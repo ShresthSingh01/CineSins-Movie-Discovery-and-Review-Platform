@@ -30,5 +30,17 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log(`Cognitive Load: ${metrics.cognitiveLoad}`);
         console.log(`Comfort Score: ${metrics.comfortScore}`);
         console.log("--------------------------");
+
+        console.log("--- Running Scene Tags Unit Test ---");
+        const { store } = await import('./store.js');
+        const testMovieId = "tt1375666"; // Inception
+        store.addTag(testMovieId, "dream");
+        store.addTag(testMovieId, "heist");
+        const tags = store.getTags(testMovieId);
+        console.log(`Tags for ${testMovieId}:`, tags);
+        const exported = store.exportTags();
+        console.log("Exported JSON structure:", exported);
+        console.log("Contains mapping for movie id?", exported.includes(`"${testMovieId}"`));
+        console.log("--------------------------");
     })();
 });

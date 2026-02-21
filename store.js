@@ -52,6 +52,55 @@ export const store = {
             const popularMovies = await api.fetchPopularMoviesBatch();
             this.saveMoviesBatch(popularMovies);
         }
+    },
+
+    // Scene Tags
+    getAllTags() {
+        return JSON.parse(localStorage.getItem("sceneTags")) || {};
+    },
+
+    getTags(movieId) {
+        const allTags = this.getAllTags();
+        return allTags[movieId] || [];
+    },
+
+    addTag(movieId, tag) {
+        const rawTag = tag.trim().toLowerCase();
+        if (!rawTag) return;
+
+        const allTags = this.getAllTags();
+        const movieTags = allTags[movieId] || [];
+
+        // Add if it doesn't exist
+        if (!movieTags.includes(rawTag)) {
+            movieTags.push(rawTag);
+            allTags[movieId] = movieTags;
+            localStorage.setItem("sceneTags", JSON.stringify(allTags));
+        }
+    },
+
+    exportTags() {
+        return JSON.stringify(this.getAllTags(), null, 2);
+    },
+
+    importTags(jsonString) {
+        try {
+            const parsed = JSON.parse(jsonString);
+            if (typeof parsed === 'object' && parsed !== null) {
+                // Merge with existing
+                const existing = this.getAllTags();
+                for (const [id, tags] of Object.entries(parsed)) {
+                    if (Array.isArray(tags)) {
+                        existing[id] = [...new Set([...(existing[id] || []), ...tags])];
+                    }
+                }
+                localStorage.setItem("sceneTags", JSON.stringify(existing));
+                return true;
+            }
+        } catch {
+            return false;
+        }
+        return false;
     }
 };
 

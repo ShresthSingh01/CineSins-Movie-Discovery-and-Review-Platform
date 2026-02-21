@@ -27,10 +27,16 @@ export const ui = {
             closeModal: document.getElementById("close-modal"),
             modalTitle: document.getElementById("modal-title"),
             modalPoster: document.getElementById("modal-poster"),
+            modalTags: document.getElementById("modal-tags"),
+            newTagInput: document.getElementById("new-tag-input"),
+            addTagBtn: document.getElementById("add-tag-btn"),
             starContainer: document.getElementById("star-container"),
             reviewText: document.getElementById("review-text"),
             charCount: document.getElementById("char-count"),
-            saveBtn: document.getElementById("save-review")
+            saveBtn: document.getElementById("save-review"),
+            importTagsBtn: document.getElementById("import-tags-btn"),
+            exportTagsBtn: document.getElementById("export-tags-btn"),
+            importFile: document.getElementById("import-file")
         };
 
         this.setupNavigation();
@@ -62,6 +68,53 @@ export const ui = {
         };
         this.elements.closeModal.onclick = () => this.closeReviewModal();
         this.elements.saveBtn.onclick = () => this.saveReview();
+
+        // Scene Tags Events
+        this.elements.addTagBtn.onclick = () => this.addTagToCurrentMovie();
+        this.elements.newTagInput.addEventListener("keypress", e => {
+            if (e.key === "Enter") this.addTagToCurrentMovie();
+        });
+
+        this.elements.exportTagsBtn.onclick = async (e) => {
+            e.preventDefault();
+            const { store } = await import('./store.js');
+            const tagsJson = store.exportTags();
+            const blob = new Blob([tagsJson], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `scene_tags_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        this.elements.importTagsBtn.onclick = (e) => {
+            e.preventDefault();
+            this.elements.importFile.click();
+        };
+
+        this.elements.importFile.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const { store } = await import('./store.js');
+                const success = store.importTags(event.target.result);
+                if (success) {
+                    alert("Tags imported successfully!");
+                    if (this.state.currentMovie) {
+                        this.renderTags();
+                    }
+                } else {
+                    alert("Failed to import tags. Invalid JSON.");
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ""; // Reset file input
+        };
 
         // Decision Mode Events
         this.elements.decisionBtn.onclick = () => {
@@ -134,14 +187,31 @@ export const ui = {
         const query = this.elements.searchInput.value.trim();
         if (!query) return;
         this.showSpinner();
+
+        const { store } = await import('./store.js');
         store.saveRecentSearch(query);
         this.loadRecent();
 
-        const results = await api.searchMovies(query);
+        let results = [];
+        const isTagSearch = query.toLowerCase().startsWith('scene:');
+
+        if (isTagSearch) {
+            const tagQuery = query.toLowerCase().replace('scene:', '').trim();
+            // Filter from allMovies based on tags
+            const allMovies = store.getAllMovies();
+            const allTags = store.getAllTags();
+            results = allMovies.filter(m => {
+                const mTags = allTags[m.id] || [];
+                return mTags.some(t => t.includes(tagQuery));
+            });
+        } else {
+            results = await api.searchMovies(query);
+        }
+
         if (results && results.length > 0) {
-            const detailedMovies = await Promise.all(
-                results.map(m => api.fetchMovieById(m.imdbID))
-            );
+            const detailedMovies = isTagSearch
+                ? results // already details if fetched from store
+                : await Promise.all(results.map(m => api.fetchMovieById(m.imdbID || m.id)));
             this.renderMovies(detailedMovies.filter(Boolean));
         } else {
             this.elements.movieResults.innerHTML = "<p>No movies found.</p>";
@@ -187,20 +257,45 @@ export const ui = {
         });
     },
 
-    openModal(movie) {
+    async openModal(movie) {
         this.state.currentMovie = movie;
-        this.elements.modalTitle.textContent = movie.Title;
+        this.elements.modalTitle.textContent = movie.Title || movie.title;
         this.elements.modalPoster.src = movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/100";
 
-        const saved = store.getReviews().find(r => r.id === movie.imdbID);
+        const { store } = await import('./store.js');
+        const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
         this.state.selectedRating = saved ? saved.rating : 0;
         this.elements.reviewText.value = saved ? saved.text : "";
         this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
 
+        this.elements.newTagInput.value = "";
+        this.renderTags();
         this.renderStars();
-        this.elements.modal.style.display = "block";
+        this.elements.modal.style.display = "flex";
     },
 
+    async renderTags() {
+        if (!this.state.currentMovie) return;
+        const { store } = await import('./store.js');
+        const tags = store.getTags(this.state.currentMovie.imdbID || this.state.currentMovie.id);
+        this.elements.modalTags.innerHTML = tags.length ? "" : "<p style='font-size:0.8rem;color:#777;'>No tags yet.</p>";
+        tags.forEach(t => {
+            const span = document.createElement('span');
+            span.className = 'scene-tag';
+            span.textContent = t;
+            this.elements.modalTags.appendChild(span);
+        });
+    },
+
+    async addTagToCurrentMovie() {
+        if (!this.state.currentMovie) return;
+        const tag = this.elements.newTagInput.value;
+        if (!tag) return;
+        const { store } = await import('./store.js');
+        store.addTag(this.state.currentMovie.imdbID || this.state.currentMovie.id, tag);
+        this.elements.newTagInput.value = "";
+        this.renderTags();
+    },
     closeReviewModal() {
         this.elements.modal.style.display = "none";
     },

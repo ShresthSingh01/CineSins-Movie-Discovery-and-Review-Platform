@@ -18,8 +18,11 @@
         <ul>
           <li><a href="#" data-section="home" class="active">Home</a></li>
           <li><a href="#" data-section="reviews">My Reviews</a></li>
+          <li><a href="#" id="import-tags-btn" style="background:#555">Import Tags</a></li>
+          <li><a href="#" id="export-tags-btn" style="background:#444">Export Tags</a></li>
         </ul>
       </nav>
+      <input type="file" id="import-file" style="display:none;" accept=".json">
     </div>
   </header>
 
@@ -28,6 +31,8 @@
     <div class="search-section">
       <div class="container">
         <h1>Discover & Review Movies</h1>
+        <p style="font-size: 0.9rem; margin-bottom: 10px; color: #aaa;">Tip: Search "scene:rain" to find movies tagged
+          with "rain"</p>
         <div class="search-box">
           <input type="text" id="search-input" placeholder="Search for a movie...">
           <button id="search-btn"><i class="fas fa-search"></i> Search</button>
@@ -59,6 +64,13 @@
       <h2 id="modal-title"></h2>
       <img id="modal-poster" src="" alt="Poster">
       <div class="rating-system">
+        <p>Scene Tags:</p>
+        <div id="modal-tags" class="tag-list"></div>
+        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+          <input type="text" id="new-tag-input" placeholder="Add a scene tag... (e.g. courtroom)">
+          <button id="add-tag-btn" class="save-btn" style="flex: 0 0 60px; padding: 5px;">Add</button>
+        </div>
+
         <p>Rate this movie:</p>
         <div id="star-container"></div>
         <p>Your review:</p>
