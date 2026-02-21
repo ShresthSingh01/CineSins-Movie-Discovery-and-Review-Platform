@@ -200,3 +200,85 @@ export async function decisionEngine(options) {
         return { ...m, explain };
     });
 }
+
+export function computeCompatibility(personAMovies, personBMovies) {
+    const getGenres = (movies) => [...new Set(movies.flatMap(m => (m.genres || '').split(',').map(g => g.trim())))];
+    const getDirectors = (movies) => [...new Set(movies.flatMap(m => (m.director || '').split(',').map(d => d.trim())))];
+
+    const aGenres = getGenres(personAMovies);
+    const bGenres = getGenres(personBMovies);
+    const commonGenres = aGenres.filter(g => bGenres.includes(g) && g);
+
+    const aDirs = getDirectors(personAMovies);
+    const bDirs = getDirectors(personBMovies);
+    const commonDirs = aDirs.filter(d => bDirs.includes(d) && d && d !== "N/A");
+
+    const getAvgMetrics = (movies) => {
+        let e = 0, c = 0, f = 0;
+        movies.forEach(m => {
+            if (m.metrics) {
+                e += m.metrics.emotionalIntensity || 0;
+                c += m.metrics.cognitiveLoad || 0;
+                f += m.metrics.comfortScore || 0;
+            }
+        });
+        const len = Math.max(1, movies.length);
+        return { e: e / len, c: c / len, f: f / len };
+    };
+
+    const aMetrics = getAvgMetrics(personAMovies);
+    const bMetrics = getAvgMetrics(personBMovies);
+
+    const distance = Math.abs(aMetrics.e - bMetrics.e) + Math.abs(aMetrics.c - bMetrics.c) + Math.abs(aMetrics.f - bMetrics.f);
+
+    // Scoring weights:
+    // Base 10
+    // Genre Overlap up to 50
+    // Director Overlap up to 10
+    // Metrics distance (max 300 diff) -> up to 30
+
+    let score = 10;
+    if (commonGenres.length > 0) score += Math.min(50, commonGenres.length * 15);
+    if (commonDirs.length > 0) score += Math.min(10, commonDirs.length * 5);
+    score += Math.max(0, 30 - (distance / 300) * 30);
+
+    const percentage = Math.min(100, Math.round(score));
+
+    // Suggest 3 movies
+    const allMovies = store.getAllMovies();
+    const excludeIds = new Set([...personAMovies, ...personBMovies].map(m => m.id || m.imdbID));
+    const combinedGenres = new Set([...aGenres, ...bGenres]);
+
+    let candidates = allMovies.filter(m => !excludeIds.has(m.id || m.imdbID));
+    candidates = candidates.map(m => {
+        const movieGenres = (m.genres || '').split(',').map(g => g.trim());
+        let matchCount = 0;
+        for (const g of movieGenres) {
+            if (combinedGenres.has(g)) matchCount++;
+        }
+        const rating = parseFloat(m.imdbRating) || 0;
+        const finalScore = rating + (matchCount * 2);
+        return { movie: m, score: finalScore, matchCount };
+    });
+
+    candidates.sort((a, b) => b.score - a.score);
+    const suggested = candidates.slice(0, 3).map(c => c.movie);
+
+    const resultObj = {
+        compatibilityScore: percentage,
+        commonGenres,
+        distanceMetrics: Math.round(distance),
+        suggestedMovies: suggested.map(m => ({
+            title: m.title || m.Title,
+            id: m.id || m.imdbID,
+            reason: `High rating & matches favorite genres.`
+        }))
+    };
+
+    return {
+        percentage,
+        commonGenres,
+        suggestedMovies: suggested,
+        jsonString: JSON.stringify(resultObj, null, 2)
+    };
+}

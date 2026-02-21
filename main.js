@@ -54,5 +54,24 @@ window.addEventListener('DOMContentLoaded', () => {
             console.log(`${i + 1}. ${g.title || g.Title} - Rating: ${g.imdbRating}, Votes: ${g.imdbVotes} -> HiddenScore: ${g.hiddenScore.toFixed(2)}`);
         });
         console.log("--------------------------");
+
+        console.log("--- Running Compatibility Unit Test ---");
+        const aMovies = [
+            { id: "tt1", title: "Action1", genres: "Action, Sci-Fi", director: "Nolan", metrics: { emotionalIntensity: 80, cognitiveLoad: 70, comfortScore: 40 } },
+            { id: "tt2", title: "Action2", genres: "Action", director: "Spielberg", metrics: { emotionalIntensity: 70, cognitiveLoad: 60, comfortScore: 50 } },
+            { id: "tt3", title: "Comedy1", genres: "Comedy", director: "Waititi", metrics: { emotionalIntensity: 40, cognitiveLoad: 30, comfortScore: 90 } }
+        ];
+        const bMovies = [
+            { id: "tt4", title: "Action3", genres: "Action, Adventure", director: "Nolan", metrics: { emotionalIntensity: 85, cognitiveLoad: 75, comfortScore: 35 } },
+            { id: "tt5", title: "Comedy2", genres: "Comedy, Romance", director: "Meyers", metrics: { emotionalIntensity: 30, cognitiveLoad: 20, comfortScore: 85 } },
+            { id: "tt6", title: "SciFi1", genres: "Sci-Fi", director: "Villeneuve", metrics: { emotionalIntensity: 75, cognitiveLoad: 80, comfortScore: 45 } }
+        ];
+        // They share genres: "Action", "Sci-Fi", "Comedy". Director: "Nolan". And metrics are close.
+        const compat = store.computeCompatibility(aMovies, bMovies);
+        console.log("Compatibility output:");
+        console.log(`Score: ${compat.percentage}% (>50% expected for overlaps)`);
+        console.log(`Shared Genres: ${compat.commonGenres.join(", ")}`);
+        console.log(`Suggested movies returned: ${compat.suggestedMovies.length}`);
+        console.log("--------------------------");
     })();
 });

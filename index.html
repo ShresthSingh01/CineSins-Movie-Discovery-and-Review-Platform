@@ -18,6 +18,7 @@
         <ul>
           <li><a href="#" data-section="home" class="active">Home</a></li>
           <li><a href="#" data-section="hidden-gems">Hidden Gems</a></li>
+          <li><a href="#" data-section="compatibility">Compatibility</a></li>
           <li><a href="#" data-section="reviews">My Reviews</a></li>
           <li><a href="#" id="import-tags-btn" style="background:#555">Import Tags</a></li>
           <li><a href="#" id="export-tags-btn" style="background:#444">Export Tags</a></li>
@@ -66,6 +67,57 @@
       <p style="text-align: center; color: #aaa; margin-bottom: 20px;">High rating, surprisingly low votes. Top 20
         calculated from local cache.</p>
       <div id="hidden-gems-list" class="movie-grid"></div>
+    </div>
+  </section>
+
+  <!-- Compatibility Mode -->
+  <section id="compatibility" class="page-section">
+    <div class="container">
+      <h2 class="section-title" style="color: #e74c3c;"><i class="fas fa-heart"></i> Compatibility Mode</h2>
+      <p style="text-align: center; color: #aaa; margin-bottom: 20px;">Enter 3 favorite movies for each person to
+        compute relationship compatibility & joint picks.</p>
+
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; background: #222; padding: 20px; border-radius: 8px; min-width: 250px;">
+          <h3>Person A Favorites</h3>
+          <input type="text" id="pa-1" placeholder="1. e.g. The Matrix"
+            style="width:100%; margin:8px 0; padding:10px; background:#333; color:#fff; border:1px solid #555; border-radius:4px;">
+          <input type="text" id="pa-2" placeholder="2. e.g. Gladiator"
+            style="width:100%; margin:8px 0; padding:10px; background:#333; color:#fff; border:1px solid #555; border-radius:4px;">
+          <input type="text" id="pa-3" placeholder="3. e.g. Alien"
+            style="width:100%; margin:8px 0; padding:10px; background:#333; color:#fff; border:1px solid #555; border-radius:4px;">
+        </div>
+        <div style="flex: 1; background: #222; padding: 20px; border-radius: 8px; min-width: 250px;">
+          <h3>Person B Favorites</h3>
+          <input type="text" id="pb-1" placeholder="1. e.g. Inception"
+            style="width:100%; margin:8px 0; padding:10px; background:#333; color:#fff; border:1px solid #555; border-radius:4px;">
+          <input type="text" id="pb-2" placeholder="2. e.g. The Notebook"
+            style="width:100%; margin:8px 0; padding:10px; background:#333; color:#fff; border:1px solid #555; border-radius:4px;">
+          <input type="text" id="pb-3" placeholder="3. e.g. Titanic"
+            style="width:100%; margin:8px 0; padding:10px; background:#333; color:#fff; border:1px solid #555; border-radius:4px;">
+        </div>
+      </div>
+      <button id="calc-compat-btn" class="save-btn"
+        style="margin-top: 20px; width: 100%; padding: 15px; font-size: 1.1rem; background: #e74c3c;">Calculate
+        Compatibility</button>
+
+      <div id="compat-results"
+        style="display:none; margin-top: 30px; background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #333;">
+        <h3 style="text-align: center; color: #e74c3c; font-size: 2.5rem; margin-bottom: 5px;">Score: <span
+            id="compat-score"></span>%</h3>
+        <p style="text-align: center; margin-bottom: 20px; font-size: 1.1rem;">Common DNA: <span id="compat-genres"
+            style="color: gold; font-weight: bold;"></span></p>
+
+        <h4
+          style="margin-top: 20px; margin-bottom: 15px; color: #3498db; border-bottom: 1px solid #333; padding-bottom: 10px;">
+          Recommended Movie Date Picks</h4>
+        <div id="compat-movies-list" class="movie-grid"></div>
+
+        <h4 style="margin-top: 30px; margin-bottom: 10px; font-size: 0.9rem; color: #888;">Shareable Compatibility JSON
+        </h4>
+        <textarea id="compat-json" readonly
+          style="width: 100%; height: 120px; background: #000; color: #0f0; padding: 10px; font-family: monospace; border: 1px solid #333; border-radius: 4px; resize: none;"></textarea>
+      </div>
     </div>
   </section>
 

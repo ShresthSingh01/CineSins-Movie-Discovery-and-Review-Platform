@@ -37,7 +37,13 @@ export const ui = {
             saveBtn: document.getElementById("save-review"),
             importTagsBtn: document.getElementById("import-tags-btn"),
             exportTagsBtn: document.getElementById("export-tags-btn"),
-            importFile: document.getElementById("import-file")
+            importFile: document.getElementById("import-file"),
+            calcCompatBtn: document.getElementById("calc-compat-btn"),
+            compatResults: document.getElementById("compat-results"),
+            compatScore: document.getElementById("compat-score"),
+            compatGenres: document.getElementById("compat-genres"),
+            compatMoviesList: document.getElementById("compat-movies-list"),
+            compatJson: document.getElementById("compat-json")
         };
 
         this.setupNavigation();
@@ -56,6 +62,9 @@ export const ui = {
                 document.getElementById(link.dataset.section).classList.add("active");
                 if (link.dataset.section === "reviews") this.loadUserReviews();
                 if (link.dataset.section === "hidden-gems") this.loadHiddenGems();
+                if (link.dataset.section === "compatibility") {
+                    // Reset or prepare compatibility view if needed
+                }
             });
         });
     },
@@ -118,33 +127,113 @@ export const ui = {
             e.target.value = ""; // Reset file input
         };
 
-        // Decision Mode Events
-        this.elements.decisionBtn.onclick = () => {
-            this.elements.decisionModal.style.display = "flex";
-            this.elements.decisionResults.innerHTML = "";
-        };
-        this.elements.closeDecisionModal.onclick = () => {
-            this.elements.decisionModal.style.display = "none";
-        };
-        this.elements.getRecommendationsBtn.onclick = async () => {
-            const options = {
-                mood: this.elements.decisionMood.value,
-                time: parseInt(this.elements.decisionTime.value, 10),
-                company: this.elements.decisionCompany.value
-            };
+        // Compatibility Mode Events
+        this.elements.calcCompatBtn.onclick = async () => {
+            const inputsA = [
+                document.getElementById("pa-1").value.trim(),
+                document.getElementById("pa-2").value.trim(),
+                document.getElementById("pa-3").value.trim()
+            ].filter(Boolean);
 
-            this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
+            const inputsB = [
+                document.getElementById("pb-1").value.trim(),
+                document.getElementById("pb-2").value.trim(),
+                document.getElementById("pb-3").value.trim()
+            ].filter(Boolean);
 
-            const { decisionEngine } = await import('./store.js');
-            const recommendations = await decisionEngine(options);
-
-            this.elements.decisionResults.innerHTML = "";
-            if (recommendations.length === 0) {
-                this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
+            if (inputsA.length < 3 || inputsB.length < 3) {
+                alert("Please enter exactly 3 movies for both Person A and Person B.");
                 return;
             }
-            recommendations.forEach(m => {
-                const metricsHtml = m.metrics ? `
+
+            this.elements.calcCompatBtn.textContent = "Computing...";
+            this.elements.calcCompatBtn.disabled = true;
+
+            try {
+                const fetchHelper = async (query) => {
+                    if (query.toLowerCase().startsWith('tt')) {
+                        return await api.fetchMovieById(query);
+                    }
+                    return await api.fetchMovieByTitle(query);
+                };
+
+                const moviesA = (await Promise.all(inputsA.map(fetchHelper))).filter(Boolean);
+                const moviesB = (await Promise.all(inputsB.map(fetchHelper))).filter(Boolean);
+
+                if (moviesA.length < 3 || moviesB.length < 3) {
+                    alert("Some movies could not be found. Try checking titles or IDs.");
+                    return;
+                }
+
+                const { store } = await import('./store.js');
+                // Pre-seed if needed before calling compatibility
+                if (store.getAllMovies().length < 50) {
+                    await store.seedMoviesIfNeeded();
+                }
+
+                const storeCompatResult = store.computeCompatibility([...moviesA], [...moviesB]);
+
+                this.elements.compatScore.textContent = storeCompatResult.percentage;
+                this.elements.compatGenres.textContent = storeCompatResult.commonGenres.length ? storeCompatResult.commonGenres.join(', ') : "None";
+                this.elements.compatJson.value = storeCompatResult.jsonString;
+
+                this.elements.compatMoviesList.innerHTML = storeCompatResult.suggestedMovies.length ? "" : "<p>No suggestions found.</p>";
+                storeCompatResult.suggestedMovies.forEach(m => {
+                    const card = document.createElement("div");
+                    card.className = "movie-card";
+                    const cover = m.Poster !== "N/A" && m.Poster ? m.Poster : m.poster && m.poster !== "N/A" ? m.poster : "https://via.placeholder.com/300x450";
+                    card.innerHTML = `
+            <img src="${cover}" alt="">
+            <div class="movie-info">
+              <h3>${m.title || m.Title}</h3>
+              <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
+              <div class="metrics-container" style="background: rgba(52, 152, 219, 0.2); border-left: 3px solid #3498db;">
+                <p class="explain-string" style="color: #fff; margin-top: 0;">Perfect Joint Pick</p>
+              </div>
+              <button class="review-btn" style="margin-top:auto">View Details</button>
+            </div>`;
+                    card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
+                    this.elements.compatMoviesList.appendChild(card);
+                });
+
+                this.elements.compatResults.style.display = "block";
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred computing compatibility.");
+            } finally {
+                this.elements.calcCompatBtn.textContent = "Calculate Compatibility";
+                this.elements.calcCompatBtn.disabled = false;
+            }
+        };
+    };
+
+    // Decision Mode Events
+    this.elements.decisionBtn.onclick = () => {
+        this.elements.decisionModal.style.display = "flex";
+        this.elements.decisionResults.innerHTML = "";
+    };
+    this.elements.closeDecisionModal.onclick = () => {
+        this.elements.decisionModal.style.display = "none";
+    };
+    this.elements.getRecommendationsBtn.onclick = async () => {
+        const options = {
+            mood: this.elements.decisionMood.value,
+            time: parseInt(this.elements.decisionTime.value, 10),
+            company: this.elements.decisionCompany.value
+        };
+
+        this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
+
+        const { decisionEngine } = await import('./store.js');
+        const recommendations = await decisionEngine(options);
+
+        this.elements.decisionResults.innerHTML = "";
+        if (recommendations.length === 0) {
+            this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
+            return;
+        }
+        recommendations.forEach(m => {
+            const metricsHtml = m.metrics ? `
                   <div class="metrics-container">
                     <div class="metric-row">
                       <span class="metric-label">Emotional</span>
@@ -164,9 +253,9 @@ export const ui = {
                   </div>
                 ` : '';
 
-                const card = document.createElement("div");
-                card.className = "movie-card";
-                card.innerHTML = `
+            const card = document.createElement("div");
+            card.className = "movie-card";
+            card.innerHTML = `
           <div class="movie-info">
             <h3>${m.title}</h3>
             <p>${m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtime}</p>
@@ -174,16 +263,16 @@ export const ui = {
             ${metricsHtml}
             <button class="review-btn" style="margin-top: 10px;">Add/Edit Review</button>
           </div>`;
-                card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
-                this.elements.decisionResults.appendChild(card);
-            });
-        };
+            card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+            this.elements.decisionResults.appendChild(card);
+        });
+    };
 
-        window.onclick = e => {
-            if (e.target === this.elements.modal) this.closeReviewModal();
-            if (e.target === this.elements.decisionModal) this.elements.decisionModal.style.display = "none";
-        };
-    },
+    window.onclick = e => {
+        if (e.target === this.elements.modal) this.closeReviewModal();
+        if (e.target === this.elements.decisionModal) this.elements.decisionModal.style.display = "none";
+    };
+},
 
     async searchMovies() {
         const query = this.elements.searchInput.value.trim();
@@ -220,10 +309,10 @@ export const ui = {
         }
     },
 
-    renderMovies(movies) {
-        this.elements.movieResults.innerHTML = "";
-        movies.forEach(m => {
-            const metricsHtml = m.metrics ? `
+        renderMovies(movies) {
+    this.elements.movieResults.innerHTML = "";
+    movies.forEach(m => {
+        const metricsHtml = m.metrics ? `
         <div class="metrics-container">
           <div class="metric-row">
             <span class="metric-label">Emotional</span>
@@ -243,9 +332,9 @@ export const ui = {
         </div>
       ` : '';
 
-            const card = document.createElement("div");
-            card.className = "movie-card";
-            card.innerHTML = `
+        const card = document.createElement("div");
+        card.className = "movie-card";
+        card.innerHTML = `
         <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" alt="">
         <div class="movie-info">
           <h3>${m.Title || m.title}</h3>
@@ -254,151 +343,132 @@ export const ui = {
           ${metricsHtml}
           <button class="review-btn">Add/Edit Review</button>
         </div>`;
-            card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
-            this.elements.movieResults.appendChild(card);
-        });
-    },
+        card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
+        this.elements.movieResults.appendChild(card);
+    });
+},
 
     async openModal(movie) {
-        this.state.currentMovie = movie;
-        this.elements.modalTitle.textContent = movie.Title || movie.title;
-        this.elements.modalPoster.src = movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/100";
+    this.state.currentMovie = movie;
+    this.elements.modalTitle.textContent = movie.Title || movie.title;
+    this.elements.modalPoster.src = movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/100";
 
-        const { store } = await import('./store.js');
-        const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
-        this.state.selectedRating = saved ? saved.rating : 0;
-        this.elements.reviewText.value = saved ? saved.text : "";
-        this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
+    const { store } = await import('./store.js');
+    const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
+    this.state.selectedRating = saved ? saved.rating : 0;
+    this.elements.reviewText.value = saved ? saved.text : "";
+    this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
 
-        this.elements.newTagInput.value = "";
-        this.renderTags();
-        this.renderStars();
-        this.elements.modal.style.display = "flex";
-    },
+    this.elements.newTagInput.value = "";
+    this.renderTags();
+    this.renderStars();
+    this.elements.modal.style.display = "flex";
+},
 
     async renderTags() {
-        if (!this.state.currentMovie) return;
-        const { store } = await import('./store.js');
-        const tags = store.getTags(this.state.currentMovie.imdbID || this.state.currentMovie.id);
-        this.elements.modalTags.innerHTML = tags.length ? "" : "<p style='font-size:0.8rem;color:#777;'>No tags yet.</p>";
-        tags.forEach(t => {
-            const span = document.createElement('span');
-            span.className = 'scene-tag';
-            span.textContent = t;
-            this.elements.modalTags.appendChild(span);
-        });
-    },
+    if (!this.state.currentMovie) return;
+    const { store } = await import('./store.js');
+    const tags = store.getTags(this.state.currentMovie.imdbID || this.state.currentMovie.id);
+    this.elements.modalTags.innerHTML = tags.length ? "" : "<p style='font-size:0.8rem;color:#777;'>No tags yet.</p>";
+    tags.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'scene-tag';
+        span.textContent = t;
+        this.elements.modalTags.appendChild(span);
+    });
+},
 
     async addTagToCurrentMovie() {
-        if (!this.state.currentMovie) return;
-        const tag = this.elements.newTagInput.value;
-        if (!tag) return;
-        const { store } = await import('./store.js');
-        store.addTag(this.state.currentMovie.imdbID || this.state.currentMovie.id, tag);
-        this.elements.newTagInput.value = "";
-        this.renderTags();
-    },
-    closeReviewModal() {
-        this.elements.modal.style.display = "none";
-    },
+    if (!this.state.currentMovie) return;
+    const tag = this.elements.newTagInput.value;
+    if (!tag) return;
+    const { store } = await import('./store.js');
+    store.addTag(this.state.currentMovie.imdbID || this.state.currentMovie.id, tag);
+    this.elements.newTagInput.value = "";
+    this.renderTags();
+},
+closeReviewModal() {
+    this.elements.modal.style.display = "none";
+},
 
-    renderStars() {
-        this.elements.starContainer.innerHTML = "";
-        for (let i = 1; i <= 5; i++) {
-            const star = document.createElement("span");
-            star.textContent = "★";
-            star.className = i <= this.state.selectedRating ? "star active" : "star";
-            star.onclick = () => {
-                this.state.selectedRating = i;
-                this.renderStars();
-            };
-            this.elements.starContainer.appendChild(star);
-        }
-    },
-
-    saveReview() {
-        if (!this.state.currentMovie) return;
-        const newReview = {
-            id: this.state.currentMovie.imdbID,
-            title: this.state.currentMovie.Title,
-            rating: this.state.selectedRating,
-            text: this.elements.reviewText.value,
-            date: new Date().toLocaleDateString()
+renderStars() {
+    this.elements.starContainer.innerHTML = "";
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement("span");
+        star.textContent = "★";
+        star.className = i <= this.state.selectedRating ? "star active" : "star";
+        star.onclick = () => {
+            this.state.selectedRating = i;
+            this.renderStars();
         };
-        store.saveReview(newReview);
-        this.closeReviewModal();
-        if (document.getElementById("reviews").classList.contains("active")) {
-            this.loadUserReviews();
-        }
-    },
+        this.elements.starContainer.appendChild(star);
+    }
+},
 
-    loadUserReviews() {
-        const reviews = store.getReviews();
-        this.elements.reviewsList.innerHTML = reviews.length ? "" : "<p>No reviews yet.</p>";
-        reviews.forEach(r => {
-            const div = document.createElement("div");
-            div.className = "review-card";
-            div.innerHTML = `
+saveReview() {
+    if (!this.state.currentMovie) return;
+    const newReview = {
+        id: this.state.currentMovie.imdbID,
+        title: this.state.currentMovie.Title,
+        rating: this.state.selectedRating,
+        text: this.elements.reviewText.value,
+        date: new Date().toLocaleDateString()
+    };
+    store.saveReview(newReview);
+    this.closeReviewModal();
+    if (document.getElementById("reviews").classList.contains("active")) {
+        this.loadUserReviews();
+    }
+},
+
+loadUserReviews() {
+    const reviews = store.getReviews();
+    this.elements.reviewsList.innerHTML = reviews.length ? "" : "<p>No reviews yet.</p>";
+    reviews.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "review-card";
+        div.innerHTML = `
         <div><h3>${r.title}</h3><span>${r.date}</span></div>
         <div>${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
         <p>${r.text}</p>
         <button class="edit">Edit</button>
         <button class="delete">Delete</button>`;
-            div.querySelector(".edit").onclick = async () => {
-                const movie = await api.fetchMovieById(r.id);
-                if (movie) this.openModal(movie);
-            };
-            div.querySelector(".delete").onclick = () => {
-                store.removeReview(r.id);
-                this.loadUserReviews();
-            };
-            this.elements.reviewsList.appendChild(div);
-        });
-    },
+        div.querySelector(".edit").onclick = async () => {
+            const movie = await api.fetchMovieById(r.id);
+            if (movie) this.openModal(movie);
+        };
+        div.querySelector(".delete").onclick = () => {
+            store.removeReview(r.id);
+            this.loadUserReviews();
+        };
+        this.elements.reviewsList.appendChild(div);
+    });
+},
 
-    loadRecent() {
-        const list = store.getRecentSearches();
-        this.elements.recentList.innerHTML = "";
-        list.forEach(q => {
-            const li = document.createElement("li");
-            li.textContent = q;
-            li.onclick = () => {
-                this.elements.searchInput.value = q;
-                this.searchMovies();
-            };
-            this.elements.recentList.appendChild(li);
-        });
-    },
-
-    loadRecent() {
-        const { store } = require('./store.js'); // Use dynamic import or keep it global if already loaded. We will handle dynamic in logic below.
-    },
-
-    // We overwrite dynamic require directly.
     async loadRecent() {
-        const { store } = await import('./store.js');
-        const list = store.getRecentSearches();
-        this.elements.recentList.innerHTML = "";
-        list.forEach(q => {
-            const li = document.createElement("li");
-            li.textContent = q;
-            li.onclick = () => {
-                this.elements.searchInput.value = q;
-                this.searchMovies();
-            };
-            this.elements.recentList.appendChild(li);
-        });
-    },
+    const { store } = await import('./store.js');
+    const list = store.getRecentSearches();
+    this.elements.recentList.innerHTML = "";
+    list.forEach(q => {
+        const li = document.createElement("li");
+        li.textContent = q;
+        li.onclick = () => {
+            this.elements.searchInput.value = q;
+            this.searchMovies();
+        };
+        this.elements.recentList.appendChild(li);
+    });
+},
 
     async loadHiddenGems() {
-        const { store } = await import('./store.js');
-        const gems = store.getHiddenGems();
-        this.elements.hiddenGemsList.innerHTML = gems.length ? "" : "<p>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
-        gems.forEach(m => {
-            const card = document.createElement("div");
-            card.className = "movie-card";
-            const cover = m.Poster !== "N/A" && m.Poster ? m.Poster : m.poster && m.poster !== "N/A" ? m.poster : "https://via.placeholder.com/300x450";
-            card.innerHTML = `
+    const { store } = await import('./store.js');
+    const gems = store.getHiddenGems();
+    this.elements.hiddenGemsList.innerHTML = gems.length ? "" : "<p>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
+    gems.forEach(m => {
+        const card = document.createElement("div");
+        card.className = "movie-card";
+        const cover = m.Poster !== "N/A" && m.Poster ? m.Poster : m.poster && m.poster !== "N/A" ? m.poster : "https://via.placeholder.com/300x450";
+        card.innerHTML = `
           <img src="${cover}" alt="">
           <div class="movie-info">
             <h3>${m.title || m.Title}</h3>
@@ -410,25 +480,25 @@ export const ui = {
             </div>
             <button class="review-btn" style="margin-top:auto">Add/Edit Review</button>
           </div>`;
-            card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
-            this.elements.hiddenGemsList.appendChild(card);
-        });
-    },
+        card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+        this.elements.hiddenGemsList.appendChild(card);
+    });
+},
 
-    showSpinner() {
-        this.elements.movieResults.innerHTML = '<div class="spinner"></div>';
-    },
+showSpinner() {
+    this.elements.movieResults.innerHTML = '<div class="spinner"></div>';
+},
 
     async loadInitialMovies() {
-        this.showSpinner();
-        const popularMovies = [
-            "Breaking Bad", "The Shawshank Redemption", "The Godfather",
-            "The Dark Knight", "Inception", "Forrest Gump"
-        ];
+    this.showSpinner();
+    const popularMovies = [
+        "Breaking Bad", "The Shawshank Redemption", "The Godfather",
+        "The Dark Knight", "Inception", "Forrest Gump"
+    ];
 
-        const detailedMovies = await Promise.all(
-            popularMovies.map(title => api.fetchRawMovieByTitle(title))
-        );
-        this.renderMovies(detailedMovies.filter(Boolean));
-    }
-};
+    const detailedMovies = await Promise.all(
+        popularMovies.map(title => api.fetchRawMovieByTitle(title))
+    );
+    this.renderMovies(detailedMovies.filter(Boolean));
+}
+    };
