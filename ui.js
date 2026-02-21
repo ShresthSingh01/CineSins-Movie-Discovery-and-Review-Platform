@@ -222,35 +222,34 @@ export const ui = {
             }
             this.generateShareCard(this.state.latestDNA);
         };
-    };
 
-    // Decision Mode Events
-    this.elements.decisionBtn.onclick = () => {
-        this.elements.decisionModal.style.display = "flex";
-        this.elements.decisionResults.innerHTML = "";
-    };
-    this.elements.closeDecisionModal.onclick = () => {
-        this.elements.decisionModal.style.display = "none";
-    };
-    this.elements.getRecommendationsBtn.onclick = async () => {
-        const options = {
-            mood: this.elements.decisionMood.value,
-            time: parseInt(this.elements.decisionTime.value, 10),
-            company: this.elements.decisionCompany.value
+        // Decision Mode Events
+        this.elements.decisionBtn.onclick = () => {
+            this.elements.decisionModal.style.display = "flex";
+            this.elements.decisionResults.innerHTML = "";
         };
+        this.elements.closeDecisionModal.onclick = () => {
+            this.elements.decisionModal.style.display = "none";
+        };
+        this.elements.getRecommendationsBtn.onclick = async () => {
+            const options = {
+                mood: this.elements.decisionMood.value,
+                time: parseInt(this.elements.decisionTime.value, 10),
+                company: this.elements.decisionCompany.value
+            };
 
-        this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
+            this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
 
-        const { decisionEngine } = await import('./store.js');
-        const recommendations = await decisionEngine(options);
+            const { decisionEngine } = await import('./store.js');
+            const recommendations = await decisionEngine(options);
 
-        this.elements.decisionResults.innerHTML = "";
-        if (recommendations.length === 0) {
-            this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
-            return;
-        }
-        recommendations.forEach(m => {
-            const metricsHtml = m.metrics ? `
+            this.elements.decisionResults.innerHTML = "";
+            if (recommendations.length === 0) {
+                this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
+                return;
+            }
+            recommendations.forEach(m => {
+                const metricsHtml = m.metrics ? `
                   <div class="metrics-container">
                     <div class="metric-row">
                       <span class="metric-label">Emotional</span>
@@ -270,9 +269,9 @@ export const ui = {
                   </div>
                 ` : '';
 
-            const card = document.createElement("div");
-            card.className = "movie-card";
-            card.innerHTML = `
+                const card = document.createElement("div");
+                card.className = "movie-card";
+                card.innerHTML = `
           <div class="movie-info">
             <h3>${m.title}</h3>
             <p>${m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtime}</p>
@@ -280,16 +279,16 @@ export const ui = {
             ${metricsHtml}
             <button class="review-btn" style="margin-top: 10px;">Add/Edit Review</button>
           </div>`;
-            card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
-            this.elements.decisionResults.appendChild(card);
-        });
-    };
+                card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+                this.elements.decisionResults.appendChild(card);
+            });
+        };
 
-    window.onclick = e => {
-        if (e.target === this.elements.modal) this.closeReviewModal();
-        if (e.target === this.elements.decisionModal) this.elements.decisionModal.style.display = "none";
-    };
-},
+        window.onclick = e => {
+            if (e.target === this.elements.modal) this.closeReviewModal();
+            if (e.target === this.elements.decisionModal) this.elements.decisionModal.style.display = "none";
+        };
+    },
 
     async searchMovies() {
         const query = this.elements.searchInput.value.trim();
@@ -326,234 +325,249 @@ export const ui = {
         }
     },
 
-        renderMovies(movies) {
-    this.elements.movieResults.innerHTML = "";
+    renderMovies(movies) {
+        this.elements.movieResults.innerHTML = "";
 
-    const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                obs.unobserve(entry.target);
-            }
+        const cards = [];
+
+        movies.forEach(m => {
+            const metricsHtml = m.metrics ? `
+              <div class="metrics-container">
+                <div class="metric-row">
+                  <span class="metric-label">Emotional</span>
+                  <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
+                  <span class="metric-value">${m.metrics.emotionalIntensity}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Cognitive</span>
+                  <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
+                  <span class="metric-value">${m.metrics.cognitiveLoad}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Comfort</span>
+                  <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
+                  <span class="metric-value">${m.metrics.comfortScore}</span>
+                </div>
+              </div>
+            ` : '';
+
+            const card = document.createElement("div");
+            card.className = "movie-card";
+
+            // Initial styling for GSAP to animate from
+            card.style.opacity = "0";
+            card.style.transform = "translateY(30px)";
+
+            card.innerHTML = `
+              <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" alt="${m.Title || m.title}">
+              <div class="card-overlay" style="pointer-events: none;">
+                <div class="movie-info">
+                  <h3>${m.Title || m.title}</h3>
+                  <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
+                  <p class="plot-text">${m.Plot ? m.Plot : m.genres || "No description."}</p>
+                  ${metricsHtml}
+                  <button class="review-btn" style="pointer-events: auto;"><i class="fas fa-plus"></i> Watchlist / Review</button>
+                </div>
+              </div>`;
+            const posterImg = card.querySelector("img");
+            card.querySelector(".review-btn").addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.openModal(m, posterImg);
+            });
+            card.addEventListener("click", () => this.openModal(m, posterImg));
+            this.elements.movieResults.appendChild(card);
+            cards.push(card);
         });
-    }, { threshold: 0.1 });
 
-    movies.forEach(m => {
-        const metricsHtml = m.metrics ? `
-          <div class="metrics-container">
-            <div class="metric-row">
-              <span class="metric-label">Emotional</span>
-              <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
-              <span class="metric-value">${m.metrics.emotionalIntensity}</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">Cognitive</span>
-              <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
-              <span class="metric-value">${m.metrics.cognitiveLoad}</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">Comfort</span>
-              <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
-              <span class="metric-value">${m.metrics.comfortScore}</span>
-            </div>
-          </div>
-        ` : '';
+        // GSAP ScrollTrigger Batch Animation
+        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && cards.length > 0) {
+            gsap.registerPlugin(ScrollTrigger);
 
-        const card = document.createElement("div");
-        card.className = "movie-card";
-        card.innerHTML = `
-          <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" alt="${m.Title || m.title}">
-          <div class="card-overlay" style="pointer-events: none;">
-            <div class="movie-info">
-              <h3>${m.Title || m.title}</h3>
-              <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
-              <p class="plot-text">${m.Plot ? m.Plot : m.genres || "No description."}</p>
-              ${metricsHtml}
-              <button class="review-btn" style="pointer-events: auto;"><i class="fas fa-plus"></i> Watchlist / Review</button>
-            </div>
-          </div>`;
-        const posterImg = card.querySelector("img");
-        card.querySelector(".review-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.openModal(m, posterImg);
-        });
-        card.addEventListener("click", () => this.openModal(m, posterImg));
-        this.elements.movieResults.appendChild(card);
-        observer.observe(card);
-    });
-},
+            ScrollTrigger.batch(cards, {
+                onEnter: batch => gsap.to(batch, {
+                    opacity: 1,
+                    y: 0,
+                    stagger: 0.1,
+                    duration: 0.6,
+                    ease: "power2.out",
+                    overwrite: true
+                }),
+                start: "top 90%",
+            });
+        }
+    },
 
     async openModal(movie, sourceImgElement = null) {
-    this.state.currentMovie = movie;
-    this.elements.modalTitle.textContent = movie.Title || movie.title;
-    this.elements.modalPoster.src = movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/100";
+        this.state.currentMovie = movie;
+        this.elements.modalTitle.textContent = movie.Title || movie.title;
+        this.elements.modalPoster.src = movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/100";
 
-    const { store } = await import('./store.js');
-    const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
-    this.state.selectedRating = saved ? saved.rating : 0;
-    this.elements.reviewText.value = saved ? saved.text : "";
-    this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
+        const { store } = await import('./store.js');
+        const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
+        this.state.selectedRating = saved ? saved.rating : 0;
+        this.elements.reviewText.value = saved ? saved.text : "";
+        this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
 
-    this.elements.newTagInput.value = "";
-    this.renderTags();
-    this.renderStars();
+        this.elements.newTagInput.value = "";
+        this.renderTags();
+        this.renderStars();
 
-    this.elements.modal.style.display = "flex";
+        this.elements.modal.style.display = "flex";
 
-    // FLIP Animation Logic
-    if (sourceImgElement && this.elements.modalPoster) {
-        // 1. FIRST: Get initial state
-        const first = sourceImgElement.getBoundingClientRect();
-        this.state.lastSourceImg = sourceImgElement; // Save for closing
+        // FLIP Animation Logic
+        if (sourceImgElement && this.elements.modalPoster) {
+            // 1. FIRST: Get initial state
+            const first = sourceImgElement.getBoundingClientRect();
+            this.state.lastSourceImg = sourceImgElement; // Save for closing
 
-        // Force layout calculation
-        const modalContent = document.querySelector('.modal-content');
-        modalContent.style.opacity = '0'; // Hide content initially to only show poster flying
-
-        requestAnimationFrame(() => {
-            // 2. LAST: Get final state
-            const last = this.elements.modalPoster.getBoundingClientRect();
-
-            // 3. INVERT: Calculate translation and scale
-            const deltaX = first.left - last.left;
-            const deltaY = first.top - last.top;
-            const deltaW = first.width / last.width;
-            const deltaH = first.height / last.height;
-
-            // Apply inverted transform instantly
-            this.elements.modalPoster.style.transformOrigin = 'top left';
-            this.elements.modalPoster.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
-            this.elements.modalPoster.style.transition = 'none';
+            // Force layout calculation
+            const modalContent = document.querySelector('.modal-content');
+            modalContent.style.opacity = '0'; // Hide content initially to only show poster flying
 
             requestAnimationFrame(() => {
-                // 4. PLAY: Animate to final state
-                this.elements.modalPoster.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-                this.elements.modalPoster.style.transform = 'none';
+                // 2. LAST: Get final state
+                const last = this.elements.modalPoster.getBoundingClientRect();
 
-                // Fade in rest of modal content slightly after
-                setTimeout(() => {
-                    modalContent.style.transition = 'opacity 0.4s ease';
-                    modalContent.style.opacity = '1';
-                }, 100);
+                // 3. INVERT: Calculate translation and scale
+                const deltaX = first.left - last.left;
+                const deltaY = first.top - last.top;
+                const deltaW = first.width / last.width;
+                const deltaH = first.height / last.height;
+
+                // Apply inverted transform instantly
+                this.elements.modalPoster.style.transformOrigin = 'top left';
+                this.elements.modalPoster.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
+                this.elements.modalPoster.style.transition = 'none';
+
+                requestAnimationFrame(() => {
+                    // 4. PLAY: Animate to final state
+                    this.elements.modalPoster.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+                    this.elements.modalPoster.style.transform = 'none';
+
+                    // Fade in rest of modal content slightly after
+                    setTimeout(() => {
+                        modalContent.style.transition = 'opacity 0.4s ease';
+                        modalContent.style.opacity = '1';
+                    }, 100);
+                });
             });
-        });
-    } else {
-        // Fallback if no source image
-        document.querySelector('.modal-content').style.opacity = '1';
-    }
-},
+        } else {
+            // Fallback if no source image
+            document.querySelector('.modal-content').style.opacity = '1';
+        }
+    },
 
     async renderTags() {
-    if (!this.state.currentMovie) return;
-    const { store } = await import('./store.js');
-    const tags = store.getTags(this.state.currentMovie.imdbID || this.state.currentMovie.id);
-    this.elements.modalTags.innerHTML = tags.length ? "" : "<p style='font-size:0.8rem;color:#777;'>No tags yet.</p>";
-    tags.forEach(t => {
-        const span = document.createElement('span');
-        span.className = 'scene-tag';
-        span.textContent = t;
-        this.elements.modalTags.appendChild(span);
-    });
-},
+        if (!this.state.currentMovie) return;
+        const { store } = await import('./store.js');
+        const tags = store.getTags(this.state.currentMovie.imdbID || this.state.currentMovie.id);
+        this.elements.modalTags.innerHTML = tags.length ? "" : "<p style='font-size:0.8rem;color:#777;'>No tags yet.</p>";
+        tags.forEach(t => {
+            const span = document.createElement('span');
+            span.className = 'scene-tag';
+            span.textContent = t;
+            this.elements.modalTags.appendChild(span);
+        });
+    },
 
     async addTagToCurrentMovie() {
-    if (!this.state.currentMovie) return;
-    const tag = this.elements.newTagInput.value;
-    if (!tag) return;
-    const { store } = await import('./store.js');
-    store.addTag(this.state.currentMovie.imdbID || this.state.currentMovie.id, tag);
-    this.elements.newTagInput.value = "";
-    this.renderTags();
-},
+        if (!this.state.currentMovie) return;
+        const tag = this.elements.newTagInput.value;
+        if (!tag) return;
+        const { store } = await import('./store.js');
+        store.addTag(this.state.currentMovie.imdbID || this.state.currentMovie.id, tag);
+        this.elements.newTagInput.value = "";
+        this.renderTags();
+    },
 
-closeReviewModal() {
-    const modalContent = document.querySelector('.modal-content');
+    closeReviewModal() {
+        const modalContent = document.querySelector('.modal-content');
 
-    // Reverse FLIP Animation if we have a source image
-    if (this.state.lastSourceImg && this.elements.modalPoster) {
-        const first = this.elements.modalPoster.getBoundingClientRect();
-        const last = this.state.lastSourceImg.getBoundingClientRect();
+        // Reverse FLIP Animation if we have a source image
+        if (this.state.lastSourceImg && this.elements.modalPoster) {
+            const first = this.elements.modalPoster.getBoundingClientRect();
+            const last = this.state.lastSourceImg.getBoundingClientRect();
 
-        const deltaX = last.left - first.left;
-        const deltaY = last.top - first.top;
-        const deltaW = last.width / first.width;
-        const deltaH = last.height / first.height;
+            const deltaX = last.left - first.left;
+            const deltaY = last.top - first.top;
+            const deltaW = last.width / first.width;
+            const deltaH = last.height / first.height;
 
-        // Fade out modal text first
-        modalContent.style.opacity = '0';
+            // Fade out modal text first
+            modalContent.style.opacity = '0';
 
-        // Animate poster back to grid position
-        this.elements.modalPoster.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-        this.elements.modalPoster.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
+            // Animate poster back to grid position
+            this.elements.modalPoster.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+            this.elements.modalPoster.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
 
-        setTimeout(() => {
+            setTimeout(() => {
+                this.elements.modal.style.display = "none";
+                this.elements.modalPoster.style.transform = 'none'; // reset
+                this.elements.modalPoster.style.transition = 'none'; // reset
+                this.state.lastSourceImg = null;
+            }, 400); // Wait for transition
+        } else {
             this.elements.modal.style.display = "none";
-            this.elements.modalPoster.style.transform = 'none'; // reset
-            this.elements.modalPoster.style.transition = 'none'; // reset
-            this.state.lastSourceImg = null;
-        }, 400); // Wait for transition
-    } else {
-        this.elements.modal.style.display = "none";
-    }
-},
+        }
+    },
 
-renderStars() {
-    this.elements.starContainer.innerHTML = "";
-    for (let i = 1; i <= 5; i++) {
-        const star = document.createElement("span");
-        star.textContent = "★";
-        star.className = i <= this.state.selectedRating ? "star active" : "star";
-        star.onclick = () => {
-            this.state.selectedRating = i;
-            this.renderStars();
+    renderStars() {
+        this.elements.starContainer.innerHTML = "";
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement("span");
+            star.textContent = "★";
+            star.className = i <= this.state.selectedRating ? "star active" : "star";
+            star.onclick = () => {
+                this.state.selectedRating = i;
+                this.renderStars();
+            };
+            this.elements.starContainer.appendChild(star);
+        }
+    },
+
+    saveReview() {
+        if (!this.state.currentMovie) return;
+        const newReview = {
+            id: this.state.currentMovie.imdbID,
+            title: this.state.currentMovie.Title,
+            rating: this.state.selectedRating,
+            text: this.elements.reviewText.value,
+            date: new Date().toLocaleDateString()
         };
-        this.elements.starContainer.appendChild(star);
-    }
-},
+        store.saveReview(newReview);
+        this.closeReviewModal();
+        if (document.getElementById("reviews").classList.contains("active")) {
+            this.loadUserReviews();
+        }
+    },
 
-saveReview() {
-    if (!this.state.currentMovie) return;
-    const newReview = {
-        id: this.state.currentMovie.imdbID,
-        title: this.state.currentMovie.Title,
-        rating: this.state.selectedRating,
-        text: this.elements.reviewText.value,
-        date: new Date().toLocaleDateString()
-    };
-    store.saveReview(newReview);
-    this.closeReviewModal();
-    if (document.getElementById("reviews").classList.contains("active")) {
-        this.loadUserReviews();
-    }
-},
+    loadUserReviews() {
+        const reviews = store.getReviews();
+        this.elements.reviewsList.innerHTML = reviews.length ? "" : "<p>No reviews yet.</p>";
 
-loadUserReviews() {
-    const reviews = store.getReviews();
-    this.elements.reviewsList.innerHTML = reviews.length ? "" : "<p>No reviews yet.</p>";
+        const spoilerTokens = ['ending', 'twist is', 'spoiler', 'dies', 'the killer is'];
 
-    const spoilerTokens = ['ending', 'twist is', 'spoiler', 'dies', 'the killer is'];
+        reviews.forEach(r => {
+            const div = document.createElement("div");
+            div.className = "review-card premium-card";
 
-    reviews.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "review-card premium-card";
+            let reviewHtml = "";
+            let expandHtml = "";
 
-        let reviewHtml = "";
-        let expandHtml = "";
+            const text = r.text || "";
+            // Keep clamping logic simple via CSS, but add "Read More" button if text is long
+            const isLong = text.length > 150;
 
-        const text = r.text || "";
-        // Keep clamping logic simple via CSS, but add "Read More" button if text is long
-        const isLong = text.length > 150;
+            const sentences = text.match(/[^.!?]+[.!?]*\s*/g) || [text];
+            const spoilerIndex = sentences.findIndex(s => spoilerTokens.some(token => s.toLowerCase().includes(token)));
+            const hasSpoiler = spoilerIndex !== -1;
 
-        const sentences = text.match(/[^.!?]+[.!?]*\s*/g) || [text];
-        const spoilerIndex = sentences.findIndex(s => spoilerTokens.some(token => s.toLowerCase().includes(token)));
-        const hasSpoiler = spoilerIndex !== -1;
+            if (hasSpoiler) {
+                const splitAt = Math.min(2, Math.max(0, spoilerIndex));
+                const safePart = splitAt > 0 ? sentences.slice(0, splitAt).join("").trim() : "<i style='color:#e74c3c'>[Spoiler Warning]</i>";
+                const spoilerPart = sentences.slice(splitAt).join("").trim();
 
-        if (hasSpoiler) {
-            const splitAt = Math.min(2, Math.max(0, spoilerIndex));
-            const safePart = splitAt > 0 ? sentences.slice(0, splitAt).join("").trim() : "<i style='color:#e74c3c'>[Spoiler Warning]</i>";
-            const spoilerPart = sentences.slice(splitAt).join("").trim();
-
-            reviewHtml = `
+                reviewHtml = `
                 <div class="spoiler-container">
                   <p class="safe-text">${safePart}</p>
                   ${spoilerPart ? `
@@ -563,20 +577,20 @@ loadUserReviews() {
                   <button class="spoiler-btn ripple-btn"><i class="fas fa-eye-slash"></i> Reveal Spoiler</button>
                   ` : ''}
                 </div>`;
-        } else {
-            reviewHtml = `
+            } else {
+                reviewHtml = `
                 <div class="review-text-container ${isLong ? 'has-overflow' : ''}">
                     <p class="review-body ${isLong ? 'clamped' : ''}">${text}</p>
                     ${isLong ? '<button class="read-more-btn">Read More</button>' : ''}
                 </div>`;
-        }
+            }
 
-        // Generate animated star string
-        const fullStars = "★".repeat(r.rating);
-        const emptyStars = "☆".repeat(5 - r.rating);
-        let starsHtml = `<span class="stars-fill">${fullStars}</span><span class="stars-empty">${emptyStars}</span>`;
+            // Generate animated star string
+            const fullStars = "★".repeat(r.rating);
+            const emptyStars = "☆".repeat(5 - r.rating);
+            let starsHtml = `<span class="stars-fill">${fullStars}</span><span class="stars-empty">${emptyStars}</span>`;
 
-        div.innerHTML = `
+            div.innerHTML = `
             <div class="review-header">
                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${r.id}" alt="Avatar" class="user-avatar">
                 <div class="user-info">
@@ -591,38 +605,61 @@ loadUserReviews() {
                 <button class="edit ripple-btn"><i class="fas fa-edit"></i> Edit</button>
                 <button class="delete ripple-btn"><i class="fas fa-trash"></i> Delete</button>
             </div>`;
-        div.querySelector(".delete").onclick = () => {
-            store.removeReview(r.id);
-            this.loadUserReviews();
-        };
-        this.elements.reviewsList.appendChild(div);
-    });
-},
+            div.querySelector(".edit").onclick = async () => {
+                const movie = await api.fetchMovieById(r.id);
+                if (movie) this.openModal(movie);
+            };
+            div.querySelector(".delete").onclick = () => {
+                store.removeReview(r.id);
+                this.loadUserReviews();
+            };
+            this.elements.reviewsList.appendChild(div);
+        });
+
+        // GSAP Staggered Entry for Review Cards
+        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && reviews.length > 0) {
+            const premiumCards = document.querySelectorAll('#reviews .premium-card');
+            gsap.fromTo(premiumCards,
+                { opacity: 0, y: 30 },
+                {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.5,
+                    stagger: 0.1,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                        trigger: "#reviews",
+                        start: "top 80%"
+                    }
+                }
+            );
+        }
+    },
 
     async loadRecent() {
-    const { store } = await import('./store.js');
-    const list = store.getRecentSearches();
-    this.elements.recentList.innerHTML = "";
-    list.forEach(q => {
-        const li = document.createElement("li");
-        li.textContent = q;
-        li.onclick = () => {
-            this.elements.searchInput.value = q;
-            this.searchMovies();
-        };
-        this.elements.recentList.appendChild(li);
-    });
-},
+        const { store } = await import('./store.js');
+        const list = store.getRecentSearches();
+        this.elements.recentList.innerHTML = "";
+        list.forEach(q => {
+            const li = document.createElement("li");
+            li.textContent = q;
+            li.onclick = () => {
+                this.elements.searchInput.value = q;
+                this.searchMovies();
+            };
+            this.elements.recentList.appendChild(li);
+        });
+    },
 
     async loadHiddenGems() {
-    const { store } = await import('./store.js');
-    const gems = store.getHiddenGems();
-    this.elements.hiddenGemsList.innerHTML = gems.length ? "" : "<p>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
-    gems.forEach(m => {
-        const card = document.createElement("div");
-        card.className = "movie-card";
-        const cover = m.Poster !== "N/A" && m.Poster ? m.Poster : m.poster && m.poster !== "N/A" ? m.poster : "https://via.placeholder.com/300x450";
-        card.innerHTML = `
+        const { store } = await import('./store.js');
+        const gems = store.getHiddenGems();
+        this.elements.hiddenGemsList.innerHTML = gems.length ? "" : "<p>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
+        gems.forEach(m => {
+            const card = document.createElement("div");
+            card.className = "movie-card";
+            const cover = m.Poster !== "N/A" && m.Poster ? m.Poster : m.poster && m.poster !== "N/A" ? m.poster : "https://via.placeholder.com/300x450";
+            card.innerHTML = `
           <img src="${cover}" alt="">
           <div class="movie-info">
             <h3>${m.title || m.Title}</h3>
@@ -634,150 +671,150 @@ loadUserReviews() {
             </div>
             <button class="review-btn" style="margin-top:auto">Add/Edit Review</button>
           </div>`;
-        card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
-        this.elements.hiddenGemsList.appendChild(card);
-    });
-},
+            card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+            this.elements.hiddenGemsList.appendChild(card);
+        });
+    },
 
     async loadCinemaDNA() {
-    const { store } = await import('./store.js');
-    const analytics = store.computeUserAnalytics();
+        const { store } = await import('./store.js');
+        const analytics = store.computeUserAnalytics();
 
-    if (analytics.totalMoviesSaved === 0) {
-        this.elements.dnaGenre.textContent = "N/A";
-        this.elements.dnaRuntime.textContent = "0 min";
-        this.elements.dnaMood.textContent = "N/A";
-        this.elements.dnaWatchtime.textContent = "0h 0m";
-        this.elements.cinemadnaList.innerHTML = "<li>No movies saved yet. Write some reviews!</li>";
-        this.drawDNAChart({});
-        return;
-    }
+        if (analytics.totalMoviesSaved === 0) {
+            this.elements.dnaGenre.textContent = "N/A";
+            this.elements.dnaRuntime.textContent = "0 min";
+            this.elements.dnaMood.textContent = "N/A";
+            this.elements.dnaWatchtime.textContent = "0h 0m";
+            this.elements.cinemadnaList.innerHTML = "<li>No movies saved yet. Write some reviews!</li>";
+            this.drawDNAChart({});
+            return;
+        }
 
-    this.elements.dnaGenre.textContent = analytics.favoriteGenre;
-    this.elements.dnaRuntime.textContent = analytics.avgRuntime + " min";
-    this.elements.dnaMood.textContent = analytics.moodTrend;
+        this.elements.dnaGenre.textContent = analytics.favoriteGenre;
+        this.elements.dnaRuntime.textContent = analytics.avgRuntime + " min";
+        this.elements.dnaMood.textContent = analytics.moodTrend;
 
-    const hours = Math.floor(analytics.totalRuntimeMins / 60);
-    const mins = analytics.totalRuntimeMins % 60;
-    this.elements.dnaWatchtime.textContent = `${hours}h ${mins}m`;
+        const hours = Math.floor(analytics.totalRuntimeMins / 60);
+        const mins = analytics.totalRuntimeMins % 60;
+        this.elements.dnaWatchtime.textContent = `${hours}h ${mins}m`;
 
-    this.elements.cinemadnaList.innerHTML = "";
-    analytics.top5Directors.forEach(d => {
-        const li = document.createElement("li");
-        li.textContent = d;
-        li.style.background = "#333";
-        li.style.padding = "5px 10px";
-        li.style.borderRadius = "20px";
-        li.style.fontSize = "0.9rem";
-        this.elements.cinemadnaList.appendChild(li);
-    });
+        this.elements.cinemadnaList.innerHTML = "";
+        analytics.top5Directors.forEach(d => {
+            const li = document.createElement("li");
+            li.textContent = d;
+            li.style.background = "#333";
+            li.style.padding = "5px 10px";
+            li.style.borderRadius = "20px";
+            li.style.fontSize = "0.9rem";
+            this.elements.cinemadnaList.appendChild(li);
+        });
 
-    this.drawDNAChart(analytics.genreCounts);
-    this.state.latestDNA = analytics;
-},
+        this.drawDNAChart(analytics.genreCounts);
+        this.state.latestDNA = analytics;
+    },
 
-drawDNAChart(genreCounts) {
-    const canvas = this.elements.dnaChart;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawDNAChart(genreCounts) {
+        const canvas = this.elements.dnaChart;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const entries = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    if (entries.length === 0) {
-        ctx.fillStyle = '#aaa';
-        ctx.font = '16px sans-serif';
-        ctx.fillText("No data to display.", 20, 30);
-        return;
-    }
+        const entries = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        if (entries.length === 0) {
+            ctx.fillStyle = '#aaa';
+            ctx.font = '16px sans-serif';
+            ctx.fillText("No data to display.", 20, 30);
+            return;
+        }
 
-    const maxCount = entries[0][1] || 1;
-    const barHeight = 15;
-    const gap = 10;
-    const startY = 20;
+        const maxCount = entries[0][1] || 1;
+        const barHeight = 15;
+        const gap = 10;
+        const startY = 20;
 
-    ctx.font = '14px sans-serif';
-    entries.forEach((entry, i) => {
-        const [genre, count] = entry;
-        const y = startY + i * (barHeight + gap);
+        ctx.font = '14px sans-serif';
+        entries.forEach((entry, i) => {
+            const [genre, count] = entry;
+            const y = startY + i * (barHeight + gap);
 
-        ctx.fillStyle = '#fff';
-        ctx.fillText(genre, 10, y + 12);
+            ctx.fillStyle = '#fff';
+            ctx.fillText(genre, 10, y + 12);
 
-        const barWidth = (count / maxCount) * (canvas.width - 200);
-        ctx.fillStyle = '#e74c3c';
-        ctx.fillRect(150, y, barWidth, barHeight);
+            const barWidth = (count / maxCount) * (canvas.width - 200);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(150, y, barWidth, barHeight);
 
-        ctx.fillStyle = '#aaa';
-        ctx.fillText(count.toString(), 150 + barWidth + 10, y + 12);
-    });
-},
+            ctx.fillStyle = '#aaa';
+            ctx.fillText(count.toString(), 150 + barWidth + 10, y + 12);
+        });
+    },
 
-generateShareCard(analytics) {
-    const canvas = this.elements.dnaShareCanvas;
-    const ctx = canvas.getContext('2d');
+    generateShareCard(analytics) {
+        const canvas = this.elements.dnaShareCanvas;
+        const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#111111';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#111111';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#3498db';
-    ctx.font = 'bold 40px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText("My CinemaDNA", canvas.width / 2, 60);
+        ctx.fillStyle = '#3498db';
+        ctx.font = 'bold 40px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("My CinemaDNA", canvas.width / 2, 60);
 
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = 'italic 20px sans-serif';
-    ctx.fillText("Analyzed by CineSins", canvas.width / 2, 95);
+        ctx.fillStyle = '#aaaaaa';
+        ctx.font = 'italic 20px sans-serif';
+        ctx.fillText("Analyzed by CineSins", canvas.width / 2, 95);
 
-    ctx.strokeStyle = '#333333';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(50, 130);
-    ctx.lineTo(550, 130);
-    ctx.stroke();
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(50, 130);
+        ctx.lineTo(550, 130);
+        ctx.stroke();
 
-    ctx.textAlign = 'left';
-
-    const drawStat = (label, val, y, color) => {
-        ctx.fillStyle = '#888888';
-        ctx.font = '24px sans-serif';
-        ctx.fillText(label, 70, y);
-
-        ctx.fillStyle = color;
-        ctx.font = 'bold 36px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(val, 530, y + 5);
         ctx.textAlign = 'left';
-    };
 
-    drawStat("Favorite Genre", analytics.favoriteGenre, 200, "#e74c3c");
-    drawStat("Avg Runtime", analytics.avgRuntime + " min", 270, "#3498db");
-    drawStat("Mood Trend", analytics.moodTrend, 340, "#2ecc71");
+        const drawStat = (label, val, y, color) => {
+            ctx.fillStyle = '#888888';
+            ctx.font = '24px sans-serif';
+            ctx.fillText(label, 70, y);
 
-    const hours = Math.floor(analytics.totalRuntimeMins / 60);
-    const mins = analytics.totalRuntimeMins % 60;
-    drawStat("Total Watch Time", `${hours}h ${mins}m`, 410, "#f1c40f");
+            ctx.fillStyle = color;
+            ctx.font = 'bold 36px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(val, 530, y + 5);
+            ctx.textAlign = 'left';
+        };
 
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = '22px sans-serif';
-    ctx.fillText("Top Directors:", 70, 500);
+        drawStat("Favorite Genre", analytics.favoriteGenre, 200, "#e74c3c");
+        drawStat("Avg Runtime", analytics.avgRuntime + " min", 270, "#3498db");
+        drawStat("Mood Trend", analytics.moodTrend, 340, "#2ecc71");
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px sans-serif';
-    const dirs = analytics.top5Directors.length ? analytics.top5Directors.join(', ') : "None";
-    ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 70, 540);
+        const hours = Math.floor(analytics.totalRuntimeMins / 60);
+        const mins = analytics.totalRuntimeMins % 60;
+        drawStat("Total Watch Time", `${hours}h ${mins}m`, 410, "#f1c40f");
 
-    ctx.fillStyle = '#444444';
-    ctx.font = '16px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText("Generated on " + new Date().toLocaleDateString(), canvas.width / 2, 760);
+        ctx.fillStyle = '#aaaaaa';
+        ctx.font = '22px sans-serif';
+        ctx.fillText("Top Directors:", 70, 500);
 
-    const link = document.createElement('a');
-    link.download = `CinemaDNA_${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-},
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px sans-serif';
+        const dirs = analytics.top5Directors.length ? analytics.top5Directors.join(', ') : "None";
+        ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 70, 540);
 
-showSpinner() {
-    const skeletons = Array(8).fill(`
+        ctx.fillStyle = '#444444';
+        ctx.font = '16px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("Generated on " + new Date().toLocaleDateString(), canvas.width / 2, 760);
+
+        const link = document.createElement('a');
+        link.download = `CinemaDNA_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    },
+
+    showSpinner() {
+        const skeletons = Array(8).fill(`
             <div class="movie-card skeleton-card">
               <div class="skeleton skeleton-img"></div>
               <div class="card-overlay" style="opacity: 1; transform: none; background: transparent; pointer-events: none;">
@@ -791,19 +828,19 @@ showSpinner() {
               </div>
             </div>
         `).join('');
-    this.elements.movieResults.innerHTML = skeletons;
-},
+        this.elements.movieResults.innerHTML = skeletons;
+    },
 
     async loadInitialMovies() {
-    this.showSpinner();
-    const popularMovies = [
-        "Breaking Bad", "The Shawshank Redemption", "The Godfather",
-        "The Dark Knight", "Inception", "Forrest Gump"
-    ];
+        this.showSpinner();
+        const popularMovies = [
+            "Breaking Bad", "The Shawshank Redemption", "The Godfather",
+            "The Dark Knight", "Inception", "Forrest Gump"
+        ];
 
-    const detailedMovies = await Promise.all(
-        popularMovies.map(title => api.fetchRawMovieByTitle(title))
-    );
-    this.renderMovies(detailedMovies.filter(Boolean));
-}
-    };
+        const detailedMovies = await Promise.all(
+            popularMovies.map(title => api.fetchRawMovieByTitle(title))
+        );
+        this.renderMovies(detailedMovies.filter(Boolean));
+    }
+};

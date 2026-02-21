@@ -11,27 +11,48 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log("Modules loaded successfully! 🚀");
     console.log("You can test the API and Decision Engine in the console.");
 
-    // Hero Section Parallax Effect
+    // Hero Section GSAP Animations
     const heroArea = document.getElementById('hero-area');
     const posters = document.querySelectorAll('.floating-poster');
+    const heroTitle = document.querySelector('.hero-title');
+    const heroSubtitle = document.querySelector('.hero-subtitle');
+    const heroSearch = document.querySelector('.hero-search');
 
-    if (heroArea && posters.length > 0) {
-        heroArea.addEventListener('mousemove', (e) => {
-            const x = e.clientX / window.innerWidth;
-            const y = e.clientY / window.innerHeight;
+    if (heroArea && typeof gsap !== 'undefined') {
+        // 1. Entrance Reveal Animation
+        const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-            posters.forEach((poster, index) => {
-                const speed = (index + 1) * 20;
-                const xOffset = (window.innerWidth / 2 - e.pageX) * speed / 1000;
-                const yOffset = (window.innerHeight / 2 - e.pageY) * speed / 1000;
-                poster.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.05)`;
+        tl.fromTo(heroTitle,
+            { y: 50, opacity: 0 },
+            { y: 0, opacity: 1, duration: 1 })
+            .fromTo(heroSubtitle,
+                { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.8 }, "-=0.6")
+            .fromTo(heroSearch,
+                { y: 30, opacity: 0, scale: 0.95 },
+                { y: 0, opacity: 1, scale: 1, duration: 0.8 }, "-=0.5");
+
+        // 2. Advanced Parallax Tracking
+        if (posters.length > 0) {
+            heroArea.addEventListener('mousemove', (e) => {
+                const xPos = (e.clientX / window.innerWidth) - 0.5;
+                const yPos = (e.clientY / window.innerHeight) - 0.5;
+
+                posters.forEach((poster, index) => {
+                    const depth = (index + 1) * 40;
+                    gsap.to(poster, {
+                        x: -(xPos * depth),
+                        y: -(yPos * depth),
+                        duration: 1,
+                        ease: "power2.out"
+                    });
+                });
             });
-        });
-        heroArea.addEventListener('mouseleave', () => {
-            posters.forEach(poster => {
-                poster.style.transform = 'translate(0px, 0px) scale(1)';
+
+            heroArea.addEventListener('mouseleave', () => {
+                gsap.to(posters, { x: 0, y: 0, duration: 1.5, ease: "elastic.out(1, 0.5)" });
             });
-        });
+        }
     }
 
     // Global Ripple Effect for Buttons

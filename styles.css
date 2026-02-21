@@ -743,54 +743,7 @@ textarea:focus {
   will-change: transform;
 }
 
-/* CSS Keyframe floats for each poster */
-.p1 {
-  top: 10%;
-  left: 5%;
-  animation: float 12s ease-in-out infinite alternate;
-  transform: rotate(-5deg);
-}
-
-.p2 {
-  top: 40%;
-  left: 85%;
-  animation: float 15s ease-in-out infinite alternate-reverse;
-  transform: rotate(8deg);
-}
-
-.p3 {
-  top: 70%;
-  left: 15%;
-  animation: float 10s ease-in-out infinite alternate;
-  transform: rotate(3deg);
-}
-
-.p4 {
-  top: 5%;
-  left: 70%;
-  animation: float 18s ease-in-out infinite alternate-reverse;
-  transform: rotate(-8deg);
-}
-
-.p5 {
-  top: 60%;
-  left: 60%;
-  animation: float 14s ease-in-out infinite alternate;
-  transform: rotate(-3deg);
-}
-
-@keyframes float {
-  0% {
-    margin-top: 0;
-    opacity: 0.2;
-  }
-
-  100% {
-    margin-top: 20px;
-    opacity: 0.4;
-  }
-}
-
+/* GSAP handles parallax and poster floating now */
 .hero-content {
   position: relative;
   z-index: 20;
