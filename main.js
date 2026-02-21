@@ -52,7 +52,51 @@ window.addEventListener('DOMContentLoaded', () => {
             heroArea.addEventListener('mouseleave', () => {
                 gsap.to(posters, { x: 0, y: 0, duration: 1.5, ease: "elastic.out(1, 0.5)" });
             });
+
+            // 3. Ambient Floating Particles
+            const particlesContainer = document.getElementById('particles-container');
+            if (particlesContainer) {
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+
+                    // Randomize size and position
+                    const size = Math.random() * 4 + 1; // 1px to 5px
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.left = `${Math.random() * 100}%`;
+                    particle.style.top = `${Math.random() * 100}%`;
+                    particlesContainer.appendChild(particle);
+
+                    // Animate with GSAP
+                    gsap.to(particle, {
+                        y: `-=${Math.random() * 100 + 50}`, // Move up 50-150px
+                        x: `+=${Math.random() * 50 - 25}`, // Drift left/right
+                        opacity: 0,
+                        duration: Math.random() * 5 + 3, // 3-8 seconds
+                        ease: "none",
+                        repeat: -1,
+                        yoyo: true,
+                        delay: Math.random() * 5 // Random start times
+                    });
+                }
+            }
         }
+    }
+
+    // Advanced UI Polish: Custom Ambient Cursor
+    const cursorGlow = document.querySelector('.cursor-glow');
+    if (cursorGlow) {
+        document.addEventListener('mousemove', (e) => {
+            // Check if mobile device using window width
+            if (window.innerWidth > 768) {
+                // Instantly follow cursor (GSAP quickSetter is faster, but this works fine for CSS translation)
+                requestAnimationFrame(() => {
+                    cursorGlow.style.left = `${e.clientX}px`;
+                    cursorGlow.style.top = `${e.clientY}px`;
+                });
+            }
+        }, { passive: true });
     }
 
     // Global Ripple Effect for Buttons
