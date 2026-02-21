@@ -467,3 +467,16 @@ footer {
   border: none;
   border-radius: 4px;
 }
+
+.gems-highlight {
+  background: rgba(155, 89, 182, 0.2);
+  border-left: 3px solid #9b59b6;
+  padding: 8px;
+  margin: 10px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.gems-highlight span {
+  font-weight: bold;
+  color: #d2b4de;
+}

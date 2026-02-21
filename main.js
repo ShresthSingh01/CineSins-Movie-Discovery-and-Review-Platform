@@ -42,5 +42,17 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log("Exported JSON structure:", exported);
         console.log("Contains mapping for movie id?", exported.includes(`"${testMovieId}"`));
         console.log("--------------------------");
+
+        console.log("--- Running Hidden Gems Unit Test ---");
+        // Ensure cache is seeded
+        if (store.getAllMovies().length < 50) {
+            await store.seedMoviesIfNeeded();
+        }
+        const gems = store.getHiddenGems();
+        console.log(`Top Hidden Gems extracted (${gems.length} elements):`);
+        gems.slice(0, 3).forEach((g, i) => {
+            console.log(`${i + 1}. ${g.title || g.Title} - Rating: ${g.imdbRating}, Votes: ${g.imdbVotes} -> HiddenScore: ${g.hiddenScore.toFixed(2)}`);
+        });
+        console.log("--------------------------");
     })();
 });

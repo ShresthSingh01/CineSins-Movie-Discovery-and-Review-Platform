@@ -54,6 +54,47 @@ export const store = {
         }
     },
 
+    computeHiddenScores() {
+        let movies = this.getAllMovies();
+        let updated = false;
+
+        // LRU cap: if over 1000 movies, prune down to 500 sorted by recency or keep the highest rated.
+        // Given we just have an array without explicit timestamps, we'll keep the newest 500 (end of array).
+        if (movies.length > 1000) {
+            movies = movies.slice(-500);
+            updated = true;
+        }
+
+        movies = movies.map(m => {
+            if (m.hiddenScore === undefined) {
+                const rating = parseFloat(m.imdbRating) || 0;
+                const votes = parseInt((m.imdbVotes || "0").replace(/,/g, '')) || 0;
+                if (rating > 0 && votes > 0) {
+                    m.hiddenScore = rating / Math.log(1 + votes);
+                } else {
+                    m.hiddenScore = 0;
+                }
+                updated = true;
+            }
+            return m;
+        });
+
+        if (updated) {
+            localStorage.setItem("allMovies", JSON.stringify(movies));
+        }
+    },
+
+    getHiddenGems() {
+        this.computeHiddenScores();
+        const movies = this.getAllMovies();
+
+        // Sort descending by hiddenScore
+        const valid = movies.filter(m => m.hiddenScore && m.hiddenScore > 0);
+        valid.sort((a, b) => b.hiddenScore - a.hiddenScore);
+
+        return valid.slice(0, 20);
+    },
+
     // Scene Tags
     getAllTags() {
         return JSON.parse(localStorage.getItem("sceneTags")) || {};

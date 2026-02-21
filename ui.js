@@ -23,6 +23,7 @@ export const ui = {
             movieResults: document.getElementById("movie-results"),
             recentList: document.getElementById("recent-list"),
             reviewsList: document.getElementById("reviews-list"),
+            hiddenGemsList: document.getElementById("hidden-gems-list"),
             modal: document.getElementById("review-modal"),
             closeModal: document.getElementById("close-modal"),
             modalTitle: document.getElementById("modal-title"),
@@ -46,14 +47,15 @@ export const ui = {
     },
 
     setupNavigation() {
-        document.querySelectorAll("nav a").forEach(link => {
+        document.querySelectorAll("nav a[data-section]").forEach(link => {
             link.addEventListener("click", e => {
                 e.preventDefault();
-                document.querySelectorAll("nav a").forEach(a => a.classList.remove("active"));
+                document.querySelectorAll("nav a[data-section]").forEach(a => a.classList.remove("active"));
                 link.classList.add("active");
                 document.querySelectorAll(".page-section").forEach(sec => sec.classList.remove("active"));
                 document.getElementById(link.dataset.section).classList.add("active");
                 if (link.dataset.section === "reviews") this.loadUserReviews();
+                if (link.dataset.section === "hidden-gems") this.loadHiddenGems();
             });
         });
     },
@@ -365,6 +367,51 @@ export const ui = {
                 this.searchMovies();
             };
             this.elements.recentList.appendChild(li);
+        });
+    },
+
+    loadRecent() {
+        const { store } = require('./store.js'); // Use dynamic import or keep it global if already loaded. We will handle dynamic in logic below.
+    },
+
+    // We overwrite dynamic require directly.
+    async loadRecent() {
+        const { store } = await import('./store.js');
+        const list = store.getRecentSearches();
+        this.elements.recentList.innerHTML = "";
+        list.forEach(q => {
+            const li = document.createElement("li");
+            li.textContent = q;
+            li.onclick = () => {
+                this.elements.searchInput.value = q;
+                this.searchMovies();
+            };
+            this.elements.recentList.appendChild(li);
+        });
+    },
+
+    async loadHiddenGems() {
+        const { store } = await import('./store.js');
+        const gems = store.getHiddenGems();
+        this.elements.hiddenGemsList.innerHTML = gems.length ? "" : "<p>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
+        gems.forEach(m => {
+            const card = document.createElement("div");
+            card.className = "movie-card";
+            const cover = m.Poster !== "N/A" && m.Poster ? m.Poster : m.poster && m.poster !== "N/A" ? m.poster : "https://via.placeholder.com/300x450";
+            card.innerHTML = `
+          <img src="${cover}" alt="">
+          <div class="movie-info">
+            <h3>${m.title || m.Title}</h3>
+            <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
+            <div class="gems-highlight">
+              <span>💎 Hidden Score: ${parseFloat(m.hiddenScore).toFixed(2)}</span>
+              <p style="margin:4px 0;">IMDb: ${m.imdbRating} | Votes: ${m.imdbVotes}</p>
+              <p class="explain-string">High rating, low votes.</p>
+            </div>
+            <button class="review-btn" style="margin-top:auto">Add/Edit Review</button>
+          </div>`;
+            card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+            this.elements.hiddenGemsList.appendChild(card);
         });
     },
 
