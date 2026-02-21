@@ -23,6 +23,7 @@ export const ui = {
             movieResults: document.getElementById("movie-results"),
             recentList: document.getElementById("recent-list"),
             reviewsList: document.getElementById("reviews-list"),
+            watchlistList: document.getElementById("watchlist-list"),
             hiddenGemsList: document.getElementById("hidden-gems-list"),
             cinemadnaList: document.getElementById("dna-directors"),
             dnaGenre: document.getElementById("dna-genre"),
@@ -43,6 +44,7 @@ export const ui = {
             reviewText: document.getElementById("review-text"),
             charCount: document.getElementById("char-count"),
             saveBtn: document.getElementById("save-review"),
+            watchlistBtn: document.getElementById("watchlist-btn"),
             importTagsBtn: document.getElementById("import-tags-btn"),
             exportTagsBtn: document.getElementById("export-tags-btn"),
             importFile: document.getElementById("import-file"),
@@ -69,6 +71,7 @@ export const ui = {
                 document.querySelectorAll(".page-section").forEach(sec => sec.classList.remove("active"));
                 document.getElementById(link.dataset.section).classList.add("active");
                 if (link.dataset.section === "reviews") this.loadUserReviews();
+                if (link.dataset.section === "watchlist") this.loadWatchlist();
                 if (link.dataset.section === "hidden-gems") this.loadHiddenGems();
                 if (link.dataset.section === "cinemadna") this.loadCinemaDNA();
                 if (link.dataset.section === "compatibility") {
@@ -88,6 +91,7 @@ export const ui = {
         };
         this.elements.closeModal.onclick = () => this.closeReviewModal();
         this.elements.saveBtn.onclick = () => this.saveReview();
+        this.elements.watchlistBtn.onclick = () => this.toggleWatchlist();
 
         // Scene Tags Events
         this.elements.addTagBtn.onclick = () => this.addTagToCurrentMovie();
@@ -422,6 +426,16 @@ export const ui = {
         this.elements.reviewText.value = saved ? saved.text : "";
         this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
 
+        // Watchlist state
+        const wl = store.getWatchlist().find(m => m.id === (movie.imdbID || movie.id));
+        if (wl) {
+            this.elements.watchlistBtn.innerHTML = '<i class="fas fa-check"></i> In Watchlist';
+            this.elements.watchlistBtn.style.background = '#27ae60';
+        } else {
+            this.elements.watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i> Watchlist';
+            this.elements.watchlistBtn.style.background = '#34495e';
+        }
+
         this.elements.newTagInput.value = "";
         this.renderTags();
         this.renderStars();
@@ -542,8 +556,8 @@ export const ui = {
     saveReview() {
         if (!this.state.currentMovie) return;
         const newReview = {
-            id: this.state.currentMovie.imdbID,
-            title: this.state.currentMovie.Title,
+            id: this.state.currentMovie.imdbID || this.state.currentMovie.id,
+            title: this.state.currentMovie.Title || this.state.currentMovie.title,
             rating: this.state.selectedRating,
             text: this.elements.reviewText.value,
             date: new Date().toLocaleDateString()
@@ -552,6 +566,24 @@ export const ui = {
         this.closeReviewModal();
         if (document.getElementById("reviews").classList.contains("active")) {
             this.loadUserReviews();
+        }
+    },
+
+    toggleWatchlist() {
+        if (!this.state.currentMovie) return;
+        const added = store.toggleWatchlist({
+            id: this.state.currentMovie.imdbID || this.state.currentMovie.id,
+            title: this.state.currentMovie.Title || this.state.currentMovie.title,
+            poster: this.state.currentMovie.Poster || this.state.currentMovie.poster,
+            year: this.state.currentMovie.Year || this.state.currentMovie.year
+        });
+
+        if (added) {
+            this.elements.watchlistBtn.innerHTML = '<i class="fas fa-check"></i> In Watchlist';
+            this.elements.watchlistBtn.style.background = '#27ae60';
+        } else {
+            this.elements.watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i> Watchlist';
+            this.elements.watchlistBtn.style.background = '#34495e';
         }
     },
 
@@ -863,6 +895,63 @@ export const ui = {
         link.download = `CinemaDNA_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
+    },
+
+    async loadWatchlist() {
+        const { store } = await import('./store.js');
+        const wl = store.getWatchlist();
+        this.elements.watchlistList.innerHTML = "";
+
+        if (!wl.length) {
+            this.elements.watchlistList.innerHTML = "<p style='grid-column: 1 / -1; width: 100%; text-align: center; color: #aaa;'>Your watchlist is empty.</p>";
+            return;
+        }
+
+        const cards = [];
+        wl.forEach(m => {
+            const card = document.createElement("div");
+            card.className = "movie-card";
+            card.style.opacity = "0";
+            card.style.transform = "translateY(30px)";
+
+            const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+            const posterUrl = m.poster || m.Poster || fallback;
+
+            card.innerHTML = `
+              <img src="${posterUrl}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
+              <div class="card-overlay" style="pointer-events: none;">
+                <div class="movie-info">
+                  <h3>${m.title || m.Title}</h3>
+                  <p>${m.year || m.Year}</p>
+                  <button class="review-btn" style="pointer-events: auto; background: #e74c3c;"><i class="fas fa-trash"></i> Remove</button>
+                </div>
+              </div>`;
+
+            card.querySelector(".review-btn").addEventListener("click", (e) => {
+                e.stopPropagation();
+                store.toggleWatchlist(m);
+                this.loadWatchlist();
+            });
+            card.addEventListener("click", () => this.openModal(m, card.querySelector("img")));
+
+            this.elements.watchlistList.appendChild(card);
+            cards.push(card);
+        });
+
+        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && cards.length > 0) {
+            gsap.registerPlugin(ScrollTrigger);
+            ScrollTrigger.batch(cards, {
+                onEnter: batch => gsap.to(batch, {
+                    opacity: 1,
+                    y: 0,
+                    stagger: 0.1,
+                    duration: 0.6,
+                    ease: "power2.out",
+                    overwrite: true
+                }),
+                start: "top 90%",
+            });
+        }
     },
 
     showSpinner() {

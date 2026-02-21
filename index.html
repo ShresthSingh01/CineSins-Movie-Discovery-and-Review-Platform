@@ -24,6 +24,7 @@
         <ul>
           <li><a href="#" data-section="home" class="active">Home</a></li>
           <li><a href="#" data-section="hidden-gems">Hidden Gems</a></li>
+          <li><a href="#" data-section="watchlist">Watchlist</a></li>
           <li><a href="#" data-section="compatibility">Compatibility</a></li>
           <li><a href="#" data-section="cinemadna">CinemaDNA</a></li>
           <li><a href="#" data-section="reviews">My Reviews</a></li>
@@ -85,6 +86,15 @@
     <div class="container">
       <h2 class="section-title">My Reviews</h2>
       <div id="reviews-list"></div>
+    </div>
+  </section>
+
+  <!-- Watchlist -->
+  <section id="watchlist" class="page-section">
+    <div class="container">
+      <h2 class="section-title" style="color: #34495e;"><i class="fas fa-bookmark"></i> My Watchlist</h2>
+      <p style="text-align: center; color: #aaa; margin-bottom: 20px;">Movies you want to watch later.</p>
+      <div id="watchlist-list" class="movie-grid"></div>
     </div>
   </section>
 
@@ -216,7 +226,11 @@
           <p>Your review:</p>
           <textarea id="review-text" maxlength="300"></textarea>
           <div id="char-count">0/300</div>
-          <button id="save-review" class="save-btn">Save</button>
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button id="watchlist-btn" class="save-btn" style="flex: 1; background: #34495e;"><i
+                class="fas fa-bookmark"></i> Watchlist</button>
+            <button id="save-review" class="save-btn" style="flex: 1;">Save Review</button>
+          </div>
         </div>
       </div>
     </div>

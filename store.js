@@ -21,6 +21,24 @@ export const store = {
         localStorage.setItem("reviews", JSON.stringify(reviews));
     },
 
+    getWatchlist() {
+        return JSON.parse(localStorage.getItem("watchlist")) || [];
+    },
+
+    toggleWatchlist(movie) {
+        let wl = this.getWatchlist();
+        const index = wl.findIndex(m => m.id === movie.id);
+        if (index > -1) {
+            wl.splice(index, 1);
+            localStorage.setItem("watchlist", JSON.stringify(wl));
+            return false; // Removed
+        } else {
+            wl.unshift(movie);
+            localStorage.setItem("watchlist", JSON.stringify(wl));
+            return true; // Added
+        }
+    },
+
     getRecentSearches() {
         return JSON.parse(localStorage.getItem("recent")) || [];
     },
