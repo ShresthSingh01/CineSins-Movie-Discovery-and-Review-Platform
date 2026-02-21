@@ -31,6 +31,7 @@
         <div class="search-box">
           <input type="text" id="search-input" placeholder="Search for a movie...">
           <button id="search-btn"><i class="fas fa-search"></i> Search</button>
+          <button id="decision-mode-btn"><i class="fas fa-magic"></i> Decision Mode</button>
         </div>
       </div>
     </div>
@@ -52,7 +53,6 @@
     </div>
   </section>
 
-  <!-- Review Modal -->
   <div id="review-modal" class="modal">
     <div class="modal-content">
       <span id="close-modal" class="close">&times;</span>
@@ -66,6 +66,40 @@
         <div id="char-count">0/300</div>
         <button id="save-review" class="save-btn">Save</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Decision Modal -->
+  <div id="decision-modal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <span id="close-decision-modal" class="close">&times;</span>
+      <h2 id="decision-modal-title" class="section-title">Decision Mode</h2>
+      <div class="decision-form">
+        <label>Mood:
+          <select id="decision-mood">
+            <option value="Comfort">Comfort</option>
+            <option value="Exciting">Exciting</option>
+            <option value="Thoughtful">Thoughtful</option>
+            <option value="Laugh">Laugh</option>
+          </select>
+        </label>
+        <label>Available Time:
+          <select id="decision-time">
+            <option value="90">&lt;= 90 mins</option>
+            <option value="120">&lt;= 120 mins</option>
+            <option value="999">&gt; 120 mins</option>
+          </select>
+        </label>
+        <label>Company:
+          <select id="decision-company">
+            <option value="Alone">Alone</option>
+            <option value="Couple">Couple</option>
+            <option value="Family">Family</option>
+          </select>
+        </label>
+        <button id="get-recommendations-btn" class="save-btn" style="margin-top: 15px;">Get Recommendations</button>
+      </div>
+      <div id="decision-results" class="movie-grid" style="margin-top: 20px;"></div>
     </div>
   </div>
 

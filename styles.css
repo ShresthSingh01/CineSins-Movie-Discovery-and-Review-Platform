@@ -1,4 +1,3 @@
-
 * {
   margin: 0;
   padding: 0;
@@ -60,6 +59,7 @@ nav a:hover {
   background: gold;
   color: #000;
 }
+
 .page-section {
   display: none;
   padding: 20px 0;
@@ -196,7 +196,7 @@ nav a:hover {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0, 0, 0, 0.8);
   justify-content: center;
   align-items: center;
 }
@@ -291,15 +291,27 @@ nav a:hover {
   background: gold;
   color: #000;
 }
+
 .spinner {
-  border: 4px solid rgba(255,255,255,0.08);
+  border: 4px solid rgba(255, 255, 255, 0.08);
   border-top: 4px solid gold;
   border-radius: 50%;
-  width: 52px; height: 52px;
+  width: 52px;
+  height: 52px;
   margin: 36px auto;
   animation: spin 0.9s linear infinite;
 }
-@keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+@keyframes spin {
+  0% {
+    transform: rotate(0)
+  }
+
+  100% {
+    transform: rotate(360deg)
+  }
+}
+
 footer {
   background: #222;
   text-align: center;
@@ -345,3 +357,91 @@ footer {
   }
 }
 
+#decision-mode-btn {
+  padding: 10px 15px;
+  background: #9b59b6;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#decision-mode-btn:hover {
+  background: #8e44ad;
+}
+
+.decision-form label {
+  display: block;
+  margin: 10px 0;
+  text-align: left;
+}
+
+.decision-form select {
+  padding: 8px;
+  width: 100%;
+  margin-top: 5px;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+.explain-string {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #ccc;
+  margin-top: 8px;
+}
+
+.metrics-container {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 0.8rem;
+}
+
+.metric-label {
+  flex: 0 0 110px;
+  color: #ddd;
+}
+
+.metric-bar {
+  flex: 1;
+  height: 6px;
+  background: #444;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 10px;
+}
+
+.metric-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.metric-fill.emotional {
+  background: #e74c3c;
+}
+
+.metric-fill.cognitive {
+  background: #3498db;
+}
+
+.metric-fill.comfort {
+  background: #2ecc71;
+}
+
+.metric-value {
+  flex: 0 0 30px;
+  text-align: right;
+  font-weight: bold;
+}

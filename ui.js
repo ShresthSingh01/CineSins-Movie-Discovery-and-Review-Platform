@@ -12,6 +12,14 @@ export const ui = {
         this.elements = {
             searchInput: document.getElementById("search-input"),
             searchBtn: document.getElementById("search-btn"),
+            decisionBtn: document.getElementById("decision-mode-btn"),
+            decisionModal: document.getElementById("decision-modal"),
+            closeDecisionModal: document.getElementById("close-decision-modal"),
+            decisionMood: document.getElementById("decision-mood"),
+            decisionTime: document.getElementById("decision-time"),
+            decisionCompany: document.getElementById("decision-company"),
+            getRecommendationsBtn: document.getElementById("get-recommendations-btn"),
+            decisionResults: document.getElementById("decision-results"),
             movieResults: document.getElementById("movie-results"),
             recentList: document.getElementById("recent-list"),
             reviewsList: document.getElementById("reviews-list"),
@@ -54,8 +62,71 @@ export const ui = {
         };
         this.elements.closeModal.onclick = () => this.closeReviewModal();
         this.elements.saveBtn.onclick = () => this.saveReview();
+
+        // Decision Mode Events
+        this.elements.decisionBtn.onclick = () => {
+            this.elements.decisionModal.style.display = "flex";
+            this.elements.decisionResults.innerHTML = "";
+        };
+        this.elements.closeDecisionModal.onclick = () => {
+            this.elements.decisionModal.style.display = "none";
+        };
+        this.elements.getRecommendationsBtn.onclick = async () => {
+            const options = {
+                mood: this.elements.decisionMood.value,
+                time: parseInt(this.elements.decisionTime.value, 10),
+                company: this.elements.decisionCompany.value
+            };
+
+            this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
+
+            const { decisionEngine } = await import('./store.js');
+            const recommendations = await decisionEngine(options);
+
+            this.elements.decisionResults.innerHTML = "";
+            if (recommendations.length === 0) {
+                this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
+                return;
+            }
+            recommendations.forEach(m => {
+                const metricsHtml = m.metrics ? `
+                  <div class="metrics-container">
+                    <div class="metric-row">
+                      <span class="metric-label">Emotional</span>
+                      <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
+                      <span class="metric-value">${m.metrics.emotionalIntensity}</span>
+                    </div>
+                    <div class="metric-row">
+                      <span class="metric-label">Cognitive</span>
+                      <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
+                      <span class="metric-value">${m.metrics.cognitiveLoad}</span>
+                    </div>
+                    <div class="metric-row">
+                      <span class="metric-label">Comfort</span>
+                      <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
+                      <span class="metric-value">${m.metrics.comfortScore}</span>
+                    </div>
+                  </div>
+                ` : '';
+
+                const card = document.createElement("div");
+                card.className = "movie-card";
+                card.innerHTML = `
+          <div class="movie-info">
+            <h3>${m.title}</h3>
+            <p>${m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtime}</p>
+            <p class="explain-string">${m.explain}</p>
+            ${metricsHtml}
+            <button class="review-btn" style="margin-top: 10px;">Add/Edit Review</button>
+          </div>`;
+                card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+                this.elements.decisionResults.appendChild(card);
+            });
+        };
+
         window.onclick = e => {
             if (e.target === this.elements.modal) this.closeReviewModal();
+            if (e.target === this.elements.decisionModal) this.elements.decisionModal.style.display = "none";
         };
     },
 
@@ -80,14 +151,35 @@ export const ui = {
     renderMovies(movies) {
         this.elements.movieResults.innerHTML = "";
         movies.forEach(m => {
+            const metricsHtml = m.metrics ? `
+        <div class="metrics-container">
+          <div class="metric-row">
+            <span class="metric-label">Emotional</span>
+            <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
+            <span class="metric-value">${m.metrics.emotionalIntensity}</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Cognitive</span>
+            <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
+            <span class="metric-value">${m.metrics.cognitiveLoad}</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Comfort</span>
+            <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
+            <span class="metric-value">${m.metrics.comfortScore}</span>
+          </div>
+        </div>
+      ` : '';
+
             const card = document.createElement("div");
             card.className = "movie-card";
             card.innerHTML = `
         <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" alt="">
         <div class="movie-info">
-          <h3>${m.Title}</h3>
-          <p>${m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
-          <p>${m.Plot || "No description."}</p>
+          <h3>${m.Title || m.title}</h3>
+          <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
+          <p>${m.Plot ? m.Plot : m.genres || "No description."}</p>
+          ${metricsHtml}
           <button class="review-btn">Add/Edit Review</button>
         </div>`;
             card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
