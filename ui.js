@@ -320,7 +320,13 @@ export const ui = {
             const detailedMovies = isTagSearch
                 ? results // already details if fetched from store
                 : await Promise.all(results.map(m => api.fetchMovieById(m.imdbID || m.id)));
-            this.renderMovies(detailedMovies.filter(Boolean));
+
+            const validDetailed = detailedMovies.filter(Boolean);
+            if (!isTagSearch && validDetailed.length > 0) {
+                const { store } = await import('./store.js');
+                store.saveMoviesBatch(validDetailed);
+            }
+            this.renderMovies(validDetailed);
         } else {
             this.elements.movieResults.innerHTML = "<p>No movies found.</p>";
         }
@@ -661,27 +667,53 @@ export const ui = {
 
     async loadHiddenGems() {
         const { store } = await import('./store.js');
-        const gems = store.getHiddenGems();
+        const gems = await store.getHiddenGems();
         this.elements.hiddenGemsList.innerHTML = gems.length ? "" : "<p>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
         gems.forEach(m => {
             const card = document.createElement("div");
             card.className = "movie-card";
-            const cover = m.Poster !== "N/A" && m.Poster ? m.Poster : m.poster && m.poster !== "N/A" ? m.poster : "https://via.placeholder.com/300x450";
+            const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+            const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
             card.innerHTML = `
-          <img src="${cover}" alt="">
-          <div class="movie-info">
-            <h3>${m.title || m.Title}</h3>
-            <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
-            <div class="gems-highlight">
-              <span>💎 Hidden Score: ${parseFloat(m.hiddenScore).toFixed(2)}</span>
-              <p style="margin:4px 0;">IMDb: ${m.imdbRating} | Votes: ${m.imdbVotes}</p>
-              <p class="explain-string">High rating, low votes.</p>
+          <img src="${cover}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
+          <div class="card-overlay" style="pointer-events: none;">
+            <div class="movie-info">
+              <h3>${m.title || m.Title}</h3>
+              <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
+              <div class="gems-highlight">
+                <span>💎 Hidden Score: ${parseFloat(m.hiddenScore).toFixed(2)}</span>
+                <p style="margin:4px 0;">IMDb: ${m.imdbRating} | Votes: ${m.imdbVotes}</p>
+                <p class="explain-string">High rating, low votes.</p>
+              </div>
+              <button class="review-btn" style="pointer-events: auto;"><i class="fas fa-plus"></i> Add/Edit Review</button>
             </div>
-            <button class="review-btn" style="margin-top:auto">Add/Edit Review</button>
           </div>`;
-            card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+            card.querySelector(".review-btn").addEventListener("click", (e) => {
+                e.stopPropagation();
+                Object.getPrototypeOf(this).openModal.call(this, m);
+            });
+            card.addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
             this.elements.hiddenGemsList.appendChild(card);
         });
+
+        // GSAP Stagger Animation for Hidden Gems
+        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && gems.length > 0) {
+            const cards = this.elements.hiddenGemsList.querySelectorAll('.movie-card');
+            gsap.fromTo(cards,
+                { opacity: 0, y: 30 },
+                {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.6,
+                    stagger: 0.1,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                        trigger: "#hidden-gems",
+                        start: "top 80%"
+                    }
+                }
+            );
+        }
     },
 
     async loadCinemaDNA() {

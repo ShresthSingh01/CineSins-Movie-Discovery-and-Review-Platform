@@ -84,7 +84,8 @@ export const store = {
         }
     },
 
-    getHiddenGems() {
+    async getHiddenGems() {
+        await this.seedMoviesIfNeeded();
         this.computeHiddenScores();
         const movies = this.getAllMovies();
 
