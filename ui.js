@@ -780,7 +780,21 @@ generateShareCard(analytics) {
 },
 
 showSpinner() {
-    this.elements.movieResults.innerHTML = '<div class="spinner"></div>';
+    const skeletons = Array(8).fill(`
+            <div class="movie-card skeleton-card">
+              <div class="skeleton skeleton-img"></div>
+              <div class="card-overlay" style="opacity: 1; transform: none; background: transparent; pointer-events: none;">
+                <div class="movie-info" style="width: 100%;">
+                  <div class="skeleton skeleton-text skeleton-title"></div>
+                  <div class="skeleton skeleton-text skeleton-year"></div>
+                  <div class="skeleton skeleton-text skeleton-desc" style="margin-top: 15px;"></div>
+                  <div class="skeleton skeleton-text skeleton-desc" style="width: 80%;"></div>
+                  <div class="skeleton skeleton-btn" style="margin-top: 20px;"></div>
+                </div>
+              </div>
+            </div>
+        `).join('');
+    this.elements.movieResults.innerHTML = skeletons;
 },
 
     async loadInitialMovies() {

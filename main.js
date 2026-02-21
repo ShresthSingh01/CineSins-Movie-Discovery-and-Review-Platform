@@ -34,6 +34,30 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Global Ripple Effect for Buttons
+    document.addEventListener('click', function (e) {
+        const target = e.target.closest('button');
+        if (target) {
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+
+            const rect = target.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+
+            target.appendChild(ripple);
+
+            ripple.addEventListener('animationend', () => {
+                ripple.remove();
+            });
+        }
+    });
+
     // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
