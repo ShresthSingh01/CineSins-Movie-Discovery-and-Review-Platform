@@ -535,14 +535,16 @@ loadUserReviews() {
 
     reviews.forEach(r => {
         const div = document.createElement("div");
-        div.className = "review-card";
+        div.className = "review-card premium-card";
 
         let reviewHtml = "";
+        let expandHtml = "";
 
         const text = r.text || "";
-        // Match sentences by looking for punctuation followed by space or end of string.
-        const sentences = text.match(/[^.!?]+[.!?]*\\s*/g) || [text];
+        // Keep clamping logic simple via CSS, but add "Read More" button if text is long
+        const isLong = text.length > 150;
 
+        const sentences = text.match(/[^.!?]+[.!?]*\s*/g) || [text];
         const spoilerIndex = sentences.findIndex(s => spoilerTokens.some(token => s.toLowerCase().includes(token)));
         const hasSpoiler = spoilerIndex !== -1;
 
@@ -552,48 +554,43 @@ loadUserReviews() {
             const spoilerPart = sentences.slice(splitAt).join("").trim();
 
             reviewHtml = `
-            <div class="spoiler-container">
-              <p class="safe-text">${safePart}</p>
-              ${spoilerPart ? `
-              <div class="spoiler-content collapsed-review">
-                <p>${spoilerPart}</p>
-              </div>
-              <button class="spoiler-btn"><i class="fas fa-eye-slash"></i> Allow Spoilers</button>
-              ` : ''}
-            </div>`;
+                <div class="spoiler-container">
+                  <p class="safe-text">${safePart}</p>
+                  ${spoilerPart ? `
+                  <div class="spoiler-content collapsed-review">
+                    <p class="review-body">${spoilerPart}</p>
+                  </div>
+                  <button class="spoiler-btn ripple-btn"><i class="fas fa-eye-slash"></i> Reveal Spoiler</button>
+                  ` : ''}
+                </div>`;
         } else {
-            reviewHtml = `<p>${text}</p>`;
+            reviewHtml = `
+                <div class="review-text-container ${isLong ? 'has-overflow' : ''}">
+                    <p class="review-body ${isLong ? 'clamped' : ''}">${text}</p>
+                    ${isLong ? '<button class="read-more-btn">Read More</button>' : ''}
+                </div>`;
         }
+
+        // Generate animated star string
+        const fullStars = "★".repeat(r.rating);
+        const emptyStars = "☆".repeat(5 - r.rating);
+        let starsHtml = `<span class="stars-fill">${fullStars}</span><span class="stars-empty">${emptyStars}</span>`;
 
         div.innerHTML = `
-        <div><h3>${r.title}</h3><span>${r.date}</span></div>
-        <div>${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
-        ${reviewHtml}
-        <button class="edit">Edit</button>
-        <button class="delete">Delete</button>`;
-
-        if (hasSpoiler && div.querySelector('.spoiler-btn')) {
-            const btn = div.querySelector('.spoiler-btn');
-            const content = div.querySelector('.spoiler-content');
-            let isExpanded = false;
-            btn.onclick = () => {
-                isExpanded = !isExpanded;
-                if (isExpanded) {
-                    content.classList.remove('collapsed-review');
-                    content.classList.add('expanded');
-                    btn.innerHTML = '<i class="fas fa-eye"></i> Hide Spoilers';
-                } else {
-                    content.classList.remove('expanded');
-                    content.classList.add('collapsed-review');
-                    btn.innerHTML = '<i class="fas fa-eye-slash"></i> Allow Spoilers';
-                }
-            };
-        }
-
-        div.querySelector(".edit").onclick = async () => {
-            const movie = await api.fetchMovieById(r.id);
-            if (movie) this.openModal(movie);
-        };
+            <div class="review-header">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${r.id}" alt="Avatar" class="user-avatar">
+                <div class="user-info">
+                    <h3>${r.title}</h3>
+                    <span class="review-meta">${r.date} • <span class="review-stars">${starsHtml}</span></span>
+                </div>
+            </div>
+            <div class="review-content">
+                ${reviewHtml}
+            </div>
+            <div class="review-actions">
+                <button class="edit ripple-btn"><i class="fas fa-edit"></i> Edit</button>
+                <button class="delete ripple-btn"><i class="fas fa-trash"></i> Delete</button>
+            </div>`;
         div.querySelector(".delete").onclick = () => {
             store.removeReview(r.id);
             this.loadUserReviews();

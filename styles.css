@@ -429,59 +429,161 @@ textarea:focus {
 }
 
 /* My Reviews list rendering */
-.review-card {
+#reviews .premium-card {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  padding: var(--spacing-lg);
   border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+}
+
+#reviews .premium-card:nth-child(n) {
+  animation-delay: 0.1s;
+}
+
+#reviews .premium-card:nth-child(2n) {
+  animation-delay: 0.2s;
+}
+
+#reviews .premium-card:nth-child(3n) {
+  animation-delay: 0.3s;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
   margin-bottom: var(--spacing-md);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: var(--spacing-sm);
 }
 
-.review-card h3 {
-  color: var(--accent-secondary);
-  font-size: 1.4rem;
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--border-light);
 }
 
-.review-card span {
+.user-info h3 {
+  font-size: 1.25rem;
+  margin: 0 0 4px 0;
+  color: #fff;
+}
+
+.review-meta {
   font-size: 0.85rem;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.review-card div:nth-child(2) {
-  color: var(--accent-warning);
-  font-size: 1.2rem;
-  margin: var(--spacing-sm) 0;
-  letter-spacing: 2px;
+.review-stars {
+  position: relative;
+  display: inline-block;
 }
 
-.review-card p {
-  line-height: 1.7;
+.stars-fill {
+  color: #ffd700;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
-.review-card button {
-  background: var(--bg-glass);
+.stars-empty {
+  color: var(--border-light);
+}
+
+.review-content {
+  margin-bottom: var(--spacing-lg);
+}
+
+.review-text-container {
+  position: relative;
+}
+
+.review-body {
   color: var(--text-main);
-  border: 1px solid var(--border-light);
-  padding: 6px 15px;
-  border-radius: var(--radius-round);
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+/* Clamping for long texts */
+.review-body.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.read-more-btn {
+  background: none;
+  border: none;
+  color: var(--accent-secondary);
+  padding: 0;
+  margin-top: 5px;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  margin-right: 10px;
-  margin-top: 15px;
-  transition: all 0.2s;
+  box-shadow: none;
+  transform: none;
 }
 
-.review-card button.edit:hover {
-  background: var(--accent-secondary);
-  color: #000;
-  border-color: var(--accent-secondary);
+.read-more-btn:hover {
+  text-decoration: underline;
+  transform: none;
+  box-shadow: none;
 }
 
-.review-card button.delete:hover {
-  background: var(--accent-primary);
-  color: #fff;
-  border-color: var(--accent-primary);
+.review-actions {
+  display: flex;
+  gap: var(--spacing-sm);
 }
+
+.review-actions button {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: none;
+}
+
+.review-actions .edit {
+  background: rgba(0, 229, 255, 0.1);
+  color: var(--accent-secondary);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.review-actions .delete {
+  background: rgba(255, 0, 85, 0.1);
+  color: var(--accent-primary);
+  border: 1px solid rgba(255, 0, 85, 0.2);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Anti-Spoiler Styling overrides for premium cards */
 
 /* Spinner */
 .spinner {
@@ -797,7 +899,8 @@ input:focus {
 }
 
 /* Sections */
-Inputs */ #compatibility input {
+/* Inputs */
+#compatibility input {
   background: rgba(0, 0, 0, 0.3) !important;
   border: 1px solid var(--border-light) !important;
   transition: all 0.2s;
