@@ -11,6 +11,29 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log("Modules loaded successfully! 🚀");
     console.log("You can test the API and Decision Engine in the console.");
 
+    // Hero Section Parallax Effect
+    const heroArea = document.getElementById('hero-area');
+    const posters = document.querySelectorAll('.floating-poster');
+
+    if (heroArea && posters.length > 0) {
+        heroArea.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+
+            posters.forEach((poster, index) => {
+                const speed = (index + 1) * 20;
+                const xOffset = (window.innerWidth / 2 - e.pageX) * speed / 1000;
+                const yOffset = (window.innerHeight / 2 - e.pageY) * speed / 1000;
+                poster.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.05)`;
+            });
+        });
+        heroArea.addEventListener('mouseleave', () => {
+            posters.forEach(poster => {
+                poster.style.transform = 'translate(0px, 0px) scale(1)';
+            });
+        });
+    }
+
     // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
