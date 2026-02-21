@@ -279,14 +279,91 @@ textarea:focus {
   font-weight: 600;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-  font-family: var(--font-family);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
 }
 
-.save-btn:hover {
-  background: #00cc6a;
-  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+.movie-info .plot-text {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: var(--spacing-md);
+}
+
+.metrics-container {
+  margin-bottom: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(4px);
+}
+
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 0.75rem;
+}
+
+.metric-row:last-child {
+  margin-bottom: 0;
+}
+
+.metric-label {
+  flex: 0 0 70px;
+  color: #ccc;
+}
+
+.metric-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin: 0 8px;
+  overflow: hidden;
+}
+
+.metric-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.metric-fill.emotional {
+  background: #e74c3c;
+}
+
+.metric-fill.cognitive {
+  background: #3498db;
+}
+
+.metric-fill.comfort {
+  background: #2ecc71;
+}
+
+.metric-value {
+  flex: 0 0 25px;
+  text-align: right;
+  font-weight: bold;
+}
+
+.review-btn {
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4);
 }
 
 /* My Reviews list rendering */

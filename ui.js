@@ -328,40 +328,53 @@ export const ui = {
 
         renderMovies(movies) {
     this.elements.movieResults.innerHTML = "";
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                obs.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
     movies.forEach(m => {
         const metricsHtml = m.metrics ? `
-        <div class="metrics-container">
-          <div class="metric-row">
-            <span class="metric-label">Emotional</span>
-            <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
-            <span class="metric-value">${m.metrics.emotionalIntensity}</span>
+          <div class="metrics-container">
+            <div class="metric-row">
+              <span class="metric-label">Emotional</span>
+              <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
+              <span class="metric-value">${m.metrics.emotionalIntensity}</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Cognitive</span>
+              <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
+              <span class="metric-value">${m.metrics.cognitiveLoad}</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Comfort</span>
+              <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
+              <span class="metric-value">${m.metrics.comfortScore}</span>
+            </div>
           </div>
-          <div class="metric-row">
-            <span class="metric-label">Cognitive</span>
-            <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
-            <span class="metric-value">${m.metrics.cognitiveLoad}</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">Comfort</span>
-            <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
-            <span class="metric-value">${m.metrics.comfortScore}</span>
-          </div>
-        </div>
-      ` : '';
+        ` : '';
 
         const card = document.createElement("div");
         card.className = "movie-card";
         card.innerHTML = `
-        <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" alt="">
-        <div class="movie-info">
-          <h3>${m.Title || m.title}</h3>
-          <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
-          <p>${m.Plot ? m.Plot : m.genres || "No description."}</p>
-          ${metricsHtml}
-          <button class="review-btn">Add/Edit Review</button>
-        </div>`;
+          <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" alt="${m.Title || m.title}">
+          <div class="card-overlay">
+            <div class="movie-info">
+              <h3>${m.Title || m.title}</h3>
+              <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
+              <p class="plot-text">${m.Plot ? m.Plot : m.genres || "No description."}</p>
+              ${metricsHtml}
+              <button class="review-btn"><i class="fas fa-plus"></i> Watchlist / Review</button>
+            </div>
+          </div>`;
         card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
         this.elements.movieResults.appendChild(card);
+        observer.observe(card);
     });
 },
 
