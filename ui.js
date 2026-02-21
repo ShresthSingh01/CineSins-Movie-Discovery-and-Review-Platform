@@ -441,15 +441,66 @@ saveReview() {
 loadUserReviews() {
     const reviews = store.getReviews();
     this.elements.reviewsList.innerHTML = reviews.length ? "" : "<p>No reviews yet.</p>";
+
+    const spoilerTokens = ['ending', 'twist is', 'spoiler', 'dies', 'the killer is'];
+
     reviews.forEach(r => {
         const div = document.createElement("div");
         div.className = "review-card";
+
+        let reviewHtml = "";
+
+        const text = r.text || "";
+        // Match sentences by looking for punctuation followed by space or end of string.
+        const sentences = text.match(/[^.!?]+[.!?]*\\s*/g) || [text];
+
+        const spoilerIndex = sentences.findIndex(s => spoilerTokens.some(token => s.toLowerCase().includes(token)));
+        const hasSpoiler = spoilerIndex !== -1;
+
+        if (hasSpoiler) {
+            const splitAt = Math.min(2, Math.max(0, spoilerIndex));
+            const safePart = splitAt > 0 ? sentences.slice(0, splitAt).join("").trim() : "<i style='color:#e74c3c'>[Spoiler Warning]</i>";
+            const spoilerPart = sentences.slice(splitAt).join("").trim();
+
+            reviewHtml = `
+            <div class="spoiler-container">
+              <p class="safe-text">${safePart}</p>
+              ${spoilerPart ? `
+              <div class="spoiler-content collapsed-review">
+                <p>${spoilerPart}</p>
+              </div>
+              <button class="spoiler-btn"><i class="fas fa-eye-slash"></i> Allow Spoilers</button>
+              ` : ''}
+            </div>`;
+        } else {
+            reviewHtml = `<p>${text}</p>`;
+        }
+
         div.innerHTML = `
         <div><h3>${r.title}</h3><span>${r.date}</span></div>
         <div>${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
-        <p>${r.text}</p>
+        ${reviewHtml}
         <button class="edit">Edit</button>
         <button class="delete">Delete</button>`;
+
+        if (hasSpoiler && div.querySelector('.spoiler-btn')) {
+            const btn = div.querySelector('.spoiler-btn');
+            const content = div.querySelector('.spoiler-content');
+            let isExpanded = false;
+            btn.onclick = () => {
+                isExpanded = !isExpanded;
+                if (isExpanded) {
+                    content.classList.remove('collapsed-review');
+                    content.classList.add('expanded');
+                    btn.innerHTML = '<i class="fas fa-eye"></i> Hide Spoilers';
+                } else {
+                    content.classList.remove('expanded');
+                    content.classList.add('collapsed-review');
+                    btn.innerHTML = '<i class="fas fa-eye-slash"></i> Allow Spoilers';
+                }
+            };
+        }
+
         div.querySelector(".edit").onclick = async () => {
             const movie = await api.fetchMovieById(r.id);
             if (movie) this.openModal(movie);

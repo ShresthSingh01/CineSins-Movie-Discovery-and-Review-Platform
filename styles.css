@@ -496,3 +496,49 @@ footer {
     transform: translateY(0);
   }
 }
+
+/* Anti-Spoiler Styles */
+.spoiler-container {
+  margin-top: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 6px;
+  border-left: 3px solid #e74c3c;
+}
+
+.safe-text {
+  margin: 0;
+}
+
+.spoiler-content {
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.collapsed-review {
+  filter: blur(5px);
+  max-height: 40px;
+  overflow: hidden;
+  user-select: none;
+  pointer-events: none;
+}
+
+.expanded {
+  filter: none;
+  max-height: 1000px;
+}
+
+.spoiler-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.spoiler-btn:hover {
+  background: #c0392b;
+}
