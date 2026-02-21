@@ -73,5 +73,14 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log(`Shared Genres: ${compat.commonGenres.join(", ")}`);
         console.log(`Suggested movies returned: ${compat.suggestedMovies.length}`);
         console.log("--------------------------");
+
+        console.log("--- Running CinemaDNA Unit Test ---");
+        const dna = store.computeUserAnalytics();
+        console.log("CinemaDNA Total Movies Evaluated:", dna.totalMoviesSaved);
+        console.log("Favorite Genre:", dna.favoriteGenre);
+        console.log("Average Runtime:", dna.avgRuntime);
+        console.log("Mood Trend:", dna.moodTrend);
+        console.log("Top Directors:", dna.top5Directors.join(', ') || "None");
+        console.log("--------------------------");
     })();
 });

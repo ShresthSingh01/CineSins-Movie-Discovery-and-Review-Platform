@@ -24,6 +24,14 @@ export const ui = {
             recentList: document.getElementById("recent-list"),
             reviewsList: document.getElementById("reviews-list"),
             hiddenGemsList: document.getElementById("hidden-gems-list"),
+            cinemadnaList: document.getElementById("dna-directors"),
+            dnaGenre: document.getElementById("dna-genre"),
+            dnaRuntime: document.getElementById("dna-runtime"),
+            dnaMood: document.getElementById("dna-mood"),
+            dnaWatchtime: document.getElementById("dna-watchtime"),
+            dnaChart: document.getElementById("dna-chart"),
+            generateShareBtn: document.getElementById("generate-share-btn"),
+            dnaShareCanvas: document.getElementById("dna-share-canvas"),
             modal: document.getElementById("review-modal"),
             closeModal: document.getElementById("close-modal"),
             modalTitle: document.getElementById("modal-title"),
@@ -62,6 +70,7 @@ export const ui = {
                 document.getElementById(link.dataset.section).classList.add("active");
                 if (link.dataset.section === "reviews") this.loadUserReviews();
                 if (link.dataset.section === "hidden-gems") this.loadHiddenGems();
+                if (link.dataset.section === "cinemadna") this.loadCinemaDNA();
                 if (link.dataset.section === "compatibility") {
                     // Reset or prepare compatibility view if needed
                 }
@@ -204,6 +213,14 @@ export const ui = {
                 this.elements.calcCompatBtn.textContent = "Calculate Compatibility";
                 this.elements.calcCompatBtn.disabled = false;
             }
+        };
+
+        this.elements.generateShareBtn.onclick = () => {
+            if (!this.state.latestDNA) {
+                alert("Please load CinemaDNA and write some reviews first.");
+                return;
+            }
+            this.generateShareCard(this.state.latestDNA);
         };
     };
 
@@ -483,6 +500,143 @@ loadUserReviews() {
         card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
         this.elements.hiddenGemsList.appendChild(card);
     });
+},
+
+    async loadCinemaDNA() {
+    const { store } = await import('./store.js');
+    const analytics = store.computeUserAnalytics();
+
+    if (analytics.totalMoviesSaved === 0) {
+        this.elements.dnaGenre.textContent = "N/A";
+        this.elements.dnaRuntime.textContent = "0 min";
+        this.elements.dnaMood.textContent = "N/A";
+        this.elements.dnaWatchtime.textContent = "0h 0m";
+        this.elements.cinemadnaList.innerHTML = "<li>No movies saved yet. Write some reviews!</li>";
+        this.drawDNAChart({});
+        return;
+    }
+
+    this.elements.dnaGenre.textContent = analytics.favoriteGenre;
+    this.elements.dnaRuntime.textContent = analytics.avgRuntime + " min";
+    this.elements.dnaMood.textContent = analytics.moodTrend;
+
+    const hours = Math.floor(analytics.totalRuntimeMins / 60);
+    const mins = analytics.totalRuntimeMins % 60;
+    this.elements.dnaWatchtime.textContent = `${hours}h ${mins}m`;
+
+    this.elements.cinemadnaList.innerHTML = "";
+    analytics.top5Directors.forEach(d => {
+        const li = document.createElement("li");
+        li.textContent = d;
+        li.style.background = "#333";
+        li.style.padding = "5px 10px";
+        li.style.borderRadius = "20px";
+        li.style.fontSize = "0.9rem";
+        this.elements.cinemadnaList.appendChild(li);
+    });
+
+    this.drawDNAChart(analytics.genreCounts);
+    this.state.latestDNA = analytics;
+},
+
+drawDNAChart(genreCounts) {
+    const canvas = this.elements.dnaChart;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const entries = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    if (entries.length === 0) {
+        ctx.fillStyle = '#aaa';
+        ctx.font = '16px sans-serif';
+        ctx.fillText("No data to display.", 20, 30);
+        return;
+    }
+
+    const maxCount = entries[0][1] || 1;
+    const barHeight = 15;
+    const gap = 10;
+    const startY = 20;
+
+    ctx.font = '14px sans-serif';
+    entries.forEach((entry, i) => {
+        const [genre, count] = entry;
+        const y = startY + i * (barHeight + gap);
+
+        ctx.fillStyle = '#fff';
+        ctx.fillText(genre, 10, y + 12);
+
+        const barWidth = (count / maxCount) * (canvas.width - 200);
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(150, y, barWidth, barHeight);
+
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(count.toString(), 150 + barWidth + 10, y + 12);
+    });
+},
+
+generateShareCard(analytics) {
+    const canvas = this.elements.dnaShareCanvas;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#111111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#3498db';
+    ctx.font = 'bold 40px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText("My CinemaDNA", canvas.width / 2, 60);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = 'italic 20px sans-serif';
+    ctx.fillText("Analyzed by CineSins", canvas.width / 2, 95);
+
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(50, 130);
+    ctx.lineTo(550, 130);
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+
+    const drawStat = (label, val, y, color) => {
+        ctx.fillStyle = '#888888';
+        ctx.font = '24px sans-serif';
+        ctx.fillText(label, 70, y);
+
+        ctx.fillStyle = color;
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(val, 530, y + 5);
+        ctx.textAlign = 'left';
+    };
+
+    drawStat("Favorite Genre", analytics.favoriteGenre, 200, "#e74c3c");
+    drawStat("Avg Runtime", analytics.avgRuntime + " min", 270, "#3498db");
+    drawStat("Mood Trend", analytics.moodTrend, 340, "#2ecc71");
+
+    const hours = Math.floor(analytics.totalRuntimeMins / 60);
+    const mins = analytics.totalRuntimeMins % 60;
+    drawStat("Total Watch Time", `${hours}h ${mins}m`, 410, "#f1c40f");
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '22px sans-serif';
+    ctx.fillText("Top Directors:", 70, 500);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px sans-serif';
+    const dirs = analytics.top5Directors.length ? analytics.top5Directors.join(', ') : "None";
+    ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 70, 540);
+
+    ctx.fillStyle = '#444444';
+    ctx.font = '16px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText("Generated on " + new Date().toLocaleDateString(), canvas.width / 2, 760);
+
+    const link = document.createElement('a');
+    link.download = `CinemaDNA_${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 },
 
 showSpinner() {

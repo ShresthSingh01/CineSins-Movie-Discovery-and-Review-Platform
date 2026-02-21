@@ -19,6 +19,7 @@
           <li><a href="#" data-section="home" class="active">Home</a></li>
           <li><a href="#" data-section="hidden-gems">Hidden Gems</a></li>
           <li><a href="#" data-section="compatibility">Compatibility</a></li>
+          <li><a href="#" data-section="cinemadna">CinemaDNA</a></li>
           <li><a href="#" data-section="reviews">My Reviews</a></li>
           <li><a href="#" id="import-tags-btn" style="background:#555">Import Tags</a></li>
           <li><a href="#" id="export-tags-btn" style="background:#444">Export Tags</a></li>
@@ -119,68 +120,117 @@
           style="width: 100%; height: 120px; background: #000; color: #0f0; padding: 10px; font-family: monospace; border: 1px solid #333; border-radius: 4px; resize: none;"></textarea>
       </div>
     </div>
-  </section>
+    <!-- CinemaDNA -->
+    <section id="cinemadna" class="page-section">
+      <div class="container">
+        <h2 class="section-title" style="color: #3498db;"><i class="fas fa-chart-pie"></i> CinemaDNA</h2>
+        <p style="text-align: center; color: #aaa; margin-bottom: 20px;">Your personal movie analytics dashboard.</p>
 
-  <div id="review-modal" class="modal">
-    <div class="modal-content">
-      <span id="close-modal" class="close">&times;</span>
-      <h2 id="modal-title"></h2>
-      <img id="modal-poster" src="" alt="Poster">
-      <div class="rating-system">
-        <p>Scene Tags:</p>
-        <div id="modal-tags" class="tag-list"></div>
-        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
-          <input type="text" id="new-tag-input" placeholder="Add a scene tag... (e.g. courtroom)">
-          <button id="add-tag-btn" class="save-btn" style="flex: 0 0 60px; padding: 5px;">Add</button>
+        <div class="dna-stats-grid"
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+          <div class="stat-card"
+            style="background:#222; padding:15px; border-radius:8px; border-bottom: 3px solid #e74c3c;">
+            <h4 style="color:#aaa; font-size:0.9rem;">Favorite Genre</h4>
+            <p id="dna-genre" style="font-size:1.5rem; font-weight:bold; color:#e74c3c;">-</p>
+          </div>
+          <div class="stat-card"
+            style="background:#222; padding:15px; border-radius:8px; border-bottom: 3px solid #3498db;">
+            <h4 style="color:#aaa; font-size:0.9rem;">Avg Runtime</h4>
+            <p id="dna-runtime" style="font-size:1.5rem; font-weight:bold; color:#3498db;">-</p>
+          </div>
+          <div class="stat-card"
+            style="background:#222; padding:15px; border-radius:8px; border-bottom: 3px solid #2ecc71;">
+            <h4 style="color:#aaa; font-size:0.9rem;">Mood Trend</h4>
+            <p id="dna-mood" style="font-size:1.5rem; font-weight:bold; color:#2ecc71;">-</p>
+          </div>
+          <div class="stat-card"
+            style="background:#222; padding:15px; border-radius:8px; border-bottom: 3px solid #f1c40f;">
+            <h4 style="color:#aaa; font-size:0.9rem;">Watch Time</h4>
+            <p id="dna-watchtime" style="font-size:1.5rem; font-weight:bold; color:#f1c40f;">-</p>
+          </div>
         </div>
 
-        <p>Rate this movie:</p>
-        <div id="star-container"></div>
-        <p>Your review:</p>
-        <textarea id="review-text" maxlength="300"></textarea>
-        <div id="char-count">0/300</div>
-        <button id="save-review" class="save-btn">Save</button>
+        <div style="background:#222; padding:20px; border-radius:8px; margin-bottom: 30px;">
+          <h4 style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">Top Directors</h4>
+          <ul id="dna-directors" style="list-style:none; padding:0; display:flex; gap:10px; flex-wrap:wrap;"></ul>
+        </div>
+
+        <div style="background:#222; padding:20px; border-radius:8px; margin-bottom: 30px;">
+          <h4 style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">Genre Distribution</h4>
+          <canvas id="dna-chart" width="800" height="200"
+            style="width:100%; max-width:800px; height:200px; background:#111; border-radius:4px;"></canvas>
+        </div>
+
+        <div style="text-align: center;">
+          <button id="generate-share-btn" class="save-btn"
+            style="background:#3498db; padding: 12px 24px; font-size: 1.1rem;"><i class="fas fa-download"></i> Generate
+            Share Card</button>
+        </div>
+
+        <canvas id="dna-share-canvas" width="600" height="800" style="display:none;"></canvas>
+      </div>
+    </section>
+
+    <div id="review-modal" class="modal">
+      <div class="modal-content">
+        <span id="close-modal" class="close">&times;</span>
+        <h2 id="modal-title"></h2>
+        <img id="modal-poster" src="" alt="Poster">
+        <div class="rating-system">
+          <p>Scene Tags:</p>
+          <div id="modal-tags" class="tag-list"></div>
+          <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+            <input type="text" id="new-tag-input" placeholder="Add a scene tag... (e.g. courtroom)">
+            <button id="add-tag-btn" class="save-btn" style="flex: 0 0 60px; padding: 5px;">Add</button>
+          </div>
+
+          <p>Rate this movie:</p>
+          <div id="star-container"></div>
+          <p>Your review:</p>
+          <textarea id="review-text" maxlength="300"></textarea>
+          <div id="char-count">0/300</div>
+          <button id="save-review" class="save-btn">Save</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Decision Modal -->
-  <div id="decision-modal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-      <span id="close-decision-modal" class="close">&times;</span>
-      <h2 id="decision-modal-title" class="section-title">Decision Mode</h2>
-      <div class="decision-form">
-        <label>Mood:
-          <select id="decision-mood">
-            <option value="Comfort">Comfort</option>
-            <option value="Exciting">Exciting</option>
-            <option value="Thoughtful">Thoughtful</option>
-            <option value="Laugh">Laugh</option>
-          </select>
-        </label>
-        <label>Available Time:
-          <select id="decision-time">
-            <option value="90">&lt;= 90 mins</option>
-            <option value="120">&lt;= 120 mins</option>
-            <option value="999">&gt; 120 mins</option>
-          </select>
-        </label>
-        <label>Company:
-          <select id="decision-company">
-            <option value="Alone">Alone</option>
-            <option value="Couple">Couple</option>
-            <option value="Family">Family</option>
-          </select>
-        </label>
-        <button id="get-recommendations-btn" class="save-btn" style="margin-top: 15px;">Get Recommendations</button>
+    <!-- Decision Modal -->
+    <div id="decision-modal" class="modal">
+      <div class="modal-content" style="max-width: 600px;">
+        <span id="close-decision-modal" class="close">&times;</span>
+        <h2 id="decision-modal-title" class="section-title">Decision Mode</h2>
+        <div class="decision-form">
+          <label>Mood:
+            <select id="decision-mood">
+              <option value="Comfort">Comfort</option>
+              <option value="Exciting">Exciting</option>
+              <option value="Thoughtful">Thoughtful</option>
+              <option value="Laugh">Laugh</option>
+            </select>
+          </label>
+          <label>Available Time:
+            <select id="decision-time">
+              <option value="90">&lt;= 90 mins</option>
+              <option value="120">&lt;= 120 mins</option>
+              <option value="999">&gt; 120 mins</option>
+            </select>
+          </label>
+          <label>Company:
+            <select id="decision-company">
+              <option value="Alone">Alone</option>
+              <option value="Couple">Couple</option>
+              <option value="Family">Family</option>
+            </select>
+          </label>
+          <button id="get-recommendations-btn" class="save-btn" style="margin-top: 15px;">Get Recommendations</button>
+        </div>
+        <div id="decision-results" class="movie-grid" style="margin-top: 20px;"></div>
       </div>
-      <div id="decision-results" class="movie-grid" style="margin-top: 20px;"></div>
     </div>
-  </div>
 
-  <footer>
-    <p>&copy; 2025 CineSins</p>
-  </footer>
+    <footer>
+      <p>&copy; 2025 CineSins</p>
+    </footer>
 </body>
 
 </html>

@@ -282,3 +282,70 @@ export function computeCompatibility(personAMovies, personBMovies) {
         jsonString: JSON.stringify(resultObj, null, 2)
     };
 }
+
+export function computeUserAnalytics() {
+    const reviews = store.getReviews();
+    const allMovies = store.getAllMovies();
+    const reviewedIds = new Set(reviews.map(r => r.id));
+
+    const userMovies = allMovies.filter(m => reviewedIds.has(m.id || m.imdbID));
+
+    const genreCounts = {};
+    const directorCounts = {};
+    let totalRuntimeMins = 0;
+    let totalEmotional = 0;
+    let validEmotionalCount = 0;
+
+    userMovies.forEach(m => {
+        const genres = (m.genres || '').split(',').map(g => g.trim()).filter(Boolean);
+        genres.forEach(g => {
+            genreCounts[g] = (genreCounts[g] || 0) + 1;
+        });
+
+        const directors = (m.director || '').split(',').map(d => d.trim()).filter(Boolean);
+        directors.forEach(d => {
+            if (d !== "N/A") {
+                directorCounts[d] = (directorCounts[d] || 0) + 1;
+            }
+        });
+
+        const rt = parseInt((m.runtime || '0').replace(/\D/g, ''), 10);
+        if (!isNaN(rt) && rt > 0) {
+            totalRuntimeMins += rt;
+        }
+
+        if (m.metrics && m.metrics.emotionalIntensity !== undefined) {
+            totalEmotional += m.metrics.emotionalIntensity;
+            validEmotionalCount++;
+        }
+    });
+
+    const sortedGenres = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]);
+    const favoriteGenre = sortedGenres.length > 0 ? sortedGenres[0][0] : "N/A";
+
+    const sortedDirectors = Object.entries(directorCounts).sort((a, b) => b[1] - a[1]);
+    const top5Directors = sortedDirectors.slice(0, 5).map(d => d[0]);
+
+    const avgRuntime = userMovies.length > 0 ? Math.round(totalRuntimeMins / userMovies.length) : 0;
+
+    const avgEmotional = validEmotionalCount > 0 ? Math.round(totalEmotional / validEmotionalCount) : 0;
+    let moodTrend = "Neutral";
+    if (avgEmotional > 70) moodTrend = "Intense/Exciting";
+    else if (avgEmotional > 40) moodTrend = "Balanced";
+    else if (avgEmotional > 0) moodTrend = "Calm/Relaxed";
+    else moodTrend = "N/A";
+
+    const analytics = {
+        totalMoviesSaved: userMovies.length,
+        favoriteGenre,
+        genreCounts,
+        avgRuntime,
+        totalRuntimeMins,
+        top5Directors,
+        moodTrend,
+        avgEmotional
+    };
+
+    localStorage.setItem("cinemaDNA", JSON.stringify(analytics));
+    return analytics;
+}
