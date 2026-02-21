@@ -375,24 +375,47 @@ export const ui = {
 
             card.innerHTML = `
               <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
-              <div class="card-overlay">
-                <div class="movie-info">
+              <div class="card-overlay" style="z-index: 2;">
+                <div class="movie-info" style="pointer-events: none;">
                   <h3>${m.Title || m.title}</h3>
                   <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
                   <p class="plot-text">${m.Plot ? m.Plot : m.genres || "No description."}</p>
                   ${metricsHtml}
-                  <button class="review-btn" style="pointer-events: auto;"><i class="fas fa-plus"></i> Watchlist / Review</button>
+                  <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="pointer-events: auto; position: relative; z-index: 10;"><i class="fas fa-plus"></i> Watchlist / Review</button>
                 </div>
               </div>`;
-            const posterImg = card.querySelector("img");
-            card.querySelector(".review-btn").addEventListener("click", (e) => {
-                e.stopPropagation();
-                this.openModal(m, posterImg);
-            });
-            card.addEventListener("click", () => this.openModal(m, posterImg));
+
+            // Give the card an identifier to fetch the movie object during delegation
+            card.dataset.id = m.imdbID || m.id;
+
+            // Temporary store to easily map dataset ID to object
+            if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
+            this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+
             this.elements.movieResults.appendChild(card);
             cards.push(card);
         });
+
+        // Event Delegation Pattern for robustness
+        this.elements.movieResults.onclick = (e) => {
+            const btn = e.target.closest('.review-btn');
+            const card = e.target.closest('.movie-card');
+
+            if (btn && btn.dataset.action === "open-modal") {
+                const movieId = btn.dataset.id;
+                const movie = this.state.renderedMoviesMap[movieId];
+                const posterImg = btn.closest('.movie-card').querySelector('img');
+                if (movie) this.openModal(movie, posterImg);
+                return;
+            }
+
+            if (card) {
+                const movieId = card.dataset.id;
+                const movie = this.state.renderedMoviesMap[movieId];
+                const posterImg = card.querySelector('img');
+                if (movie) this.openModal(movie, posterImg);
+            }
+        };
 
         // GSAP ScrollTrigger Batch Animation
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && cards.length > 0) {
@@ -719,26 +742,46 @@ export const ui = {
             const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
             const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
             card.innerHTML = `
-          <img src="${cover}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
-          <div class="card-overlay">
-            <div class="movie-info">
-              <h3>${m.title || m.Title}</h3>
-              <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
-              <div class="gems-highlight">
-                <span>💎 Hidden Score: ${parseFloat(m.hiddenScore).toFixed(2)}</span>
-                <p style="margin:4px 0;">IMDb: ${m.imdbRating} | Votes: ${m.imdbVotes}</p>
-                <p class="explain-string">High rating, low votes.</p>
-              </div>
-              <button class="review-btn" style="pointer-events: auto;"><i class="fas fa-plus"></i> Add/Edit Review</button>
-            </div>
-          </div>`;
-            card.querySelector(".review-btn").addEventListener("click", (e) => {
-                e.stopPropagation();
-                Object.getPrototypeOf(this).openModal.call(this, m);
-            });
-            card.addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+              <img src="${cover}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
+              <div class="card-overlay" style="z-index: 2;">
+                <div class="movie-info" style="pointer-events: none;">
+                  <h3>${m.title || m.Title}</h3>
+                  <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
+                  <div class="gems-highlight">
+                    <span>💎 Hidden Score: ${parseFloat(m.hiddenScore).toFixed(2)}</span>
+                    <p style="margin:4px 0;">IMDb: ${m.imdbRating} | Votes: ${m.imdbVotes}</p>
+                    <p class="explain-string">High rating, low votes.</p>
+                  </div>
+                  <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="pointer-events: auto; position: relative; z-index: 10;"><i class="fas fa-plus"></i> Watchlist / Review</button>
+                </div>
+              </div>`;
+
+            card.dataset.id = m.imdbID || m.id;
+            if (!this.state.renderedGemsMap) this.state.renderedGemsMap = {};
+            this.state.renderedGemsMap[m.imdbID || m.id] = m;
+
             this.elements.hiddenGemsList.appendChild(card);
         });
+
+        this.elements.hiddenGemsList.onclick = (e) => {
+            const btn = e.target.closest('.review-btn');
+            const card = e.target.closest('.movie-card');
+
+            if (btn && btn.dataset.action === "open-modal") {
+                const movieId = btn.dataset.id;
+                const movie = this.state.renderedGemsMap[movieId];
+                const posterImg = btn.closest('.movie-card').querySelector('img');
+                if (movie) Object.getPrototypeOf(this).openModal.call(this, movie, posterImg);
+                return;
+            }
+
+            if (card) {
+                const movieId = card.dataset.id;
+                const movie = this.state.renderedGemsMap[movieId];
+                const posterImg = card.querySelector('img');
+                if (movie) Object.getPrototypeOf(this).openModal.call(this, movie, posterImg);
+            }
+        };
 
         // GSAP Stagger Animation for Hidden Gems
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && gems.length > 0) {
@@ -919,24 +962,43 @@ export const ui = {
 
             card.innerHTML = `
               <img src="${posterUrl}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
-              <div class="card-overlay">
-                <div class="movie-info">
+              <div class="card-overlay" style="z-index: 2;">
+                <div class="movie-info" style="pointer-events: none;">
                   <h3>${m.title || m.Title}</h3>
                   <p>${m.year || m.Year}</p>
-                  <button class="review-btn" style="pointer-events: auto; background: #e74c3c;"><i class="fas fa-trash"></i> Remove</button>
+                  <button class="review-btn" data-action="remove-watchlist" data-id="${m.imdbID || m.id}" style="pointer-events: auto; background: #e74c3c; position: relative; z-index: 10;"><i class="fas fa-trash"></i> Remove</button>
                 </div>
               </div>`;
 
-            card.querySelector(".review-btn").addEventListener("click", (e) => {
-                e.stopPropagation();
-                store.toggleWatchlist(m);
-                this.loadWatchlist();
-            });
-            card.addEventListener("click", () => this.openModal(m, card.querySelector("img")));
+            card.dataset.id = m.imdbID || m.id;
+            if (!this.state.renderedWatchlistMap) this.state.renderedWatchlistMap = {};
+            this.state.renderedWatchlistMap[m.imdbID || m.id] = m;
 
             this.elements.watchlistList.appendChild(card);
             cards.push(card);
         });
+
+        this.elements.watchlistList.onclick = (e) => {
+            const btn = e.target.closest('.review-btn');
+            const card = e.target.closest('.movie-card');
+
+            if (btn && btn.dataset.action === "remove-watchlist") {
+                const movieId = btn.dataset.id;
+                const movie = this.state.renderedWatchlistMap[movieId];
+                if (movie) {
+                    store.toggleWatchlist(movie);
+                    this.loadWatchlist();
+                }
+                return;
+            }
+
+            if (card) {
+                const movieId = card.dataset.id;
+                const movie = this.state.renderedWatchlistMap[movieId];
+                const posterImg = card.querySelector('img');
+                if (movie) this.openModal(movie, posterImg);
+            }
+        };
 
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && cards.length > 0) {
             gsap.registerPlugin(ScrollTrigger);
