@@ -107,6 +107,15 @@ nav a:hover {
   background: darkorange;
 }
 
+/* Movie Grid */
+#movie-results {
+  display: grid;
+  grid-template-columns: 1fr;
+  /* Mobile First: 1 column */
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-lg);
+}
+
 .movie-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -898,7 +907,21 @@ input:focus {
   transform: translateY(-1px);
 }
 
-/* Sections */
+/* Hero Section */
+.hero-section {
+  position: relative;
+  min-height: 40vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  padding: var(--spacing-xxl) var(--spacing-md);
+  background: radial-gradient(circle at center, rgba(30, 30, 35, 0.8) 0%, var(--bg-dark) 80%);
+  border-bottom: 1px solid var(--border-light);
+  z-index: 10;
+}
+
 /* Inputs */
 #compatibility input {
   background: rgba(0, 0, 0, 0.3) !important;
@@ -1069,37 +1092,136 @@ input:focus {
   }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    text-align: center;
+/* Responsive Queries */
+@media (min-width: 480px) {
+  #movie-results {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  #movie-results {
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  nav ul {
-    justify-content: center;
+  .dna-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .search-container {
+    flex-direction: row;
+  }
+
+  #search-btn {
+    width: auto;
+  }
+
+  nav ul {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  #movie-results {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .dna-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .search-container {
+    /* Sticky search on mobile */
+    position: sticky;
+    top: 80px;
+    /* Below the header */
+    z-index: 90;
+    background: rgba(5, 5, 5, 0.95);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--border-light);
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: var(--spacing-lg);
+  }
+
+  .header-content {
     flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-sm);
+  }
+
+  nav ul {
+    flex-direction: column;
+    gap: 10px;
   }
 
   .search-btn {
     padding: 15px;
+    font-size: 1.1rem;
   }
 
-  .movie-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+  input[type="text"] {
+    padding: 14px 20px;
+    font-size: 1rem;
+    /* Prevent iOS zoom */
   }
 
-  .floating-btn {
-    bottom: 15px;
-    right: 15px;
-    font-size: 0.9rem;
-    padding: 12px 20px;
+  /* Remove Hover-Only Interactions */
+  .card-overlay {
+    opacity: 1 !important;
+    /* Always show overlay on mobile */
+    background: linear-gradient(to top, var(--bg-card) 60%, transparent 100%) !important;
+    backdrop-filter: blur(4px) !important;
+    transform: translateY(10%) !important;
+    /* Move it down slightly so poster is partially visible */
   }
 
-  #compat-results {
-    padding: 15px !important;
+  .movie-card:hover .card-overlay {
+    transform: translateY(0) !important;
   }
+
+  .movie-info {
+    transform: translateY(10px) !important;
+    /* Keep text slightly down */
+  }
+
+  /* Bigger tap targets */
+  .review-actions button,
+  .spoiler-btn,
+  .save-btn,
+  .close {
+    min-height: 44px;
+    padding: 12px;
+  }
+}
+
+.movie-grid {
+  grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+}
+
+.floating-btn {
+  bottom: 15px;
+  right: 15px;
+  font-size: 0.9rem;
+  padding: 12px 20px;
+}
+
+#compat-results {
+  padding: 15px !important;
 }
