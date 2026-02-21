@@ -375,7 +375,7 @@ export const ui = {
 
             card.innerHTML = `
               <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
-              <div class="card-overlay" style="pointer-events: none;">
+              <div class="card-overlay">
                 <div class="movie-info">
                   <h3>${m.Title || m.title}</h3>
                   <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
@@ -720,7 +720,7 @@ export const ui = {
             const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
             card.innerHTML = `
           <img src="${cover}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
-          <div class="card-overlay" style="pointer-events: none;">
+          <div class="card-overlay">
             <div class="movie-info">
               <h3>${m.title || m.Title}</h3>
               <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
@@ -919,7 +919,7 @@ export const ui = {
 
             card.innerHTML = `
               <img src="${posterUrl}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
-              <div class="card-overlay" style="pointer-events: none;">
+              <div class="card-overlay">
                 <div class="movie-info">
                   <h3>${m.title || m.Title}</h3>
                   <p>${m.year || m.Year}</p>
