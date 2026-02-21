@@ -130,17 +130,17 @@ export const api = {
     },
 
     async fetchPopularMoviesBatch() {
-        const queries = ['Star', 'Batman', 'Avengers', 'Harry Potter', 'Matrix', 'Lord of the Rings', 'Spider', 'Jurassic', 'X-Men', 'Pirates'];
+        const queries = ['Star Wars', 'Batman', 'Avengers', 'Matrix'];
         let allResults = [];
         for (const q of queries) {
             const searchRes = await this.searchMovies(q);
             if (searchRes && searchRes.length) allResults.push(...searchRes);
         }
 
-        allResults = [...new Map(allResults.map(m => [m.imdbID, m])).values()].slice(0, 100);
+        allResults = [...new Map(allResults.map(m => [m.imdbID, m])).values()].slice(0, 25);
         const detailed = [];
-        for (let i = 0; i < allResults.length; i += 10) {
-            const batch = allResults.slice(i, i + 10);
+        for (let i = 0; i < allResults.length; i += 5) {
+            const batch = allResults.slice(i, i + 5);
             const batchDetails = await Promise.all(batch.map(m => this.fetchMovieById(m.imdbID)));
             for (const movie of batchDetails) {
                 if (movie && movie.id && movie.title) {
