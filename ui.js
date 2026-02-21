@@ -363,22 +363,27 @@ export const ui = {
         card.className = "movie-card";
         card.innerHTML = `
           <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" alt="${m.Title || m.title}">
-          <div class="card-overlay">
+          <div class="card-overlay" style="pointer-events: none;">
             <div class="movie-info">
               <h3>${m.Title || m.title}</h3>
               <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
               <p class="plot-text">${m.Plot ? m.Plot : m.genres || "No description."}</p>
               ${metricsHtml}
-              <button class="review-btn"><i class="fas fa-plus"></i> Watchlist / Review</button>
+              <button class="review-btn" style="pointer-events: auto;"><i class="fas fa-plus"></i> Watchlist / Review</button>
             </div>
           </div>`;
-        card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
+        const posterImg = card.querySelector("img");
+        card.querySelector(".review-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.openModal(m, posterImg);
+        });
+        card.addEventListener("click", () => this.openModal(m, posterImg));
         this.elements.movieResults.appendChild(card);
         observer.observe(card);
     });
 },
 
-    async openModal(movie) {
+    async openModal(movie, sourceImgElement = null) {
     this.state.currentMovie = movie;
     this.elements.modalTitle.textContent = movie.Title || movie.title;
     this.elements.modalPoster.src = movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/100";
@@ -392,7 +397,50 @@ export const ui = {
     this.elements.newTagInput.value = "";
     this.renderTags();
     this.renderStars();
+
     this.elements.modal.style.display = "flex";
+
+    // FLIP Animation Logic
+    if (sourceImgElement && this.elements.modalPoster) {
+        // 1. FIRST: Get initial state
+        const first = sourceImgElement.getBoundingClientRect();
+        this.state.lastSourceImg = sourceImgElement; // Save for closing
+
+        // Force layout calculation
+        const modalContent = document.querySelector('.modal-content');
+        modalContent.style.opacity = '0'; // Hide content initially to only show poster flying
+
+        requestAnimationFrame(() => {
+            // 2. LAST: Get final state
+            const last = this.elements.modalPoster.getBoundingClientRect();
+
+            // 3. INVERT: Calculate translation and scale
+            const deltaX = first.left - last.left;
+            const deltaY = first.top - last.top;
+            const deltaW = first.width / last.width;
+            const deltaH = first.height / last.height;
+
+            // Apply inverted transform instantly
+            this.elements.modalPoster.style.transformOrigin = 'top left';
+            this.elements.modalPoster.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
+            this.elements.modalPoster.style.transition = 'none';
+
+            requestAnimationFrame(() => {
+                // 4. PLAY: Animate to final state
+                this.elements.modalPoster.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+                this.elements.modalPoster.style.transform = 'none';
+
+                // Fade in rest of modal content slightly after
+                setTimeout(() => {
+                    modalContent.style.transition = 'opacity 0.4s ease';
+                    modalContent.style.opacity = '1';
+                }, 100);
+            });
+        });
+    } else {
+        // Fallback if no source image
+        document.querySelector('.modal-content').style.opacity = '1';
+    }
 },
 
     async renderTags() {
@@ -417,8 +465,36 @@ export const ui = {
     this.elements.newTagInput.value = "";
     this.renderTags();
 },
+
 closeReviewModal() {
-    this.elements.modal.style.display = "none";
+    const modalContent = document.querySelector('.modal-content');
+
+    // Reverse FLIP Animation if we have a source image
+    if (this.state.lastSourceImg && this.elements.modalPoster) {
+        const first = this.elements.modalPoster.getBoundingClientRect();
+        const last = this.state.lastSourceImg.getBoundingClientRect();
+
+        const deltaX = last.left - first.left;
+        const deltaY = last.top - first.top;
+        const deltaW = last.width / first.width;
+        const deltaH = last.height / first.height;
+
+        // Fade out modal text first
+        modalContent.style.opacity = '0';
+
+        // Animate poster back to grid position
+        this.elements.modalPoster.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+        this.elements.modalPoster.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
+
+        setTimeout(() => {
+            this.elements.modal.style.display = "none";
+            this.elements.modalPoster.style.transform = 'none'; // reset
+            this.elements.modalPoster.style.transition = 'none'; // reset
+            this.state.lastSourceImg = null;
+        }, 400); // Wait for transition
+    } else {
+        this.elements.modal.style.display = "none";
+    }
 },
 
 renderStars() {
