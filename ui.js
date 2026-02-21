@@ -190,9 +190,10 @@ export const ui = {
                 storeCompatResult.suggestedMovies.forEach(m => {
                     const card = document.createElement("div");
                     card.className = "movie-card";
-                    const cover = m.Poster !== "N/A" && m.Poster ? m.Poster : m.poster && m.poster !== "N/A" ? m.poster : "https://via.placeholder.com/300x450";
+                    const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+                    const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
                     card.innerHTML = `
-            <img src="${cover}" alt="">
+            <img src="${cover}" alt="" onerror="this.src='${fallback}'">
             <div class="movie-info">
               <h3>${m.title || m.Title}</h3>
               <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
@@ -358,8 +359,12 @@ export const ui = {
             card.style.opacity = "0";
             card.style.transform = "translateY(30px)";
 
+            // Robust Poster URL Logic
+            const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+            const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+
             card.innerHTML = `
-              <img src="${m.Poster !== "N/A" ? m.Poster : "https://via.placeholder.com/300x450"}" alt="${m.Title || m.title}">
+              <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
               <div class="card-overlay" style="pointer-events: none;">
                 <div class="movie-info">
                   <h3>${m.Title || m.title}</h3>
@@ -400,7 +405,10 @@ export const ui = {
     async openModal(movie, sourceImgElement = null) {
         this.state.currentMovie = movie;
         this.elements.modalTitle.textContent = movie.Title || movie.title;
-        this.elements.modalPoster.src = movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/100";
+        const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+        const posterUrl = (movie.Poster && movie.Poster !== "N/A") ? movie.Poster : (movie.poster && movie.poster !== "N/A") ? movie.poster : fallback;
+        this.elements.modalPoster.src = posterUrl;
+        this.elements.modalPoster.onerror = function () { this.src = fallback; };
 
         const { store } = await import('./store.js');
         const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));

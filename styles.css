@@ -142,14 +142,14 @@ nav a:hover {
   margin: var(--spacing-xl) 0;
 }
 
-.search-box {
+.search-container {
   display: flex;
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 auto;
   gap: var(--spacing-sm);
 }
 
-.search-box input {
+.search-container input {
   flex: 1;
   padding: 16px 20px;
   border: 1px solid var(--border-light);
@@ -160,13 +160,13 @@ nav a:hover {
   transition: all 0.4s var(--transition-cinematic);
 }
 
-.search-box input:focus {
+.search-container input:focus {
   outline: none;
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-.search-box button {
+.search-container button {
   padding: 16px 30px;
   background: var(--text-main);
   border: none;
@@ -178,7 +178,7 @@ nav a:hover {
   transition: transform 0.4s var(--transition-cinematic), background 0.4s var(--transition-cinematic);
 }
 
-.search-box button:hover {
+.search-container button:hover {
   background: #fff;
   transform: scale(1.05);
 }
