@@ -666,8 +666,9 @@ export const ui = {
     },
 
     async loadHiddenGems() {
-        this.elements.hiddenGemsList.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+        const container = this.elements.hiddenGemsList;
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; width: 100%; text-align: center; padding: 60px 20px;">
                 <i class="fas fa-gem fa-spin" style="font-size: 3rem; color: var(--accent-secondary); margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(0,229,255,0.5));"></i>
                 <h3 style="color: #fff; margin-bottom: 10px;">Mining Hidden Gems...</h3>
                 <p style="color: var(--text-muted); font-size: 0.9rem;">Please wait while we analyze movie data to find high-rated gems with low popularity.</p>
@@ -675,7 +676,11 @@ export const ui = {
         `;
         const { store } = await import('./store.js');
         const gems = await store.getHiddenGems();
-        this.elements.hiddenGemsList.innerHTML = gems.length ? "" : "<p>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
+
+        container.innerHTML = gems.length ? "" : "<p style='grid-column: 1 / -1; width: 100%; text-align: center;'>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
+
+        // Remove .movie-grid from index.html manually next, we create it dynamically here or we just apply it to the container instead
+        container.classList.add("movie-grid"); // Just to be safe if it was missing
         gems.forEach(m => {
             const card = document.createElement("div");
             card.className = "movie-card";
