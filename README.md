@@ -34,6 +34,16 @@ API: OMDb API
 
 Storage: LocalStorage (for user reviews & search history)
 
+## Development / Run Instructions
+
+1. **Local Server Required**: Because the app uses ES modules (`<script type="module">`), opening `index.html` directly from the filesystem (`file://`) may result in CORS errors depending on your browser.
+2. **Start a server**: 
+   - You can run `npx serve .` using Node.js
+   - Or `python -m http.server 8000` using Python
+   - Or use the "Live Server" extension in VS Code.
+3. **View the App**: Open your browser at `http://localhost:8000` (or the port specified by your server).
+4. **Developer Testing**: Open the browser console. You will see a test log demonstrating that the `api.fetchMovieByTitle('Inception')` module function fetches and returns a normalized movie object. The `api` object is exposed globally so you can test search commands directly, e.g., `await api.fetchMovieByTitle('The Matrix')`.
+
 
 ## Future Improvements
 🔐 User login system with authentication
