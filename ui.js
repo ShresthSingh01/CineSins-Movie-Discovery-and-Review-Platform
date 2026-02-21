@@ -37,6 +37,7 @@ export const ui = {
             closeModal: document.getElementById("close-modal"),
             modalTitle: document.getElementById("modal-title"),
             modalPoster: document.getElementById("modal-poster"),
+            modalPlot: document.getElementById("modal-plot"),
             modalTags: document.getElementById("modal-tags"),
             newTagInput: document.getElementById("new-tag-input"),
             addTagBtn: document.getElementById("add-tag-btn"),
@@ -231,10 +232,14 @@ export const ui = {
         // Decision Mode Events
         this.elements.decisionBtn.onclick = () => {
             this.elements.decisionModal.style.display = "flex";
+            setTimeout(() => this.elements.decisionModal.classList.add("active"), 10);
             this.elements.decisionResults.innerHTML = "";
         };
         this.elements.closeDecisionModal.onclick = () => {
-            this.elements.decisionModal.style.display = "none";
+            this.elements.decisionModal.classList.remove("active");
+            setTimeout(() => {
+                this.elements.decisionModal.style.display = "none";
+            }, 400);
         };
         this.elements.getRecommendationsBtn.onclick = async () => {
             const options = {
@@ -284,14 +289,19 @@ export const ui = {
             ${metricsHtml}
             <button class="review-btn" style="margin-top: 10px;">Add/Edit Review</button>
           </div>`;
-                card.querySelector(".review-btn").addEventListener("click", () => Object.getPrototypeOf(this).openModal.call(this, m));
+                card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
                 this.elements.decisionResults.appendChild(card);
             });
         };
 
         window.onclick = e => {
             if (e.target === this.elements.modal) this.closeReviewModal();
-            if (e.target === this.elements.decisionModal) this.elements.decisionModal.style.display = "none";
+            if (e.target === this.elements.decisionModal) {
+                this.elements.decisionModal.classList.remove("active");
+                setTimeout(() => {
+                    this.elements.decisionModal.style.display = "none";
+                }, 400);
+            }
         };
     },
 
@@ -366,8 +376,10 @@ export const ui = {
             card.className = "movie-card";
 
             // Initial styling for GSAP to animate from
-            card.style.opacity = "0";
-            card.style.transform = "translateY(30px)";
+            if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+                card.style.opacity = "0";
+                card.style.transform = "translateY(30px)";
+            }
 
             // Robust Poster URL Logic
             const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
@@ -379,7 +391,7 @@ export const ui = {
                 <div class="movie-info" style="pointer-events: none;">
                   <h3>${m.Title || m.title}</h3>
                   <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
-                  <p class="plot-text">${m.Plot ? m.Plot : m.genres || "No description."}</p>
+                  <p class="plot-text" style="font-size: 0.85rem; margin-top: 5px; opacity: 0.8; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">${m.plot || m.Plot || m.genres || "No description."}</p>
                   ${metricsHtml}
                   <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="pointer-events: auto; position: relative; z-index: 10;"><i class="fas fa-plus"></i> Watchlist / Review</button>
                 </div>
@@ -443,6 +455,8 @@ export const ui = {
         this.elements.modalPoster.src = posterUrl;
         this.elements.modalPoster.onerror = function () { this.src = fallback; };
 
+        this.elements.modalPlot.textContent = movie.plot || movie.Plot || "No plot summary available.";
+
         const { store } = await import('./store.js');
         const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
         this.state.selectedRating = saved ? saved.rating : 0;
@@ -464,48 +478,9 @@ export const ui = {
         this.renderStars();
 
         this.elements.modal.style.display = "flex";
+        setTimeout(() => this.elements.modal.classList.add("active"), 10);
 
-        // FLIP Animation Logic
-        if (sourceImgElement && this.elements.modalPoster) {
-            // 1. FIRST: Get initial state
-            const first = sourceImgElement.getBoundingClientRect();
-            this.state.lastSourceImg = sourceImgElement; // Save for closing
-
-            // Force layout calculation
-            const modalContent = document.querySelector('.modal-content');
-            modalContent.style.opacity = '0'; // Hide content initially to only show poster flying
-
-            requestAnimationFrame(() => {
-                // 2. LAST: Get final state
-                const last = this.elements.modalPoster.getBoundingClientRect();
-
-                // 3. INVERT: Calculate translation and scale
-                const deltaX = first.left - last.left;
-                const deltaY = first.top - last.top;
-                const deltaW = first.width / last.width;
-                const deltaH = first.height / last.height;
-
-                // Apply inverted transform instantly
-                this.elements.modalPoster.style.transformOrigin = 'top left';
-                this.elements.modalPoster.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
-                this.elements.modalPoster.style.transition = 'none';
-
-                requestAnimationFrame(() => {
-                    // 4. PLAY: Animate to final state
-                    this.elements.modalPoster.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-                    this.elements.modalPoster.style.transform = 'none';
-
-                    // Fade in rest of modal content slightly after
-                    setTimeout(() => {
-                        modalContent.style.transition = 'opacity 0.4s ease';
-                        modalContent.style.opacity = '1';
-                    }, 100);
-                });
-            });
-        } else {
-            // Fallback if no source image
-            document.querySelector('.modal-content').style.opacity = '1';
-        }
+        document.querySelector('.modal-content').style.opacity = '1';
     },
 
     async renderTags() {
@@ -534,32 +509,10 @@ export const ui = {
     closeReviewModal() {
         const modalContent = document.querySelector('.modal-content');
 
-        // Reverse FLIP Animation if we have a source image
-        if (this.state.lastSourceImg && this.elements.modalPoster) {
-            const first = this.elements.modalPoster.getBoundingClientRect();
-            const last = this.state.lastSourceImg.getBoundingClientRect();
-
-            const deltaX = last.left - first.left;
-            const deltaY = last.top - first.top;
-            const deltaW = last.width / first.width;
-            const deltaH = last.height / first.height;
-
-            // Fade out modal text first
-            modalContent.style.opacity = '0';
-
-            // Animate poster back to grid position
-            this.elements.modalPoster.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-            this.elements.modalPoster.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
-
-            setTimeout(() => {
-                this.elements.modal.style.display = "none";
-                this.elements.modalPoster.style.transform = 'none'; // reset
-                this.elements.modalPoster.style.transition = 'none'; // reset
-                this.state.lastSourceImg = null;
-            }, 400); // Wait for transition
-        } else {
+        this.elements.modal.classList.remove("active");
+        setTimeout(() => {
             this.elements.modal.style.display = "none";
-        }
+        }, 400);
     },
 
     renderStars() {
@@ -771,7 +724,7 @@ export const ui = {
                 const movieId = btn.dataset.id;
                 const movie = this.state.renderedGemsMap[movieId];
                 const posterImg = btn.closest('.movie-card').querySelector('img');
-                if (movie) Object.getPrototypeOf(this).openModal.call(this, movie, posterImg);
+                if (movie) this.openModal(movie, posterImg);
                 return;
             }
 
@@ -779,7 +732,7 @@ export const ui = {
                 const movieId = card.dataset.id;
                 const movie = this.state.renderedGemsMap[movieId];
                 const posterImg = card.querySelector('img');
-                if (movie) Object.getPrototypeOf(this).openModal.call(this, movie, posterImg);
+                if (movie) this.openModal(movie, posterImg);
             }
         };
 
