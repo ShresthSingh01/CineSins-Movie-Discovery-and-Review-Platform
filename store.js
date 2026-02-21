@@ -33,7 +33,12 @@ export const store = {
     },
 
     getAllMovies() {
-        return JSON.parse(localStorage.getItem("allMovies")) || [];
+        const movies = JSON.parse(localStorage.getItem("allMovies")) || [];
+        const validMovies = movies.filter(m => m && m.id && m.title);
+        if (validMovies.length !== movies.length) {
+            localStorage.setItem("allMovies", JSON.stringify(validMovies));
+        }
+        return validMovies;
     },
 
     saveMoviesBatch(movies) {

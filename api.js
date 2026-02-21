@@ -142,24 +142,12 @@ export const api = {
         for (let i = 0; i < allResults.length; i += 10) {
             const batch = allResults.slice(i, i + 10);
             const batchDetails = await Promise.all(batch.map(m => this.fetchMovieById(m.imdbID)));
-            for (const raw of batchDetails) {
-                if (raw) {
-                    detailed.push({
-                        id: raw.imdbID,
-                        title: raw.Title,
-                        year: raw.Year,
-                        genres: raw.Genre,
-                        runtime: raw.Runtime,
-                        director: raw.Director,
-                        actors: raw.Actors,
-                        poster: raw.Poster,
-                        imdbRating: raw.imdbRating,
-                        imdbVotes: raw.imdbVotes,
-                        rated: raw.Rated
-                    });
+            for (const movie of batchDetails) {
+                if (movie && movie.id && movie.title) {
+                    detailed.push(movie);
                 }
             }
         }
-        return detailed.map(m => ({ ...m, metrics: this.computeMetrics(m) }));
+        return detailed;
     }
 };
