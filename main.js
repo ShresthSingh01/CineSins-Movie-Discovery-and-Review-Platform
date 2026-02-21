@@ -11,6 +11,55 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log("Modules loaded successfully! 🚀");
     console.log("You can test the API and Decision Engine in the console.");
 
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        });
+    }
+
+    // Offline Badge Logic
+    const offlineBadge = document.getElementById('offline-badge');
+    const updateOnlineStatus = () => {
+        if (navigator.onLine) {
+            offlineBadge.style.display = 'none';
+        } else {
+            offlineBadge.style.display = 'inline-block';
+        }
+    };
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // Install Prompt Logic
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'inline-block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+            } else {
+                console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        }
+    });
+
     // Unit test demonstrating it returns a normalized movie object array with explanations
     (async function runTest() {
         console.log("--- Running Decision Engine Unit Test ---");
