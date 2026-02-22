@@ -1,5 +1,5 @@
-const CACHE_NAME = 'cinesins-cache-v1';
-const IMAGE_CACHE_NAME = 'cinesins-images-v1';
+const CACHE_NAME = 'cinesins-cache-v3';
+const IMAGE_CACHE_NAME = 'cinesins-images-v2';
 const MAX_IMAGE_CACHE_SIZE_MB = 20;
 
 const APP_SHELL = [
@@ -81,28 +81,44 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Handle other requests (App Shell + API)
-    event.respondWith(
-        caches.match(event.request).then(response => {
-            // If we have it in cache, return it
-            if (response) {
-                return response;
-            }
+    // Handle other requests (App Shell + API + External)
+    event.respondWith((async () => {
+        const isAppShell = APP_SHELL.some(path => url.pathname.endsWith(path.replace('./', '')));
 
-            // Otherwise fetch from network
-            return fetch(event.request).then(networkResponse => {
-                // Cache OMDB api responses (movies cache)
-                if (url.hostname.includes('omdbapi.com') && networkResponse.status === 200) {
-                    const resClone = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, resClone);
-                    });
+        if (isAppShell) {
+            try {
+                const networkResponse = await fetch(event.request);
+                if (networkResponse && networkResponse.status === 200) {
+                    const cache = await caches.open(CACHE_NAME);
+                    cache.put(event.request, networkResponse.clone());
+                    return networkResponse;
+                }
+            } catch (err) { }
+            const cachedResponse = await caches.match(event.request);
+            if (cachedResponse) return cachedResponse;
+            return new Response("Offline Mode", { status: 503, statusText: "Offline" });
+        }
+
+        if (url.hostname.includes('omdbapi.com')) {
+            const cachedResponse = await caches.match(event.request);
+            if (cachedResponse) return cachedResponse;
+            try {
+                const networkResponse = await fetch(event.request);
+                if (networkResponse && networkResponse.status === 200) {
+                    const cache = await caches.open(CACHE_NAME);
+                    cache.put(event.request, networkResponse.clone());
                 }
                 return networkResponse;
-            }).catch(() => {
-                // Offline fallback
+            } catch (err) {
                 return new Response("Offline Mode", { status: 503, statusText: "Offline" });
-            });
-        })
-    );
+            }
+        }
+
+        // Everything else (CDN resources like GSAP, FontAwesome) Network First
+        try {
+            return await fetch(event.request);
+        } catch (err) {
+            return caches.match(event.request);
+        }
+    })());
 });

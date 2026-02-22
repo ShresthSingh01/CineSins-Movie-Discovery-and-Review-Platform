@@ -33,7 +33,8 @@ export const api = {
                     actors: raw.Actors,
                     poster: raw.Poster,
                     imdbRating: raw.imdbRating,
-                    imdbVotes: raw.imdbVotes
+                    imdbVotes: raw.imdbVotes,
+                    plot: raw.Plot
                 };
                 const finalMovie = { ...movie, metrics: this.computeMetrics(movie) };
                 cache.set(`movie_${id}`, finalMovie);
@@ -122,7 +123,8 @@ export const api = {
                 actors: raw.Actors,
                 poster: raw.Poster,
                 imdbRating: raw.imdbRating,
-                imdbVotes: raw.imdbVotes
+                imdbVotes: raw.imdbVotes,
+                plot: raw.Plot
             };
             return { ...movie, metrics: this.computeMetrics(movie) };
         }
