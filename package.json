@@ -1,0 +1,14 @@
+{
+    "name": "cinemadna",
+    "version": "1.0.0",
+    "description": "CinemaDNA — A privacy-first, offline-first movie analytics & personality product",
+    "type": "module",
+    "scripts": {
+        "start": "npx serve .",
+        "build": "echo \"Build step placeholder\"",
+        "test:smoke": "echo \"Smoke test placeholder\""
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}

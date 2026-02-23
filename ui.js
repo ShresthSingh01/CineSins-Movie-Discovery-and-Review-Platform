@@ -1,5 +1,6 @@
 import { api } from './api.js';
 import { store } from './store.js';
+import { config } from './config.js';
 
 export const ui = {
     elements: {},
@@ -8,7 +9,37 @@ export const ui = {
         selectedRating: 0
     },
 
+    applyFeatureFlags() {
+        if (!config.FEATURES.sceneTags) {
+            const tagsContainer = document.getElementById("modal-tags")?.parentElement;
+            if (tagsContainer) tagsContainer.style.display = "none";
+        }
+        if (!config.FEATURES.watchNow) {
+            const watchBtn = document.getElementById("watch-now-btn");
+            if (watchBtn) watchBtn.style.display = "none";
+        }
+        if (!config.FEATURES.neonUI) {
+            // Can toggle off particles or specific glowing classes if needed
+            const particles = document.getElementById("particles-container");
+            if (particles) particles.style.display = "none";
+        }
+        if (!config.FEATURES.sceneTags) {
+            // Since sceneTags is false, we can also disable the carousel if that falls under it, or create a new flag.
+            // The prompt said: "Disable/flag for later: Scene Carousel... { FEATURES: { sceneTags: false, watchNow: false, compatibility: false, neonUI: false } }"
+            // Let's assume sceneTags flag covers carousel, or we add sceneCarousel to config.
+            // Since config only mentioned 4 keys, let's just piggyback or hide carousel by default.
+            const carousel = document.getElementById("modal-carousel");
+            if (carousel) carousel.style.display = "none";
+        }
+        if (!config.FEATURES.compatibility) {
+            const compatSection = document.getElementById("compatibility");
+            if (compatSection) compatSection.style.display = "none";
+        }
+    },
+
     init() {
+        this.applyFeatureFlags();
+
         this.elements = {
             searchInput: document.getElementById("search-input"),
             searchBtn: document.getElementById("search-btn"),
@@ -27,9 +58,9 @@ export const ui = {
             hiddenGemsList: document.getElementById("hidden-gems-list"),
             cinemadnaList: document.getElementById("dna-directors"),
             dnaGenre: document.getElementById("dna-genre"),
-            dnaRuntime: document.getElementById("dna-runtime"),
+            dnaRating: document.getElementById("dna-rating"),
             dnaMood: document.getElementById("dna-mood"),
-            dnaWatchtime: document.getElementById("dna-watchtime"),
+            dnaReviews: document.getElementById("dna-reviews"),
             dnaChart: document.getElementById("dna-chart"),
             generateShareBtn: document.getElementById("generate-share-btn"),
             dnaShareCanvas: document.getElementById("dna-share-canvas"),
@@ -38,6 +69,11 @@ export const ui = {
             modalTitle: document.getElementById("modal-title"),
             modalPoster: document.getElementById("modal-poster"),
             modalPlot: document.getElementById("modal-plot"),
+            modalCarousel: document.getElementById("modal-carousel"),
+            carouselTrack: document.getElementById("carousel-track"),
+            carouselPrev: document.getElementById("carousel-prev"),
+            carouselNext: document.getElementById("carousel-next"),
+            carouselDots: document.getElementById("carousel-dots"),
             modalTags: document.getElementById("modal-tags"),
             newTagInput: document.getElementById("new-tag-input"),
             addTagBtn: document.getElementById("add-tag-btn"),
@@ -46,6 +82,7 @@ export const ui = {
             charCount: document.getElementById("char-count"),
             saveBtn: document.getElementById("save-review"),
             watchlistBtn: document.getElementById("watchlist-btn"),
+            watchNowBtn: document.getElementById("watch-now-btn"),
             importTagsBtn: document.getElementById("import-tags-btn"),
             exportTagsBtn: document.getElementById("export-tags-btn"),
             importFile: document.getElementById("import-file"),
@@ -54,7 +91,8 @@ export const ui = {
             compatScore: document.getElementById("compat-score"),
             compatGenres: document.getElementById("compat-genres"),
             compatMoviesList: document.getElementById("compat-movies-list"),
-            compatJson: document.getElementById("compat-json")
+            generateCompatShareBtn: document.getElementById("generate-compat-share-btn"),
+            compatShareCanvas: document.getElementById("compat-share-canvas")
         };
 
         this.setupNavigation();
@@ -64,9 +102,31 @@ export const ui = {
     },
 
     setupNavigation() {
+        const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+        const mainNav = document.getElementById("main-nav");
+
+        if (mobileMenuBtn && mainNav) {
+            mobileMenuBtn.addEventListener("click", () => {
+                const isActive = mainNav.classList.toggle("active");
+                mobileMenuBtn.innerHTML = isActive ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+            });
+        }
+
         document.querySelectorAll("nav a[data-section]").forEach(link => {
             link.addEventListener("click", e => {
                 e.preventDefault();
+
+                // Close mobile menu on click
+                if (mainNav && mainNav.classList.contains("active")) {
+                    mainNav.classList.remove("active");
+                    if (mobileMenuBtn) mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+
+                if (link.dataset.section === "decision-mode") {
+                    document.getElementById("decision-modal").classList.add("active");
+                    return;
+                }
+
                 document.querySelectorAll("nav a[data-section]").forEach(a => a.classList.remove("active"));
                 link.classList.add("active");
                 document.querySelectorAll(".page-section").forEach(sec => sec.classList.remove("active"));
@@ -179,37 +239,46 @@ export const ui = {
                     return;
                 }
 
-                const { store } = await import('./store.js');
+                const { store, computeCompatibility } = await import('./store.js');
                 // Pre-seed if needed before calling compatibility
                 if (store.getAllMovies().length < 50) {
                     await store.seedMoviesIfNeeded();
                 }
 
-                const storeCompatResult = store.computeCompatibility([...moviesA], [...moviesB]);
+                const storeCompatResult = computeCompatibility([...moviesA], [...moviesB]);
 
                 this.elements.compatScore.textContent = storeCompatResult.percentage;
                 this.elements.compatGenres.textContent = storeCompatResult.commonGenres.length ? storeCompatResult.commonGenres.join(', ') : "None";
-                this.elements.compatJson.value = storeCompatResult.jsonString;
-
                 this.elements.compatMoviesList.innerHTML = storeCompatResult.suggestedMovies.length ? "" : "<p>No suggestions found.</p>";
                 storeCompatResult.suggestedMovies.forEach(m => {
                     const card = document.createElement("div");
                     card.className = "movie-card";
                     const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
                     const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+
                     card.innerHTML = `
-            <img src="${cover}" alt="" onerror="this.src='${fallback}'">
-            <div class="movie-info">
-              <h3>${m.title || m.Title}</h3>
-              <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
-              <div class="metrics-container" style="background: rgba(52, 152, 219, 0.2); border-left: 3px solid #3498db;">
-                <p class="explain-string" style="color: #fff; margin-top: 0;">Perfect Joint Pick</p>
-              </div>
-              <button class="review-btn" style="margin-top:auto">View Details</button>
-            </div>`;
+              <img src="${cover}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
+              <div class="card-overlay" style="z-index: 2;">
+                <div class="movie-info" style="pointer-events: none;">
+                  <h3>${m.title || m.Title}</h3>
+                  <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
+                  <p class="plot-text" style="font-size: 0.85rem; margin-top: 5px; opacity: 0.8; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">${m.plot || m.Plot || m.genres || "No description."}</p>
+                  <p class="explain-string" style="color: #2ecc71; margin-top: 5px; font-weight: bold;">Perfect Joint Pick</p>
+                  <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="pointer-events: auto; position: relative; z-index: 10;"><i class="fas fa-plus"></i> Watchlist / Review</button>
+                </div>
+              </div>`;
+
+                    card.dataset.id = m.imdbID || m.id;
+                    if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
+                    this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+
                     card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
                     this.elements.compatMoviesList.appendChild(card);
                 });
+
+                this.elements.generateCompatShareBtn.onclick = () => {
+                    this.generateCompatShareCard(storeCompatResult);
+                };
 
                 this.elements.compatResults.style.display = "block";
             } catch (err) {
@@ -230,18 +299,21 @@ export const ui = {
         };
 
         // Decision Mode Events
-        this.elements.decisionBtn.onclick = () => {
+        this.elements.decisionBtn.addEventListener('click', (e) => {
+            if (e) e.preventDefault();
             this.elements.decisionModal.style.display = "flex";
             setTimeout(() => this.elements.decisionModal.classList.add("active"), 10);
             this.elements.decisionResults.innerHTML = "";
-        };
-        this.elements.closeDecisionModal.onclick = () => {
+        });
+        this.elements.closeDecisionModal.addEventListener('click', (e) => {
+            if (e) e.preventDefault();
             this.elements.decisionModal.classList.remove("active");
             setTimeout(() => {
                 this.elements.decisionModal.style.display = "none";
             }, 400);
-        };
-        this.elements.getRecommendationsBtn.onclick = async () => {
+        });
+        this.elements.getRecommendationsBtn.addEventListener('click', async (e) => {
+            if (e) e.preventDefault();
             const options = {
                 mood: this.elements.decisionMood.value,
                 time: parseInt(this.elements.decisionTime.value, 10),
@@ -250,7 +322,7 @@ export const ui = {
 
             this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
 
-            const { decisionEngine } = await import('./store.js');
+            const { store, decisionEngine } = await import('./store.js');
             const recommendations = await decisionEngine(options);
 
             this.elements.decisionResults.innerHTML = "";
@@ -258,41 +330,54 @@ export const ui = {
                 this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
                 return;
             }
+
             recommendations.forEach(m => {
-                const metricsHtml = m.metrics ? `
-                  <div class="metrics-container">
-                    <div class="metric-row">
-                      <span class="metric-label">Emotional</span>
-                      <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
-                      <span class="metric-value">${m.metrics.emotionalIntensity}</span>
-                    </div>
-                    <div class="metric-row">
-                      <span class="metric-label">Cognitive</span>
-                      <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
-                      <span class="metric-value">${m.metrics.cognitiveLoad}</span>
-                    </div>
-                    <div class="metric-row">
-                      <span class="metric-label">Comfort</span>
-                      <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
-                      <span class="metric-value">${m.metrics.comfortScore}</span>
-                    </div>
-                  </div>
-                ` : '';
+                const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+                const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+
+                // Create a sleek mini badge for the dominant metric
+                const badgeColor = m.dominantMetric === 'Intensity' ? 'var(--accent-secondary)' :
+                    m.dominantMetric === 'Thought-Provoking' ? 'var(--accent-primary)' : 'var(--accent-tertiary)';
+
+                const badgeHtml = m.metrics ?
+                    `<span style="background: ${badgeColor}; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; font-family: var(--font-heading); display: inline-block; margin-bottom: 8px;">
+                        Highest Metric: ${m.dominantMetric} (${m.metrics[m.dominantMetric === 'Intensity' ? 'emotionalIntensity' : m.dominantMetric === 'Thought-Provoking' ? 'cognitiveLoad' : 'comfortScore']})
+                    </span>` : '';
 
                 const card = document.createElement("div");
                 card.className = "movie-card";
                 card.innerHTML = `
-          <div class="movie-info">
-            <h3>${m.title}</h3>
-            <p>${m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtime}</p>
-            <p class="explain-string">${m.explain}</p>
-            ${metricsHtml}
-            <button class="review-btn" style="margin-top: 10px;">Add/Edit Review</button>
-          </div>`;
-                card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
+                  <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
+                  <div class="card-overlay" style="z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; text-align: left; padding: 20px;">
+                    <div style="background: rgba(15, 17, 21, 0.95); padding: 15px; border-radius: 8px; width: 100%; border: 1px solid var(--border-light); backdrop-filter: blur(8px);">
+                        ${badgeHtml}
+                        <h3 style="margin-bottom: 4px; font-size: 1.1rem;">${m.Title || m.title}</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+                            ${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtimeStr || m.runtime || "90 min"}
+                        </p>
+                        <p style="font-size: 0.85rem; line-height: 1.4; color: var(--text-light); margin-bottom: 15px; font-style: italic;">
+                            "${m.explain}"
+                        </p>
+                        <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="width: 100%; padding: 8px; font-size: 0.9rem;">
+                            <i class="fas fa-search"></i> Details
+                        </button>
+                    </div>
+                  </div>`;
+
+                // Event bindings
+                card.dataset.id = m.imdbID || m.id;
+                if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
+                this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+
+                card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m, card.querySelector('img')));
                 this.elements.decisionResults.appendChild(card);
             });
-        };
+        });
+
+        ["pa-1", "pa-2", "pa-3", "pb-1", "pb-2", "pb-3", "search-input"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) this.bindAutocomplete(el);
+        });
 
         window.onclick = e => {
             if (e.target === this.elements.modal) this.closeReviewModal();
@@ -303,6 +388,47 @@ export const ui = {
                 }, 400);
             }
         };
+    },
+
+    bindAutocomplete(inputNode) {
+        let debounceTimer;
+        const suggestionBox = document.createElement('div');
+        suggestionBox.className = 'autocomplete-suggestions';
+        inputNode.parentNode.insertBefore(suggestionBox, inputNode.nextSibling);
+
+        inputNode.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const query = inputNode.value.trim();
+            if (query.length < 3) {
+                suggestionBox.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                const results = await api.searchMovies(query);
+                if (results && results.length > 0) {
+                    suggestionBox.innerHTML = '';
+                    results.slice(0, 5).forEach(m => {
+                        const div = document.createElement('div');
+                        div.textContent = `${m.Title} (${m.Year})`;
+                        div.onclick = () => {
+                            inputNode.value = m.Title;
+                            suggestionBox.style.display = 'none';
+                        };
+                        suggestionBox.appendChild(div);
+                    });
+                    suggestionBox.style.display = 'block';
+                } else {
+                    suggestionBox.style.display = 'none';
+                }
+            }, 300);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target !== inputNode && e.target !== suggestionBox) {
+                suggestionBox.style.display = 'none';
+            }
+        });
     },
 
     async searchMovies() {
@@ -457,11 +583,21 @@ export const ui = {
 
         this.elements.modalPlot.textContent = movie.plot || movie.Plot || "No plot summary available.";
 
+        this.setupCarousel(movie);
+
         const { store } = await import('./store.js');
         const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
         this.state.selectedRating = saved ? saved.rating : 0;
         this.elements.reviewText.value = saved ? saved.text : "";
         this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
+
+        // Update Watch Now link
+        if (movie.watchLink) {
+            this.elements.watchNowBtn.href = movie.watchLink;
+        } else {
+            const movieTitle = movie.Title || movie.title;
+            this.elements.watchNowBtn.href = `https://www.google.com/search?q=where+to+watch+${encodeURIComponent(movieTitle)}+movie+online`;
+        }
 
         // Watchlist state
         const wl = store.getWatchlist().find(m => m.id === (movie.imdbID || movie.id));
@@ -479,8 +615,64 @@ export const ui = {
 
         this.elements.modal.style.display = "flex";
         setTimeout(() => this.elements.modal.classList.add("active"), 10);
+    },
 
-        document.querySelector('.modal-content').style.opacity = '1';
+    setupCarousel(movie) {
+        const scenes = movie.scenes && movie.scenes.length > 0 ? movie.scenes : [];
+
+        this.elements.carouselTrack.innerHTML = '';
+        this.elements.carouselDots.innerHTML = '';
+
+        if (scenes.length === 0) {
+            this.elements.modalCarousel.style.display = 'none';
+            return;
+        }
+
+        this.elements.modalCarousel.style.display = 'block';
+
+        scenes.forEach((url, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'carousel-slide';
+            slide.innerHTML = `<img src="${url}" alt="Scene ${index + 1}">`;
+            this.elements.carouselTrack.appendChild(slide);
+
+            const dot = document.createElement('div');
+            dot.className = index === 0 ? 'carousel-dot active' : 'carousel-dot';
+            dot.dataset.index = index;
+            dot.addEventListener('click', () => this.goToSlide(index));
+            this.elements.carouselDots.appendChild(dot);
+        });
+
+        this.state.currentSlide = 0;
+        this.state.totalSlides = mockScenes.length;
+        this.updateCarouselPosition();
+
+        this.elements.carouselPrev.onclick = () => this.prevSlide();
+        this.elements.carouselNext.onclick = () => this.nextSlide();
+    },
+
+    goToSlide(index) {
+        this.state.currentSlide = index;
+        this.updateCarouselPosition();
+    },
+
+    prevSlide() {
+        this.state.currentSlide = (this.state.currentSlide - 1 + this.state.totalSlides) % this.state.totalSlides;
+        this.updateCarouselPosition();
+    },
+
+    nextSlide() {
+        this.state.currentSlide = (this.state.currentSlide + 1) % this.state.totalSlides;
+        this.updateCarouselPosition();
+    },
+
+    updateCarouselPosition() {
+        const offset = -this.state.currentSlide * 100;
+        this.elements.carouselTrack.style.transform = `translateX(${offset}%)`;
+
+        Array.from(this.elements.carouselDots.children).forEach((dot, index) => {
+            dot.classList.toggle('active', index === this.state.currentSlide);
+        });
     },
 
     async renderTags() {
@@ -507,8 +699,6 @@ export const ui = {
     },
 
     closeReviewModal() {
-        const modalContent = document.querySelector('.modal-content');
-
         this.elements.modal.classList.remove("active");
         setTimeout(() => {
             this.elements.modal.style.display = "none";
@@ -529,7 +719,7 @@ export const ui = {
         }
     },
 
-    saveReview() {
+    async saveReview() {
         if (!this.state.currentMovie) return;
         const newReview = {
             id: this.state.currentMovie.imdbID || this.state.currentMovie.id,
@@ -538,15 +728,19 @@ export const ui = {
             text: this.elements.reviewText.value,
             date: new Date().toLocaleDateString()
         };
+        const { store } = await import('./store.js');
         store.saveReview(newReview);
+        store.saveMoviesBatch([this.state.currentMovie]);
+
         this.closeReviewModal();
         if (document.getElementById("reviews").classList.contains("active")) {
             this.loadUserReviews();
         }
     },
 
-    toggleWatchlist() {
+    async toggleWatchlist() {
         if (!this.state.currentMovie) return;
+        const { store } = await import('./store.js');
         const added = store.toggleWatchlist({
             id: this.state.currentMovie.imdbID || this.state.currentMovie.id,
             title: this.state.currentMovie.Title || this.state.currentMovie.title,
@@ -757,88 +951,190 @@ export const ui = {
     },
 
     async loadCinemaDNA() {
-        const { store } = await import('./store.js');
+        const { store, computeUserAnalytics } = await import('./store.js');
         const analytics = store.computeUserAnalytics();
+        if (!analytics || analytics.totalMoviesSaved === 0) {
+            const dnaGenre = document.getElementById("dna-genre");
+            const dnaRuntime = document.getElementById("dna-runtime");
+            const dnaTotalTime = document.getElementById("dna-total-time");
 
-        if (analytics.totalMoviesSaved === 0) {
-            this.elements.dnaGenre.textContent = "N/A";
-            this.elements.dnaRuntime.textContent = "0 min";
-            this.elements.dnaMood.textContent = "N/A";
-            this.elements.dnaWatchtime.textContent = "0h 0m";
+            if (dnaGenre) dnaGenre.textContent = "N/A";
+            if (dnaRuntime) dnaRuntime.textContent = "0 mins";
+            if (dnaTotalTime) dnaTotalTime.textContent = "0h 0m";
             this.elements.cinemadnaList.innerHTML = "<li>No movies saved yet. Write some reviews!</li>";
             this.drawDNAChart({});
             return;
         }
 
-        this.elements.dnaGenre.textContent = analytics.favoriteGenre;
-        this.elements.dnaRuntime.textContent = analytics.avgRuntime + " min";
-        this.elements.dnaMood.textContent = analytics.moodTrend;
+        const dnaGenre = document.getElementById("dna-genre");
+        const dnaRuntime = document.getElementById("dna-runtime");
+        const dnaTotalTime = document.getElementById("dna-total-time");
 
-        const hours = Math.floor(analytics.totalRuntimeMins / 60);
-        const mins = analytics.totalRuntimeMins % 60;
-        this.elements.dnaWatchtime.textContent = `${hours}h ${mins}m`;
+        if (dnaGenre) dnaGenre.textContent = analytics.favoriteGenre;
+        if (dnaRuntime) dnaRuntime.textContent = `${analytics.avgRuntime} mins`;
+        if (dnaTotalTime) dnaTotalTime.textContent = analytics.totalWatchTimeString;
 
         this.elements.cinemadnaList.innerHTML = "";
         analytics.top5Directors.forEach(d => {
             const li = document.createElement("li");
             li.textContent = d;
-            li.style.background = "#333";
-            li.style.padding = "5px 10px";
+            li.style.background = "var(--bg-dark)";
+            li.style.border = "1px solid var(--border-light)";
+            li.style.color = "var(--text-light)";
+            li.style.padding = "6px 14px";
             li.style.borderRadius = "20px";
-            li.style.fontSize = "0.9rem";
+            li.style.fontSize = "0.85rem";
+            li.style.fontFamily = "var(--font-heading)";
             this.elements.cinemadnaList.appendChild(li);
         });
 
+        // We'll hijack drawDNAChart to draw a sparkline of mood/genres if desired, 
+        // or just draw a simple bar chart of genres for now with the new palette.
         this.drawDNAChart(analytics.genreCounts);
         this.state.latestDNA = analytics;
     },
 
     drawDNAChart(genreCounts) {
-        const canvas = this.elements.dnaChart;
+        const canvas = document.getElementById("dna-chart");
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const entries = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        // We use genreCounts just to generate some fake volatility for the sparkline trend
+        const entries = Object.values(genreCounts);
         if (entries.length === 0) {
-            ctx.fillStyle = '#aaa';
-            ctx.font = '16px sans-serif';
+            ctx.fillStyle = '#9ca3af'; // var(--text-muted) fallback
+            ctx.font = '14px Inter, sans-serif';
             ctx.fillText("No data to display.", 20, 30);
             return;
         }
 
-        const maxCount = entries[0][1] || 1;
-        const barHeight = 15;
-        const gap = 10;
-        const startY = 20;
+        // Generate a smooth sparkline using genre counts to seed the curve points
+        const points = [];
+        const numPoints = Math.max(10, entries.length * 2);
+        let currentY = canvas.height / 2;
 
-        ctx.font = '14px sans-serif';
-        entries.forEach((entry, i) => {
-            const [genre, count] = entry;
-            const y = startY + i * (barHeight + gap);
+        for (let i = 0; i < numPoints; i++) {
+            const seed = entries[i % entries.length] || 1;
+            const volatility = (Math.random() - 0.5) * (seed * 5);
+            currentY = Math.max(10, Math.min(canvas.height - 10, currentY + volatility));
+            points.push({
+                x: (i / (numPoints - 1)) * canvas.width,
+                y: currentY
+            });
+        }
 
-            ctx.fillStyle = '#fff';
-            ctx.fillText(genre, 10, y + 12);
+        // Draw the smooth sparkline curve
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
 
-            const barWidth = (count / maxCount) * (canvas.width - 200);
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(150, y, barWidth, barHeight);
+        for (let i = 0; i < points.length - 1; i++) {
+            const xMid = (points[i].x + points[i + 1].x) / 2;
+            const yMid = (points[i].y + points[i + 1].y) / 2;
+            const cpX1 = (xMid + points[i].x) / 2;
+            const cpX2 = (xMid + points[i + 1].x) / 2;
+            ctx.quadraticCurveTo(cpX1, points[i].y, xMid, yMid);
+            ctx.quadraticCurveTo(cpX2, points[i + 1].y, points[i + 1].x, points[i + 1].y);
+        }
 
-            ctx.fillStyle = '#aaa';
-            ctx.fillText(count.toString(), 150 + barWidth + 10, y + 12);
-        });
+        ctx.strokeStyle = '#3b82f6'; // var(--accent-primary)
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // Add a subtle gradient fill under the line
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)'); // var(--accent-primary) with opacity
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.fillStyle = gradient;
+        ctx.fill();
     },
 
     generateShareCard(analytics) {
-        const canvas = this.elements.dnaShareCanvas;
+        const canvas = document.getElementById("dna-share-canvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        // Matte Background
+        ctx.fillStyle = '#181a20'; // var(--bg-card)
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Header
+        ctx.fillStyle = '#3b82f6'; // var(--accent-primary)
+        ctx.font = 'bold 50px Poppins, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("CinemaDNA", canvas.width / 2, 100);
+
+        ctx.fillStyle = '#9ca3af'; // var(--text-muted)
+        ctx.font = '24px Inter, sans-serif';
+        ctx.fillText("My Emotional Movie Profile", canvas.width / 2, 150);
+
+        // Divider
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(100, 200);
+        ctx.lineTo(700, 200);
+        ctx.stroke();
+
+        ctx.textAlign = 'left';
+
+        // Draw Row Helper
+        const drawRow = (label, val, y, color) => {
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '28px Inter, sans-serif';
+            ctx.fillText(label, 120, y);
+
+            ctx.fillStyle = color;
+            ctx.font = 'bold 36px Poppins, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(val, 680, y + 5);
+            ctx.textAlign = 'left';
+        };
+
+        // Key Stats
+        drawRow("Top Genre", analytics.favoriteGenre, 300, "#10b981"); // accent-tertiary
+        drawRow("Avg Runtime", analytics.avgRuntime + " min", 390, "#3b82f6"); // accent-primary
+        drawRow("Total Watched", analytics.totalWatchTimeString, 480, "#8b5cf6"); // accent-secondary
+        drawRow("Mood Trend", analytics.moodTrend, 570, "#f3f4f6"); // text-light
+
+        // Top Directors Section
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '28px Inter, sans-serif';
+        ctx.fillText("Top Directors:", 120, 700);
+
+        ctx.fillStyle = '#f3f4f6';
+        ctx.font = 'bold 28px Poppins, sans-serif';
+        const dirs = analytics.top5Directors.length ? analytics.top5Directors.join(', ') : "None";
+        ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 120, 750);
+
+        // Footer
+        ctx.fillStyle = '#4b5563'; // darker gray
+        ctx.font = '20px Inter, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("Generated by CineSins", canvas.width / 2, 1050);
+
+        // Trigger Download
+        const link = document.createElement('a');
+        link.download = `CinemaDNA_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    },
+
+    generateCompatShareCard(compatResult) {
+        const canvas = this.elements.compatShareCanvas;
         const ctx = canvas.getContext('2d');
 
         ctx.fillStyle = '#111111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = '#3498db';
+        ctx.fillStyle = '#e74c3c';
         ctx.font = 'bold 40px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText("My CinemaDNA", canvas.width / 2, 60);
+        ctx.fillText("Movie Compatibility", canvas.width / 2, 60);
 
         ctx.fillStyle = '#aaaaaa';
         ctx.font = 'italic 20px sans-serif';
@@ -851,36 +1147,33 @@ export const ui = {
         ctx.lineTo(550, 130);
         ctx.stroke();
 
-        ctx.textAlign = 'left';
+        ctx.textAlign = 'center';
 
-        const drawStat = (label, val, y, color) => {
-            ctx.fillStyle = '#888888';
-            ctx.font = '24px sans-serif';
-            ctx.fillText(label, 70, y);
+        ctx.fillStyle = '#888888';
+        ctx.font = '24px sans-serif';
+        ctx.fillText("Compatibility Score", canvas.width / 2, 200);
 
-            ctx.fillStyle = color;
-            ctx.font = 'bold 36px sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText(val, 530, y + 5);
-            ctx.textAlign = 'left';
-        };
+        ctx.fillStyle = '#e74c3c';
+        ctx.font = 'bold 64px sans-serif';
+        ctx.fillText(`${compatResult.percentage}%`, canvas.width / 2, 270);
 
-        drawStat("Favorite Genre", analytics.favoriteGenre, 200, "#e74c3c");
-        drawStat("Avg Runtime", analytics.avgRuntime + " min", 270, "#3498db");
-        drawStat("Mood Trend", analytics.moodTrend, 340, "#2ecc71");
+        ctx.fillStyle = '#888888';
+        ctx.font = '24px sans-serif';
+        ctx.fillText("Shared DNA Genres", canvas.width / 2, 360);
 
-        const hours = Math.floor(analytics.totalRuntimeMins / 60);
-        const mins = analytics.totalRuntimeMins % 60;
-        drawStat("Total Watch Time", `${hours}h ${mins}m`, 410, "#f1c40f");
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = 'bold 28px sans-serif';
+        const genres = compatResult.commonGenres.length ? compatResult.commonGenres.join(', ') : "None";
+        ctx.fillText(genres.length > 35 ? genres.substring(0, 32) + "..." : genres, canvas.width / 2, 410);
 
-        ctx.fillStyle = '#aaaaaa';
-        ctx.font = '22px sans-serif';
-        ctx.fillText("Top Directors:", 70, 500);
+        ctx.fillStyle = '#888888';
+        ctx.font = '24px sans-serif';
+        ctx.fillText("Top Joint Pick", canvas.width / 2, 530);
 
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 24px sans-serif';
-        const dirs = analytics.top5Directors.length ? analytics.top5Directors.join(', ') : "None";
-        ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 70, 540);
+        ctx.fillStyle = '#3498db';
+        ctx.font = 'bold 36px sans-serif';
+        const bestMovie = compatResult.suggestedMovies.length ? (compatResult.suggestedMovies[0].Title || compatResult.suggestedMovies[0].title) : "Unknown";
+        ctx.fillText(bestMovie.length > 25 ? bestMovie.substring(0, 22) + "..." : bestMovie, canvas.width / 2, 590);
 
         ctx.fillStyle = '#444444';
         ctx.font = '16px monospace';
@@ -888,7 +1181,7 @@ export const ui = {
         ctx.fillText("Generated on " + new Date().toLocaleDateString(), canvas.width / 2, 760);
 
         const link = document.createElement('a');
-        link.download = `CinemaDNA_${Date.now()}.png`;
+        link.download = `Compatibility_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     },
@@ -995,8 +1288,13 @@ export const ui = {
         ];
 
         const detailedMovies = await Promise.all(
-            popularMovies.map(title => api.fetchRawMovieByTitle(title))
+            popularMovies.map(title => api.fetchMovieByTitle(title))
         );
-        this.renderMovies(detailedMovies.filter(Boolean));
+        const validMovies = detailedMovies.filter(Boolean);
+
+        const { store } = await import('./store.js');
+        store.saveMoviesBatch(validMovies);
+
+        this.renderMovies(validMovies);
     }
 };

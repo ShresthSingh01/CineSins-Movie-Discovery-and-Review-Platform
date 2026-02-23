@@ -15,23 +15,32 @@ Takes your current *Mood*, *Available Time*, and *Company*, and computes the per
 **2. 📊 Emotional Metrics Engine**
 Computes deep film metrics (`emotionalIntensity`, `cognitiveLoad`, `comfortScore`) on-the-fly based on a movie's genres, runtime, and IMDb rating.
 
-**3. 🏷️ Scene Tags & Export**
-Tag specific scenes within a movie (e.g., "plot twist", "heist"). All tags are searchable globally and can be exported/imported as a JSON backup file.
+**3. 🎬 TMDb Integration & Scene Image Carousel**
+Now powered by **The Movie Database (TMDb)** for richer media data. Movie modals include an interactive "Scene Carousel" that automatically fetches and displays high-res backdrop images from the film.
 
-**4. 💎 Hidden Gems Discovery**
-Calculates a unique `Hidden Score` (`imdbRating / log(1 + imdbVotes)`) to uncover highly-rated but under-watched masterpieces from your cache.
+**4. 🛡️ Fail-Safe Dual API Architecture**
+Built for maximum uptime. If the primary TMDb API fails, rate-limits, or times out, the application intelligently catches the error and automatically falls back to the secondary **OMDb API** to ensure uninterrupted movie discovery.
 
-**5. 💖 Compatibility Mode**
+**5. 🍿 Smart "Watch Now" Streaming**
+Deep-links directly to local streaming providers (like Netflix, Prime, Hulu) by querying TMDb's `watch/providers` endpoint. If unavailable, falls back to an intelligent Google Search query.
+
+**6. 📱 Modern Glassmorphism & Responsive UI**
+A gorgeous, mobile-first responsive design. Features a sleek slide-in hamburger menu, precise CSS Grid layouts for complex forms, and perfectly aligned dual-action buttons that span elegantly across 320px screens.
+
+**7. 🎨 Vibing Neon Aesthetics & Animations**
+A "vibecoded", highly premium dark-mode aesthetic. Employs sharp neon pinks (`#ff0f7b`) and cyans (`#2df9fe`), infinitely animated text gradients, floating hover-state physics, and projecting drop-shadow pulses to create a living UI.
+
+**8. 💖 Compatibility Mode**
 Compare 3 favorite movies between two people. Computes a "Compatibility Score" based on genre/director overlap and emotional metric variance. Suggests 3 perfect joint "Date Night" movie picks and generates a shareable JSON blob.
 
-**6. 🧬 CinemaDNA Analytics Dashboard**
+**9. 🧬 CinemaDNA Analytics Dashboard**
 Your personal viewing analytics. Aggregates your reviews to compute your *Favorite Genre*, *Average Runtime*, *Top 5 Directors*, *Total Watch Time*, and an overall *Mood Trend*. Renders a custom bar chart on an HTML `<canvas>` and lets you generate a downloadable **Share Card (PNG)**.
 
-**7. 🕵️‍♂️ Anti-Spoiler Protection**
+**10. 🕵️‍♂️ Anti-Spoiler Protection**
 Automatically parses your written reviews for spoiler keywords (`ending`, `twist is`, `dies`, etc.). Automatically blurs out the spoiling sentences and places them behind an interactive "Allow Spoilers" toggle button.
 
-**8. 📱 Progressive Web App (PWA) & Offline Mode**
-Fully installable on desktop/mobile. Implements a Service Worker (`sw.js`) that caches the App Shell and intercepts API responses. Includes a smart 20MB LRU cache specifically for movie posters so you can browse your entire synced library without an internet connection. An "Offline Available" badge appears automatically when network is lost.
+**11. 🏷️ Progressive Web App (PWA) & Offline Cache**
+Fully installable on desktop/mobile. Implements a Service Worker (`sw.js`). Includes a smart 20MB LRU cache specifically for movie posters so you can browse your entire synced library offline.
 
 ---
 
@@ -92,11 +101,11 @@ Many features rely on a populated local database.
 
 ## 🎬 30-Second Demo Script (For Video Presentation)
 
-* **[0:00 - 0:05] Intro & PWA**: "Welcome to CineSins! Notice the 'Install App' button—this is a fully functional Progressive Web App. It works completely offline, caching API requests and posters as we browse."
-* **[0:05 - 0:10] Search & UX**: "Let's search for *Inception*. The UI is fast, responsive, and cinematic. I can open it, add custom 'Scene Tags' like *#dream-heist*, and quickly write a review."
-* **[0:10 - 0:15] Anti-Spoiler**: "If I try to ruin the movie by typing 'the ending was crazy because he dies', CineSins automatically detects the spoiler keyword and blurs the text on the Review feed to protect my friends."
-* **[0:15 - 0:20] Decision & Hidden Gems**: "Can't decide what to watch? 'Decision Mode' uses an AI-lite emotional metrics engine to pick a movie based on my current mood and time. We also have a 'Hidden Gems' tab that mathematically surfaces highly-rated but under-voted films."
-* **[0:20 - 0:25] Compatibility**: "Planning a movie date? In 'Compatibility Mode', two users enter their top 3 films. CineSins calculates their architectural overlap and suggests perfect joint picks."
+* **[0:00 - 0:05] Intro & Aesthetics**: "Welcome to CineSins! Notice the vibrant neon animated text and smooth hover physics. It's built to look premium and sharp."
+* **[0:05 - 0:10] TMDb Search & Responsive Mobile**: "Searching for *Inception* on mobile looks perfect now thanks to CSS Grid. It queries TMDb, falling back to OMDb effortlessly if the network hiccups, ensuring pure uptime."
+* **[0:10 - 0:15] Review Modal & Carousel**: "Inside the review modal, we automatically fetch and slide through gorgeous high-res movie scenes via the new Carousel. Then, we can hit 'Watch Now' which deep-links directly to a streaming provider."
+* **[0:15 - 0:20] Anti-Spoiler & Offline Mode**: "If I type 'he dies' in my review, CineSins detects the spoiler and blurs it. Even if I go offline, the PWA service worker keeps all my cached movies rendering flawlessly."
+* **[0:20 - 0:25] Decision Engine**: "Can't decide? 'Decision Mode' uses AI-lite metrics—like *Cognitive Load* or *Comfort Score*—to scan my local cache and recommend a masterpiece tailored exactly to my current mood."
 * **[0:25 - 0:30] CinemaDNA**: "Finally, 'CinemaDNA' analyzes all my reviews into a gorgeous customized dashboard showing my mood trends, watch-time, and favorite directors, letting me export my DNA as a sleek shareable image card!"
 
 ---
