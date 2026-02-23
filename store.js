@@ -316,7 +316,8 @@ export function computeUserAnalytics() {
 
     const genreCounts = {};
     const directorCounts = {};
-    let totalRuntimeMins = 0;
+    let totalRating = 0;
+    let validRatingCount = 0;
     let totalEmotional = 0;
     let validEmotionalCount = 0;
 
@@ -333,14 +334,16 @@ export function computeUserAnalytics() {
             }
         });
 
-        const rt = parseInt((m.runtime || '0').replace(/\D/g, ''), 10);
-        if (!isNaN(rt) && rt > 0) {
-            totalRuntimeMins += rt;
-        }
-
         if (m.metrics && m.metrics.emotionalIntensity !== undefined) {
             totalEmotional += m.metrics.emotionalIntensity;
             validEmotionalCount++;
+        }
+    });
+
+    reviews.forEach(r => {
+        if (r.rating !== undefined && !isNaN(r.rating)) {
+            totalRating += Number(r.rating);
+            validRatingCount++;
         }
     });
 
@@ -350,7 +353,7 @@ export function computeUserAnalytics() {
     const sortedDirectors = Object.entries(directorCounts).sort((a, b) => b[1] - a[1]);
     const top5Directors = sortedDirectors.slice(0, 5).map(d => d[0]);
 
-    const avgRuntime = userMovies.length > 0 ? Math.round(totalRuntimeMins / userMovies.length) : 0;
+    const avgRating = validRatingCount > 0 ? (totalRating / validRatingCount).toFixed(1) : 0;
 
     const avgEmotional = validEmotionalCount > 0 ? Math.round(totalEmotional / validEmotionalCount) : 0;
     let moodTrend = "Neutral";
@@ -363,8 +366,8 @@ export function computeUserAnalytics() {
         totalMoviesSaved: userMovies.length,
         favoriteGenre,
         genreCounts,
-        avgRuntime,
-        totalRuntimeMins,
+        avgRating,
+        totalReviews: reviews.length,
         top5Directors,
         moodTrend,
         avgEmotional

@@ -27,9 +27,9 @@ export const ui = {
             hiddenGemsList: document.getElementById("hidden-gems-list"),
             cinemadnaList: document.getElementById("dna-directors"),
             dnaGenre: document.getElementById("dna-genre"),
-            dnaRuntime: document.getElementById("dna-runtime"),
+            dnaRating: document.getElementById("dna-rating"),
             dnaMood: document.getElementById("dna-mood"),
-            dnaWatchtime: document.getElementById("dna-watchtime"),
+            dnaReviews: document.getElementById("dna-reviews"),
             dnaChart: document.getElementById("dna-chart"),
             generateShareBtn: document.getElementById("generate-share-btn"),
             dnaShareCanvas: document.getElementById("dna-share-canvas"),
@@ -38,6 +38,11 @@ export const ui = {
             modalTitle: document.getElementById("modal-title"),
             modalPoster: document.getElementById("modal-poster"),
             modalPlot: document.getElementById("modal-plot"),
+            modalCarousel: document.getElementById("modal-carousel"),
+            carouselTrack: document.getElementById("carousel-track"),
+            carouselPrev: document.getElementById("carousel-prev"),
+            carouselNext: document.getElementById("carousel-next"),
+            carouselDots: document.getElementById("carousel-dots"),
             modalTags: document.getElementById("modal-tags"),
             newTagInput: document.getElementById("new-tag-input"),
             addTagBtn: document.getElementById("add-tag-btn"),
@@ -46,6 +51,7 @@ export const ui = {
             charCount: document.getElementById("char-count"),
             saveBtn: document.getElementById("save-review"),
             watchlistBtn: document.getElementById("watchlist-btn"),
+            watchNowBtn: document.getElementById("watch-now-btn"),
             importTagsBtn: document.getElementById("import-tags-btn"),
             exportTagsBtn: document.getElementById("export-tags-btn"),
             importFile: document.getElementById("import-file"),
@@ -54,7 +60,8 @@ export const ui = {
             compatScore: document.getElementById("compat-score"),
             compatGenres: document.getElementById("compat-genres"),
             compatMoviesList: document.getElementById("compat-movies-list"),
-            compatJson: document.getElementById("compat-json")
+            generateCompatShareBtn: document.getElementById("generate-compat-share-btn"),
+            compatShareCanvas: document.getElementById("compat-share-canvas")
         };
 
         this.setupNavigation();
@@ -64,9 +71,25 @@ export const ui = {
     },
 
     setupNavigation() {
+        const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+        const mainNav = document.getElementById("main-nav");
+
+        if (mobileMenuBtn && mainNav) {
+            mobileMenuBtn.addEventListener("click", () => {
+                const isActive = mainNav.classList.toggle("active");
+                mobileMenuBtn.innerHTML = isActive ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+            });
+        }
+
         document.querySelectorAll("nav a[data-section]").forEach(link => {
             link.addEventListener("click", e => {
                 e.preventDefault();
+
+                // Close mobile menu on click
+                if (mainNav && mainNav.classList.contains("active")) {
+                    mainNav.classList.remove("active");
+                    if (mobileMenuBtn) mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                }
                 document.querySelectorAll("nav a[data-section]").forEach(a => a.classList.remove("active"));
                 link.classList.add("active");
                 document.querySelectorAll(".page-section").forEach(sec => sec.classList.remove("active"));
@@ -179,37 +202,46 @@ export const ui = {
                     return;
                 }
 
-                const { store } = await import('./store.js');
+                const { store, computeCompatibility } = await import('./store.js');
                 // Pre-seed if needed before calling compatibility
                 if (store.getAllMovies().length < 50) {
                     await store.seedMoviesIfNeeded();
                 }
 
-                const storeCompatResult = store.computeCompatibility([...moviesA], [...moviesB]);
+                const storeCompatResult = computeCompatibility([...moviesA], [...moviesB]);
 
                 this.elements.compatScore.textContent = storeCompatResult.percentage;
                 this.elements.compatGenres.textContent = storeCompatResult.commonGenres.length ? storeCompatResult.commonGenres.join(', ') : "None";
-                this.elements.compatJson.value = storeCompatResult.jsonString;
-
                 this.elements.compatMoviesList.innerHTML = storeCompatResult.suggestedMovies.length ? "" : "<p>No suggestions found.</p>";
                 storeCompatResult.suggestedMovies.forEach(m => {
                     const card = document.createElement("div");
                     card.className = "movie-card";
                     const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
                     const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+
                     card.innerHTML = `
-            <img src="${cover}" alt="" onerror="this.src='${fallback}'">
-            <div class="movie-info">
-              <h3>${m.title || m.Title}</h3>
-              <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
-              <div class="metrics-container" style="background: rgba(52, 152, 219, 0.2); border-left: 3px solid #3498db;">
-                <p class="explain-string" style="color: #fff; margin-top: 0;">Perfect Joint Pick</p>
-              </div>
-              <button class="review-btn" style="margin-top:auto">View Details</button>
-            </div>`;
+              <img src="${cover}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
+              <div class="card-overlay" style="z-index: 2;">
+                <div class="movie-info" style="pointer-events: none;">
+                  <h3>${m.title || m.Title}</h3>
+                  <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
+                  <p class="plot-text" style="font-size: 0.85rem; margin-top: 5px; opacity: 0.8; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">${m.plot || m.Plot || m.genres || "No description."}</p>
+                  <p class="explain-string" style="color: #2ecc71; margin-top: 5px; font-weight: bold;">Perfect Joint Pick</p>
+                  <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="pointer-events: auto; position: relative; z-index: 10;"><i class="fas fa-plus"></i> Watchlist / Review</button>
+                </div>
+              </div>`;
+
+                    card.dataset.id = m.imdbID || m.id;
+                    if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
+                    this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+
                     card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
                     this.elements.compatMoviesList.appendChild(card);
                 });
+
+                this.elements.generateCompatShareBtn.onclick = () => {
+                    this.generateCompatShareCard(storeCompatResult);
+                };
 
                 this.elements.compatResults.style.display = "block";
             } catch (err) {
@@ -230,18 +262,21 @@ export const ui = {
         };
 
         // Decision Mode Events
-        this.elements.decisionBtn.onclick = () => {
+        this.elements.decisionBtn.addEventListener('click', (e) => {
+            if (e) e.preventDefault();
             this.elements.decisionModal.style.display = "flex";
             setTimeout(() => this.elements.decisionModal.classList.add("active"), 10);
             this.elements.decisionResults.innerHTML = "";
-        };
-        this.elements.closeDecisionModal.onclick = () => {
+        });
+        this.elements.closeDecisionModal.addEventListener('click', (e) => {
+            if (e) e.preventDefault();
             this.elements.decisionModal.classList.remove("active");
             setTimeout(() => {
                 this.elements.decisionModal.style.display = "none";
             }, 400);
-        };
-        this.elements.getRecommendationsBtn.onclick = async () => {
+        });
+        this.elements.getRecommendationsBtn.addEventListener('click', async (e) => {
+            if (e) e.preventDefault();
             const options = {
                 mood: this.elements.decisionMood.value,
                 time: parseInt(this.elements.decisionTime.value, 10),
@@ -292,7 +327,12 @@ export const ui = {
                 card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
                 this.elements.decisionResults.appendChild(card);
             });
-        };
+        });
+
+        ["pa-1", "pa-2", "pa-3", "pb-1", "pb-2", "pb-3", "search-input"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) this.bindAutocomplete(el);
+        });
 
         window.onclick = e => {
             if (e.target === this.elements.modal) this.closeReviewModal();
@@ -303,6 +343,47 @@ export const ui = {
                 }, 400);
             }
         };
+    },
+
+    bindAutocomplete(inputNode) {
+        let debounceTimer;
+        const suggestionBox = document.createElement('div');
+        suggestionBox.className = 'autocomplete-suggestions';
+        inputNode.parentNode.insertBefore(suggestionBox, inputNode.nextSibling);
+
+        inputNode.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const query = inputNode.value.trim();
+            if (query.length < 3) {
+                suggestionBox.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                const results = await api.searchMovies(query);
+                if (results && results.length > 0) {
+                    suggestionBox.innerHTML = '';
+                    results.slice(0, 5).forEach(m => {
+                        const div = document.createElement('div');
+                        div.textContent = `${m.Title} (${m.Year})`;
+                        div.onclick = () => {
+                            inputNode.value = m.Title;
+                            suggestionBox.style.display = 'none';
+                        };
+                        suggestionBox.appendChild(div);
+                    });
+                    suggestionBox.style.display = 'block';
+                } else {
+                    suggestionBox.style.display = 'none';
+                }
+            }, 300);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target !== inputNode && e.target !== suggestionBox) {
+                suggestionBox.style.display = 'none';
+            }
+        });
     },
 
     async searchMovies() {
@@ -457,11 +538,21 @@ export const ui = {
 
         this.elements.modalPlot.textContent = movie.plot || movie.Plot || "No plot summary available.";
 
+        this.setupCarousel(movie);
+
         const { store } = await import('./store.js');
         const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
         this.state.selectedRating = saved ? saved.rating : 0;
         this.elements.reviewText.value = saved ? saved.text : "";
         this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
+
+        // Update Watch Now link
+        if (movie.watchLink) {
+            this.elements.watchNowBtn.href = movie.watchLink;
+        } else {
+            const movieTitle = movie.Title || movie.title;
+            this.elements.watchNowBtn.href = `https://www.google.com/search?q=where+to+watch+${encodeURIComponent(movieTitle)}+movie+online`;
+        }
 
         // Watchlist state
         const wl = store.getWatchlist().find(m => m.id === (movie.imdbID || movie.id));
@@ -479,8 +570,64 @@ export const ui = {
 
         this.elements.modal.style.display = "flex";
         setTimeout(() => this.elements.modal.classList.add("active"), 10);
+    },
 
-        document.querySelector('.modal-content').style.opacity = '1';
+    setupCarousel(movie) {
+        const scenes = movie.scenes && movie.scenes.length > 0 ? movie.scenes : [];
+
+        this.elements.carouselTrack.innerHTML = '';
+        this.elements.carouselDots.innerHTML = '';
+
+        if (scenes.length === 0) {
+            this.elements.modalCarousel.style.display = 'none';
+            return;
+        }
+
+        this.elements.modalCarousel.style.display = 'block';
+
+        scenes.forEach((url, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'carousel-slide';
+            slide.innerHTML = `<img src="${url}" alt="Scene ${index + 1}">`;
+            this.elements.carouselTrack.appendChild(slide);
+
+            const dot = document.createElement('div');
+            dot.className = index === 0 ? 'carousel-dot active' : 'carousel-dot';
+            dot.dataset.index = index;
+            dot.addEventListener('click', () => this.goToSlide(index));
+            this.elements.carouselDots.appendChild(dot);
+        });
+
+        this.state.currentSlide = 0;
+        this.state.totalSlides = mockScenes.length;
+        this.updateCarouselPosition();
+
+        this.elements.carouselPrev.onclick = () => this.prevSlide();
+        this.elements.carouselNext.onclick = () => this.nextSlide();
+    },
+
+    goToSlide(index) {
+        this.state.currentSlide = index;
+        this.updateCarouselPosition();
+    },
+
+    prevSlide() {
+        this.state.currentSlide = (this.state.currentSlide - 1 + this.state.totalSlides) % this.state.totalSlides;
+        this.updateCarouselPosition();
+    },
+
+    nextSlide() {
+        this.state.currentSlide = (this.state.currentSlide + 1) % this.state.totalSlides;
+        this.updateCarouselPosition();
+    },
+
+    updateCarouselPosition() {
+        const offset = -this.state.currentSlide * 100;
+        this.elements.carouselTrack.style.transform = `translateX(${offset}%)`;
+
+        Array.from(this.elements.carouselDots.children).forEach((dot, index) => {
+            dot.classList.toggle('active', index === this.state.currentSlide);
+        });
     },
 
     async renderTags() {
@@ -507,8 +654,6 @@ export const ui = {
     },
 
     closeReviewModal() {
-        const modalContent = document.querySelector('.modal-content');
-
         this.elements.modal.classList.remove("active");
         setTimeout(() => {
             this.elements.modal.style.display = "none";
@@ -529,7 +674,7 @@ export const ui = {
         }
     },
 
-    saveReview() {
+    async saveReview() {
         if (!this.state.currentMovie) return;
         const newReview = {
             id: this.state.currentMovie.imdbID || this.state.currentMovie.id,
@@ -538,15 +683,19 @@ export const ui = {
             text: this.elements.reviewText.value,
             date: new Date().toLocaleDateString()
         };
+        const { store } = await import('./store.js');
         store.saveReview(newReview);
+        store.saveMoviesBatch([this.state.currentMovie]);
+
         this.closeReviewModal();
         if (document.getElementById("reviews").classList.contains("active")) {
             this.loadUserReviews();
         }
     },
 
-    toggleWatchlist() {
+    async toggleWatchlist() {
         if (!this.state.currentMovie) return;
+        const { store } = await import('./store.js');
         const added = store.toggleWatchlist({
             id: this.state.currentMovie.imdbID || this.state.currentMovie.id,
             title: this.state.currentMovie.Title || this.state.currentMovie.title,
@@ -757,26 +906,23 @@ export const ui = {
     },
 
     async loadCinemaDNA() {
-        const { store } = await import('./store.js');
-        const analytics = store.computeUserAnalytics();
+        const { computeUserAnalytics } = await import('./store.js');
+        const analytics = computeUserAnalytics();
 
         if (analytics.totalMoviesSaved === 0) {
             this.elements.dnaGenre.textContent = "N/A";
-            this.elements.dnaRuntime.textContent = "0 min";
+            this.elements.dnaRating.textContent = "0 ★";
             this.elements.dnaMood.textContent = "N/A";
-            this.elements.dnaWatchtime.textContent = "0h 0m";
+            this.elements.dnaReviews.textContent = "0";
             this.elements.cinemadnaList.innerHTML = "<li>No movies saved yet. Write some reviews!</li>";
             this.drawDNAChart({});
             return;
         }
 
         this.elements.dnaGenre.textContent = analytics.favoriteGenre;
-        this.elements.dnaRuntime.textContent = analytics.avgRuntime + " min";
+        this.elements.dnaRating.textContent = analytics.avgRating + " ★";
         this.elements.dnaMood.textContent = analytics.moodTrend;
-
-        const hours = Math.floor(analytics.totalRuntimeMins / 60);
-        const mins = analytics.totalRuntimeMins % 60;
-        this.elements.dnaWatchtime.textContent = `${hours}h ${mins}m`;
+        this.elements.dnaReviews.textContent = analytics.totalReviews;
 
         this.elements.cinemadnaList.innerHTML = "";
         analytics.top5Directors.forEach(d => {
@@ -893,6 +1039,68 @@ export const ui = {
         link.click();
     },
 
+    generateCompatShareCard(compatResult) {
+        const canvas = this.elements.compatShareCanvas;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = '#111111';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#e74c3c';
+        ctx.font = 'bold 40px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText("Movie Compatibility", canvas.width / 2, 60);
+
+        ctx.fillStyle = '#aaaaaa';
+        ctx.font = 'italic 20px sans-serif';
+        ctx.fillText("Analyzed by CineSins", canvas.width / 2, 95);
+
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(50, 130);
+        ctx.lineTo(550, 130);
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+
+        ctx.fillStyle = '#888888';
+        ctx.font = '24px sans-serif';
+        ctx.fillText("Compatibility Score", canvas.width / 2, 200);
+
+        ctx.fillStyle = '#e74c3c';
+        ctx.font = 'bold 64px sans-serif';
+        ctx.fillText(`${compatResult.percentage}%`, canvas.width / 2, 270);
+
+        ctx.fillStyle = '#888888';
+        ctx.font = '24px sans-serif';
+        ctx.fillText("Shared DNA Genres", canvas.width / 2, 360);
+
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = 'bold 28px sans-serif';
+        const genres = compatResult.commonGenres.length ? compatResult.commonGenres.join(', ') : "None";
+        ctx.fillText(genres.length > 35 ? genres.substring(0, 32) + "..." : genres, canvas.width / 2, 410);
+
+        ctx.fillStyle = '#888888';
+        ctx.font = '24px sans-serif';
+        ctx.fillText("Top Joint Pick", canvas.width / 2, 530);
+
+        ctx.fillStyle = '#3498db';
+        ctx.font = 'bold 36px sans-serif';
+        const bestMovie = compatResult.suggestedMovies.length ? (compatResult.suggestedMovies[0].Title || compatResult.suggestedMovies[0].title) : "Unknown";
+        ctx.fillText(bestMovie.length > 25 ? bestMovie.substring(0, 22) + "..." : bestMovie, canvas.width / 2, 590);
+
+        ctx.fillStyle = '#444444';
+        ctx.font = '16px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("Generated on " + new Date().toLocaleDateString(), canvas.width / 2, 760);
+
+        const link = document.createElement('a');
+        link.download = `Compatibility_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    },
+
     async loadWatchlist() {
         const { store } = await import('./store.js');
         const wl = store.getWatchlist();
@@ -995,8 +1203,13 @@ export const ui = {
         ];
 
         const detailedMovies = await Promise.all(
-            popularMovies.map(title => api.fetchRawMovieByTitle(title))
+            popularMovies.map(title => api.fetchMovieByTitle(title))
         );
-        this.renderMovies(detailedMovies.filter(Boolean));
+        const validMovies = detailedMovies.filter(Boolean);
+
+        const { store } = await import('./store.js');
+        store.saveMoviesBatch(validMovies);
+
+        this.renderMovies(validMovies);
     }
 };

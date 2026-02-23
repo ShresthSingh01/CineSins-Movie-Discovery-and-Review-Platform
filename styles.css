@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --bg-dark: #050507;
+  --bg-dark: #07070a;
   /* Deepest midnight/obsidian */
-  --bg-card: rgba(15, 15, 20, 0.6);
-  --bg-modal: rgba(10, 10, 15, 0.85);
-  --text-main: #f8f9fa;
-  --text-muted: #8b8e98;
-  --border-light: rgba(255, 255, 255, 0.06);
-  --border-glow: rgba(0, 229, 255, 0.3);
-  --accent-primary: #ff2a5f;
-  /* Neon crimson */
-  --accent-secondary: #00e5ff;
-  /* Cyan */
-  --accent-warning: #ffb800;
+  --bg-card: rgba(18, 18, 25, 0.65);
+  --bg-modal: rgba(10, 10, 14, 0.90);
+  --text-main: #ffffff;
+  --text-muted: #9ba1b0;
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(45, 249, 254, 0.4);
+  --accent-primary: #ff0f7b;
+  /* Vibrant Neon Pink */
+  --accent-secondary: #2df9fe;
+  /* Sharp Cyan */
+  --accent-warning: #f8e71c;
 
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -97,8 +97,28 @@ header {
   color: #fff;
   text-decoration: none;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.5px;
+  background: linear-gradient(90deg, #ffffff, var(--accent-secondary), var(--accent-primary), #ffffff);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientFlow 6s ease infinite;
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 nav ul {
@@ -137,9 +157,14 @@ nav a:hover {
   text-align: center;
   margin-bottom: var(--spacing-lg);
   font-size: 2rem;
-  color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.5px;
+  background: linear-gradient(90deg, #ffffff, var(--accent-secondary));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientFlow 4s ease infinite;
 }
 
 .search-section {
@@ -178,14 +203,15 @@ nav a:hover {
   color: var(--bg-dark);
   cursor: pointer;
   border-radius: var(--radius-round);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
-  transition: transform 0.4s var(--transition-cinematic), background 0.4s var(--transition-cinematic);
+  transition: transform 0.4s var(--transition-cinematic), box-shadow 0.4s var(--transition-cinematic), background 0.4s var(--transition-cinematic);
 }
 
 .search-container button:hover {
   background: #fff;
-  transform: scale(1.05);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(255, 255, 255, 0.3);
 }
 
 /* Movie Grid */
@@ -205,11 +231,11 @@ nav a:hover {
 
 .movie-card {
   position: relative;
-  background: var(--bg-dark);
+  background: var(--bg-card);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  transition: transform 0.5s var(--transition-cinematic);
+  transition: transform 0.5s var(--transition-cinematic), border-color 0.5s var(--transition-cinematic), box-shadow 0.5s var(--transition-cinematic);
   cursor: pointer;
   aspect-ratio: 2/3;
   border: 1px solid var(--border-light);
@@ -219,17 +245,18 @@ nav a:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.8s var(--transition-cinematic);
+  transition: transform 0.8s var(--transition-cinematic), filter 0.8s var(--transition-cinematic);
 }
 
 .movie-card:hover {
-  transform: translateY(-10px);
-  border-color: var(--border-glow);
-  box-shadow: 0 20px 40px rgba(0, 229, 255, 0.2);
+  transform: translateY(-12px);
+  border-color: var(--accent-secondary);
+  box-shadow: 0 20px 40px var(--border-glow);
 }
 
 .movie-card:hover img {
-  transform: scale(1.05);
+  transform: scale(1.08);
+  filter: brightness(1.1);
 }
 
 .card-overlay {
@@ -340,7 +367,13 @@ nav a:hover {
   position: relative;
   box-shadow: 0 50px 100px rgba(0, 0, 0, 1);
   opacity: 0;
-  /* JS handles fade-in post FLIP */
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.modal.active .modal-content {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .close {
@@ -465,13 +498,14 @@ textarea:focus {
   margin-bottom: var(--spacing-sm);
   position: relative;
   overflow: hidden;
-  transition: transform 0.4s var(--transition-cinematic), background 0.4s var(--transition-cinematic);
+  transition: transform 0.4s var(--transition-cinematic), box-shadow 0.4s var(--transition-cinematic), background 0.4s var(--transition-cinematic);
   width: 100%;
 }
 
 .save-btn:hover {
-  transform: scale(1.02);
+  transform: translateY(-3px) scale(1.02);
   background: #fff;
+  box-shadow: 0 10px 20px rgba(255, 255, 255, 0.3);
 }
 
 /* Icon Morph */
@@ -1300,6 +1334,45 @@ input:focus {
   }
 }
 
+/* Autocomplete Styles */
+.autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-card, #2a2a2a);
+  z-index: 1000;
+  border: 1px solid var(--border-light, #444);
+  border-radius: var(--radius-md, 8px);
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.autocomplete-suggestions div {
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light, #444);
+  font-size: 0.95rem;
+  color: var(--text-base, #eee);
+  transition: all var(--transition-fast, 0.2s);
+}
+
+.autocomplete-suggestions div:hover {
+  background: var(--bg-hover, #3a3a3a);
+  color: var(--primary, #3498db);
+}
+
+.autocomplete-suggestions div:last-child {
+  border-bottom: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .hero-title {
@@ -1326,17 +1399,6 @@ input:focus {
   .modal-content {
     width: 95%;
     padding: var(--spacing-lg);
-  }
-
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-    gap: var(--spacing-sm);
-  }
-
-  nav ul {
-    flex-direction: column;
-    gap: 10px;
   }
 
   /* Disable advanced desktop polish on mobile */
@@ -1386,19 +1448,299 @@ input:focus {
     min-height: 44px;
     padding: 12px;
   }
+
+  .movie-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+  }
+
+  .floating-btn {
+    bottom: 15px;
+    right: 15px;
+    font-size: 0.9rem;
+    padding: 12px 20px;
+  }
+
+  #compat-results {
+    padding: 15px !important;
+  }
 }
 
-.movie-grid {
-  grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+.autocomplete-wrapper {
+  position: relative;
 }
 
-.floating-btn {
-  bottom: 15px;
-  right: 15px;
-  font-size: 0.9rem;
+.autocomplete-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 5px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: none;
+}
+
+.autocomplete-suggestions div {
   padding: 12px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s;
+  color: var(--text-main);
 }
 
-#compat-results {
-  padding: 15px !important;
+.autocomplete-suggestions div:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-suggestions div:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent-secondary);
+}
+
+/* Movie Scene Carousel Container */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin: var(--spacing-md) 0;
+  display: none;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border-light);
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s var(--transition-cinematic);
+  height: 200px;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  height: 100%;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.3s;
+  backdrop-filter: blur(4px);
+}
+
+.carousel-btn:hover {
+  background: var(--accent-primary);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-btn.prev {
+  left: 10px;
+}
+
+.carousel-btn.next {
+  right: 10px;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.carousel-dot.active {
+  background: var(--accent-secondary);
+  box-shadow: 0 0 5px var(--accent-secondary);
+  transform: scale(1.2);
+}
+
+/* Responsive Navbar Styles */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 101;
+  /* Ensure it stays above the absolute nav */
+}
+
+@media (max-width: 900px) {
+  .header-content {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    /* Prevent stacking of logo and hamburger */
+    padding: 10px 0;
+  }
+
+  .mobile-menu-btn {
+    display: block;
+    margin-left: auto;
+    /* Push to the right edge */
+  }
+
+  #main-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: rgba(10, 10, 15, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-light);
+    transform: translateY(-100%) scaleY(0);
+    transform-origin: top;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s var(--transition-cinematic);
+    padding: 20px 0;
+    z-index: 99;
+  }
+
+  #main-nav.active {
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #main-nav ul {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin: 0;
+    padding: 0;
+  }
+
+  #main-nav ul li {
+    width: 100%;
+    text-align: center;
+  }
+
+  #main-nav a {
+    display: block;
+    font-size: 1.2rem;
+    width: 90%;
+    margin: 0 auto;
+    padding: 15px 10px;
+  }
+
+  /* Make hero text smaller on mobile to prevent overflow */
+  .hero-title {
+    font-size: 2.2rem !important;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem !important;
+  }
+
+  .hero-search {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .autocomplete-wrapper {
+    grid-column: 1 / -1;
+    /* Stretch across the entire top row */
+  }
+
+  .hero-search input {
+    width: 100%;
+    border-radius: var(--radius-md);
+  }
+
+  .hero-search button {
+    width: 100%;
+    /* Fill the grid column */
+    border-radius: var(--radius-round);
+    padding: 12px 5px;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  /* Fix for Decision Modal Form */
+  .decision-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .decision-form label {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 5px;
+    font-weight: 500;
+  }
+
+  .decision-form label select {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-light);
+    color: var(--text-main);
+    font-size: 1rem;
+  }
+
+  .decision-form button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    font-size: 1.1rem;
+  }
+
+  /* Increase bottom padding of hero content so negative margins don't overlap the search box */
+  .hero-content {
+    padding-bottom: 140px;
+  }
+
+  /* Prevent Modal title from overlapping with absolute close button */
+  .modal-content h2.section-title {
+    margin-top: 20px;
+    font-size: 1.8rem;
+  }
 }
