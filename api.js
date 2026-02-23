@@ -5,7 +5,7 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 const TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
 
-const OMDB_API_KEY = config.OMDB_API_KEY || "INSERT_OMDB_API_KEY_HERE";
+const OMDB_API_KEY = config.OMDB_API_KEY || "5dddf095";
 const OMDB_BASE_URL = "https://www.omdbapi.com";
 
 const cache = new Map();
@@ -109,7 +109,11 @@ function normalizeTMDBMovie(tmdbMovie, credits = null, watchProviders = null, im
 export const api = {
     async searchMovies(query) {
         if (cache.has(`search_${query}`)) return cache.get(`search_${query}`);
+
+        const isTmdbReady = TMDB_API_KEY && TMDB_API_KEY !== "INSERT_TMDB_API_KEY_HERE";
+
         try {
+            if (!isTmdbReady) throw new Error("TMDB Key Missing");
             const res = await fetch(`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`);
             if (!res.ok) throw new Error("TMDB failed");
             const data = await res.json();
@@ -120,7 +124,9 @@ export const api = {
             }
             return [];
         } catch (e) {
-            console.warn("TMDB Search failed, falling back to OMDB:", e);
+            if (e.message !== "TMDB Key Missing") {
+                console.warn("TMDB Search failed, falling back to OMDB:", e);
+            }
             try {
                 const res = await fetch(`${OMDB_BASE_URL}/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}`);
                 const data = await res.json();
@@ -143,29 +149,31 @@ export const api = {
     },
 
     async fetchMovieById(id) {
+        const isTmdbReady = TMDB_API_KEY && TMDB_API_KEY !== "INSERT_TMDB_API_KEY_HERE";
         let fetchUrl = `${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=credits,watch/providers,images`;
         let actualId = id;
 
-        if (id && id.toString().startsWith('tt')) {
+        if (isTmdbReady && id && id.toString().startsWith('tt')) {
             try {
                 const findRes = await fetch(`${TMDB_BASE_URL}/find/${id}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
-                const findData = await findRes.json();
-                if (findData.movie_results && findData.movie_results.length > 0) {
-                    actualId = findData.movie_results[0].id;
-                    fetchUrl = `${TMDB_BASE_URL}/movie/${actualId}?api_key=${TMDB_API_KEY}&append_to_response=credits,watch/providers,images`;
-                } else {
-                    return null;
+                if (findRes.ok) {
+                    const findData = await findRes.json();
+                    if (findData.movie_results && findData.movie_results.length > 0) {
+                        actualId = findData.movie_results[0].id;
+                        fetchUrl = `${TMDB_BASE_URL}/movie/${actualId}?api_key=${TMDB_API_KEY}&append_to_response=credits,watch/providers,images`;
+                    }
                 }
-            } catch {
-                return null;
+            } catch (e) {
+                console.warn("TMDB find failed, will attempt fallback fetch block next:", e);
             }
         }
 
         if (cache.has(`movie_${actualId}`)) return cache.get(`movie_${actualId}`);
 
         try {
+            if (!isTmdbReady) throw new Error("TMDB Key Missing");
             const res = await fetch(fetchUrl);
-            if (!res.ok) throw new Error("TMDB failed");
+            if (!res.ok) throw new Error(`TMDB fetch failed with status ${res.status}`);
             const data = await res.json();
 
             if (data.id) {
@@ -179,9 +187,11 @@ export const api = {
 
                 return finalMovie;
             }
-            throw new Error("Invalid TMDB data");
+            throw new Error("Invalid TMDB data structure");
         } catch (e) {
-            console.warn(`TMDB fetchMovieById failed for ${id}, falling back to OMDB:`, e);
+            if (e.message !== "TMDB Key Missing") {
+                console.warn(`TMDB fetchMovieById failed for ${id}, falling back to OMDB:`, e);
+            }
             try {
                 // If it's a TMDB internal ID (numbers only), OMDB might not be able to find it directly
                 // because OMDB only accepts 'tt...' format for IDs.
@@ -293,7 +303,9 @@ export const api = {
 
     async fetchPopularMoviesBatch() {
         // TMDB allows getting trending directly, bypassing the need to search specific titles manually!
+        const isTmdbReady = TMDB_API_KEY && TMDB_API_KEY !== "INSERT_TMDB_API_KEY_HERE";
         try {
+            if (!isTmdbReady) throw new Error("TMDB Key Missing");
             const res = await fetch(`${TMDB_BASE_URL}/trending/movie/week?api_key=${TMDB_API_KEY}`);
             const data = await res.json();
             if (data.results && data.results.length > 0) {
@@ -312,8 +324,18 @@ export const api = {
             }
             return [];
         } catch (e) {
-            console.error("fetchPopularMoviesBatch error", e);
-            return [];
+            console.error("fetchPopularMoviesBatch TMDB error, falling back to OMDB manually:", e);
+            const popularMovies = [
+                "Breaking Bad", "The Shawshank Redemption", "The Godfather",
+                "The Dark Knight", "Inception", "Forrest Gump",
+                "The Matrix", "Pulp Fiction", "Interstellar", "Gladiator"
+            ];
+            const detailed = [];
+            for (const title of popularMovies) {
+                const movie = await this.fetchMovieByTitle(title);
+                if (movie) detailed.push(movie);
+            }
+            return detailed;
         }
     }
 };

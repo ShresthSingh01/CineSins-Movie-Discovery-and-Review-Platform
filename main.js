@@ -9,7 +9,21 @@ window.addEventListener('DOMContentLoaded', () => {
     window.api = api;
     window.decisionEngine = decisionEngine;
     console.log("Modules loaded successfully! 🚀");
-    console.log("You can test the API and Decision Engine in the console.");
+
+    if (window.location.port === '5500') {
+        console.warn("⚠️ Running on Port 5500: Browsers often block module loading or have caching issues on this port. If movies don't load, please use port 8080 or a different server.");
+    }
+
+    window.debugCineSins = async () => {
+        console.log("Clearing CineSins state...");
+        localStorage.clear();
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+            await registration.unregister();
+        }
+        location.reload();
+    };
+    console.log("Tip: Run 'debugCineSins()' in the console to reset the app if experiencing persistent loading issues.");
 
     // Hero Section GSAP Animations
     const heroArea = document.getElementById('hero-area');

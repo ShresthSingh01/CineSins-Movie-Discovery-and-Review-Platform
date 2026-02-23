@@ -143,236 +143,275 @@ export const ui = {
     },
 
     setupEventListeners() {
-        this.elements.searchBtn.onclick = () => this.searchMovies();
-        this.elements.searchInput.addEventListener("keypress", e => {
-            if (e.key === "Enter") this.searchMovies();
-        });
-        this.elements.reviewText.oninput = () => {
-            this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
-        };
-        this.elements.closeModal.onclick = () => this.closeReviewModal();
-        this.elements.saveBtn.onclick = () => this.saveReview();
-        this.elements.watchlistBtn.onclick = () => this.toggleWatchlist();
-
-        // Scene Tags Events
-        this.elements.addTagBtn.onclick = () => this.addTagToCurrentMovie();
-        this.elements.newTagInput.addEventListener("keypress", e => {
-            if (e.key === "Enter") this.addTagToCurrentMovie();
-        });
-
-        this.elements.exportTagsBtn.onclick = async (e) => {
-            e.preventDefault();
-            const { store } = await import('./store.js');
-            const tagsJson = store.exportTags();
-            const blob = new Blob([tagsJson], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `scene_tags_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        };
-
-        this.elements.importTagsBtn.onclick = (e) => {
-            e.preventDefault();
-            this.elements.importFile.click();
-        };
-
-        this.elements.importFile.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const { store } = await import('./store.js');
-                const success = store.importTags(event.target.result);
-                if (success) {
-                    alert("Tags imported successfully!");
-                    if (this.state.currentMovie) {
-                        this.renderTags();
-                    }
-                } else {
-                    alert("Failed to import tags. Invalid JSON.");
+        if (this.elements.searchBtn) {
+            this.elements.searchBtn.onclick = () => this.searchMovies();
+        }
+        if (this.elements.searchInput) {
+            this.elements.searchInput.addEventListener("keypress", e => {
+                if (e.key === "Enter") this.searchMovies();
+            });
+        }
+        if (this.elements.reviewText) {
+            this.elements.reviewText.oninput = () => {
+                if (this.elements.charCount) {
+                    this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
                 }
             };
-            reader.readAsText(file);
-            e.target.value = ""; // Reset file input
-        };
+        }
+        if (this.elements.closeModal) {
+            this.elements.closeModal.onclick = () => this.closeReviewModal();
+        }
+        if (this.elements.saveBtn) {
+            this.elements.saveBtn.onclick = () => this.saveReview();
+        }
+        if (this.elements.watchlistBtn) {
+            this.elements.watchlistBtn.onclick = () => this.toggleWatchlist();
+        }
+
+        // Scene Tags Events
+        if (this.elements.addTagBtn) {
+            this.elements.addTagBtn.onclick = () => this.addTagToCurrentMovie();
+        }
+        if (this.elements.newTagInput) {
+            this.elements.newTagInput.addEventListener("keypress", e => {
+                if (e.key === "Enter") this.addTagToCurrentMovie();
+            });
+        }
+
+        if (this.elements.exportTagsBtn) {
+            this.elements.exportTagsBtn.onclick = async (e) => {
+                e.preventDefault();
+                const { store } = await import('./store.js');
+                const tagsJson = store.exportTags();
+                const blob = new Blob([tagsJson], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `scene_tags_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+        }
+
+        if (this.elements.importTagsBtn) {
+            this.elements.importTagsBtn.onclick = (e) => {
+                e.preventDefault();
+                if (this.elements.importFile) this.elements.importFile.click();
+            };
+        }
+
+        if (this.elements.importFile) {
+            this.elements.importFile.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const { store } = await import('./store.js');
+                    const success = store.importTags(event.target.result);
+                    if (success) {
+                        alert("Tags imported successfully!");
+                        if (this.state.currentMovie) {
+                            this.renderTags();
+                        }
+                    } else {
+                        alert("Failed to import tags. Invalid JSON.");
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = ""; // Reset file input
+            };
+        }
 
         // Compatibility Mode Events
-        this.elements.calcCompatBtn.onclick = async () => {
-            const inputsA = [
-                document.getElementById("pa-1").value.trim(),
-                document.getElementById("pa-2").value.trim(),
-                document.getElementById("pa-3").value.trim()
-            ].filter(Boolean);
+        if (this.elements.calcCompatBtn) {
+            this.elements.calcCompatBtn.onclick = async () => {
+                const inputsA = [
+                    document.getElementById("pa-1").value.trim(),
+                    document.getElementById("pa-2").value.trim(),
+                    document.getElementById("pa-3").value.trim()
+                ].filter(Boolean);
 
-            const inputsB = [
-                document.getElementById("pb-1").value.trim(),
-                document.getElementById("pb-2").value.trim(),
-                document.getElementById("pb-3").value.trim()
-            ].filter(Boolean);
+                const inputsB = [
+                    document.getElementById("pb-1").value.trim(),
+                    document.getElementById("pb-2").value.trim(),
+                    document.getElementById("pb-3").value.trim()
+                ].filter(Boolean);
 
-            if (inputsA.length < 3 || inputsB.length < 3) {
-                alert("Please enter exactly 3 movies for both Person A and Person B.");
-                return;
-            }
-
-            this.elements.calcCompatBtn.textContent = "Computing...";
-            this.elements.calcCompatBtn.disabled = true;
-
-            try {
-                const fetchHelper = async (query) => {
-                    if (query.toLowerCase().startsWith('tt')) {
-                        return await api.fetchMovieById(query);
-                    }
-                    return await api.fetchMovieByTitle(query);
-                };
-
-                const moviesA = (await Promise.all(inputsA.map(fetchHelper))).filter(Boolean);
-                const moviesB = (await Promise.all(inputsB.map(fetchHelper))).filter(Boolean);
-
-                if (moviesA.length < 3 || moviesB.length < 3) {
-                    alert("Some movies could not be found. Try checking titles or IDs.");
+                if (inputsA.length < 3 || inputsB.length < 3) {
+                    alert("Please enter exactly 3 movies for both Person A and Person B.");
                     return;
                 }
 
-                const { store, computeCompatibility } = await import('./store.js');
-                // Pre-seed if needed before calling compatibility
-                if (store.getAllMovies().length < 50) {
-                    await store.seedMoviesIfNeeded();
+                this.elements.calcCompatBtn.textContent = "Computing...";
+                this.elements.calcCompatBtn.disabled = true;
+
+                try {
+                    const fetchHelper = async (query) => {
+                        if (query.toLowerCase().startsWith('tt')) {
+                            return await api.fetchMovieById(query);
+                        }
+                        return await api.fetchMovieByTitle(query);
+                    };
+
+                    const moviesA = (await Promise.all(inputsA.map(fetchHelper))).filter(Boolean);
+                    const moviesB = (await Promise.all(inputsB.map(fetchHelper))).filter(Boolean);
+
+                    if (moviesA.length < 3 || moviesB.length < 3) {
+                        alert("Some movies could not be found. Try checking titles or IDs.");
+                        return;
+                    }
+
+                    const { store, computeCompatibility } = await import('./store.js');
+                    if (store.getAllMovies().length < 50) {
+                        await store.seedMoviesIfNeeded();
+                    }
+
+                    const storeCompatResult = computeCompatibility([...moviesA], [...moviesB]);
+
+                    this.elements.compatScore.textContent = storeCompatResult.percentage;
+                    this.elements.compatGenres.textContent = storeCompatResult.commonGenres.length ? storeCompatResult.commonGenres.join(', ') : "None";
+                    this.elements.compatMoviesList.innerHTML = storeCompatResult.suggestedMovies.length ? "" : "<p>No suggestions found.</p>";
+                    storeCompatResult.suggestedMovies.forEach(m => {
+                        const card = document.createElement("div");
+                        card.className = "movie-card";
+                        const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+                        const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+
+                        card.innerHTML = `
+                          <img src="${cover}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
+                          <div class="card-overlay" style="z-index: 2;">
+                            <div class="movie-info" style="pointer-events: none;">
+                              <h3>${m.title || m.Title}</h3>
+                              <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
+                              <p class="plot-text" style="font-size: 0.85rem; margin-top: 5px; opacity: 0.8; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">${m.plot || m.Plot || m.genres || "No description."}</p>
+                              <p class="explain-string" style="color: #2ecc71; margin-top: 5px; font-weight: bold;">Perfect Joint Pick</p>
+                              <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="pointer-events: auto; position: relative; z-index: 10;"><i class="fas fa-plus"></i> Watchlist / Review</button>
+                            </div>
+                          </div>`;
+
+                        card.dataset.id = m.imdbID || m.id;
+                        if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
+                        this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+
+                        card.querySelector(".review-btn").onclick = (e) => {
+                            e.stopPropagation();
+                            this.openModal(m, card.querySelector('img'));
+                        };
+                        this.elements.compatMoviesList.appendChild(card);
+                    });
+
+                    if (this.elements.generateCompatShareBtn) {
+                        this.elements.generateCompatShareBtn.onclick = () => {
+                            this.generateCompatShareCard(storeCompatResult);
+                        };
+                    }
+
+                    this.elements.compatResults.style.display = "block";
+                } catch (err) {
+                    console.error(err);
+                    alert("An error occurred computing compatibility.");
+                } finally {
+                    this.elements.calcCompatBtn.textContent = "Calculate Compatibility";
+                    this.elements.calcCompatBtn.disabled = false;
+                }
+            };
+        }
+
+        if (this.elements.generateShareBtn) {
+            this.elements.generateShareBtn.onclick = () => {
+                if (!this.state.latestDNA) {
+                    alert("Please load CinemaDNA and write some reviews first.");
+                    return;
+                }
+                this.generateShareCard(this.state.latestDNA);
+            };
+        }
+
+        // Decision Mode Events
+        if (this.elements.decisionBtn) {
+            this.elements.decisionBtn.addEventListener('click', (e) => {
+                if (e) e.preventDefault();
+                this.elements.decisionModal.style.display = "flex";
+                setTimeout(() => this.elements.decisionModal.classList.add("active"), 10);
+                this.elements.decisionResults.innerHTML = "";
+            });
+        }
+        if (this.elements.closeDecisionModal) {
+            this.elements.closeDecisionModal.addEventListener('click', (e) => {
+                if (e) e.preventDefault();
+                this.elements.decisionModal.classList.remove("active");
+                setTimeout(() => {
+                    this.elements.decisionModal.style.display = "none";
+                }, 400);
+            });
+        }
+        if (this.elements.getRecommendationsBtn) {
+            this.elements.getRecommendationsBtn.addEventListener('click', async (e) => {
+                if (e) e.preventDefault();
+                const options = {
+                    mood: this.elements.decisionMood.value,
+                    time: parseInt(this.elements.decisionTime.value, 10),
+                    company: this.elements.decisionCompany.value
+                };
+
+                this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
+
+                const { decisionEngine } = await import('./store.js');
+                const recommendations = await decisionEngine(options);
+
+                this.elements.decisionResults.innerHTML = "";
+                if (recommendations.length === 0) {
+                    this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
+                    return;
                 }
 
-                const storeCompatResult = computeCompatibility([...moviesA], [...moviesB]);
+                recommendations.forEach(m => {
+                    const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+                    const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
 
-                this.elements.compatScore.textContent = storeCompatResult.percentage;
-                this.elements.compatGenres.textContent = storeCompatResult.commonGenres.length ? storeCompatResult.commonGenres.join(', ') : "None";
-                this.elements.compatMoviesList.innerHTML = storeCompatResult.suggestedMovies.length ? "" : "<p>No suggestions found.</p>";
-                storeCompatResult.suggestedMovies.forEach(m => {
+                    const badgeColor = m.dominantMetric === 'Intensity' ? 'var(--accent-secondary)' :
+                        m.dominantMetric === 'Thought-Provoking' ? 'var(--accent-primary)' : 'var(--accent-tertiary)';
+
+                    const badgeHtml = m.metrics ?
+                        `<span style="background: ${badgeColor}; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; font-family: var(--font-heading); display: inline-block; margin-bottom: 8px;">
+                                Highest Metric: ${m.dominantMetric} (${m.metrics[m.dominantMetric === 'Intensity' ? 'emotionalIntensity' : m.dominantMetric === 'Thought-Provoking' ? 'cognitiveLoad' : 'comfortScore']})
+                            </span>` : '';
+
                     const card = document.createElement("div");
                     card.className = "movie-card";
-                    const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-                    const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
-
                     card.innerHTML = `
-              <img src="${cover}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
-              <div class="card-overlay" style="z-index: 2;">
-                <div class="movie-info" style="pointer-events: none;">
-                  <h3>${m.title || m.Title}</h3>
-                  <p>${m.year || m.Year} • IMDb: ${m.imdbRating || "N/A"}</p>
-                  <p class="plot-text" style="font-size: 0.85rem; margin-top: 5px; opacity: 0.8; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">${m.plot || m.Plot || m.genres || "No description."}</p>
-                  <p class="explain-string" style="color: #2ecc71; margin-top: 5px; font-weight: bold;">Perfect Joint Pick</p>
-                  <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="pointer-events: auto; position: relative; z-index: 10;"><i class="fas fa-plus"></i> Watchlist / Review</button>
-                </div>
-              </div>`;
+                          <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
+                          <div class="card-overlay" style="z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; text-align: left; padding: 20px;">
+                            <div style="background: rgba(15, 17, 21, 0.95); padding: 15px; border-radius: 8px; width: 100%; border: 1px solid var(--border-light); backdrop-filter: blur(8px);">
+                                ${badgeHtml}
+                                <h3 style="margin-bottom: 4px; font-size: 1.1rem;">${m.Title || m.title}</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+                                    ${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtimeStr || m.runtime || "90 min"}
+                                </p>
+                                <p style="font-size: 0.85rem; line-height: 1.4; color: var(--text-light); margin-bottom: 15px; font-style: italic;">
+                                    "${m.explain}"
+                                </p>
+                                <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="width: 100%; padding: 8px; font-size: 0.9rem;">
+                                    <i class="fas fa-search"></i> Details
+                                </button>
+                            </div>
+                          </div>`;
 
                     card.dataset.id = m.imdbID || m.id;
                     if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
                     this.state.renderedMoviesMap[m.imdbID || m.id] = m;
 
-                    card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
-                    this.elements.compatMoviesList.appendChild(card);
+                    card.querySelector(".review-btn").onclick = (e) => {
+                        e.stopPropagation();
+                        this.openModal(m, card.querySelector('img'));
+                    };
+                    this.elements.decisionResults.appendChild(card);
                 });
-
-                this.elements.generateCompatShareBtn.onclick = () => {
-                    this.generateCompatShareCard(storeCompatResult);
-                };
-
-                this.elements.compatResults.style.display = "block";
-            } catch (err) {
-                console.error(err);
-                alert("An error occurred computing compatibility.");
-            } finally {
-                this.elements.calcCompatBtn.textContent = "Calculate Compatibility";
-                this.elements.calcCompatBtn.disabled = false;
-            }
-        };
-
-        this.elements.generateShareBtn.onclick = () => {
-            if (!this.state.latestDNA) {
-                alert("Please load CinemaDNA and write some reviews first.");
-                return;
-            }
-            this.generateShareCard(this.state.latestDNA);
-        };
-
-        // Decision Mode Events
-        this.elements.decisionBtn.addEventListener('click', (e) => {
-            if (e) e.preventDefault();
-            this.elements.decisionModal.style.display = "flex";
-            setTimeout(() => this.elements.decisionModal.classList.add("active"), 10);
-            this.elements.decisionResults.innerHTML = "";
-        });
-        this.elements.closeDecisionModal.addEventListener('click', (e) => {
-            if (e) e.preventDefault();
-            this.elements.decisionModal.classList.remove("active");
-            setTimeout(() => {
-                this.elements.decisionModal.style.display = "none";
-            }, 400);
-        });
-        this.elements.getRecommendationsBtn.addEventListener('click', async (e) => {
-            if (e) e.preventDefault();
-            const options = {
-                mood: this.elements.decisionMood.value,
-                time: parseInt(this.elements.decisionTime.value, 10),
-                company: this.elements.decisionCompany.value
-            };
-
-            this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
-
-            const { store, decisionEngine } = await import('./store.js');
-            const recommendations = await decisionEngine(options);
-
-            this.elements.decisionResults.innerHTML = "";
-            if (recommendations.length === 0) {
-                this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
-                return;
-            }
-
-            recommendations.forEach(m => {
-                const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-                const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
-
-                // Create a sleek mini badge for the dominant metric
-                const badgeColor = m.dominantMetric === 'Intensity' ? 'var(--accent-secondary)' :
-                    m.dominantMetric === 'Thought-Provoking' ? 'var(--accent-primary)' : 'var(--accent-tertiary)';
-
-                const badgeHtml = m.metrics ?
-                    `<span style="background: ${badgeColor}; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; font-family: var(--font-heading); display: inline-block; margin-bottom: 8px;">
-                        Highest Metric: ${m.dominantMetric} (${m.metrics[m.dominantMetric === 'Intensity' ? 'emotionalIntensity' : m.dominantMetric === 'Thought-Provoking' ? 'cognitiveLoad' : 'comfortScore']})
-                    </span>` : '';
-
-                const card = document.createElement("div");
-                card.className = "movie-card";
-                card.innerHTML = `
-                  <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
-                  <div class="card-overlay" style="z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; text-align: left; padding: 20px;">
-                    <div style="background: rgba(15, 17, 21, 0.95); padding: 15px; border-radius: 8px; width: 100%; border: 1px solid var(--border-light); backdrop-filter: blur(8px);">
-                        ${badgeHtml}
-                        <h3 style="margin-bottom: 4px; font-size: 1.1rem;">${m.Title || m.title}</h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
-                            ${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtimeStr || m.runtime || "90 min"}
-                        </p>
-                        <p style="font-size: 0.85rem; line-height: 1.4; color: var(--text-light); margin-bottom: 15px; font-style: italic;">
-                            "${m.explain}"
-                        </p>
-                        <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="width: 100%; padding: 8px; font-size: 0.9rem;">
-                            <i class="fas fa-search"></i> Details
-                        </button>
-                    </div>
-                  </div>`;
-
-                // Event bindings
-                card.dataset.id = m.imdbID || m.id;
-                if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
-                this.state.renderedMoviesMap[m.imdbID || m.id] = m;
-
-                card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m, card.querySelector('img')));
-                this.elements.decisionResults.appendChild(card);
             });
-        });
+        }
 
         ["pa-1", "pa-2", "pa-3", "pb-1", "pb-2", "pb-3", "search-input"].forEach(id => {
             const el = document.getElementById(id);
@@ -475,6 +514,15 @@ export const ui = {
     renderMovies(movies) {
         this.elements.movieResults.innerHTML = "";
 
+        if (!movies || movies.length === 0) {
+            this.elements.movieResults.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
+                    <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                    <p>No movies found matching your request.</p>
+                </div>`;
+            return;
+        }
+
         const cards = [];
 
         movies.forEach(m => {
@@ -500,12 +548,6 @@ export const ui = {
 
             const card = document.createElement("div");
             card.className = "movie-card";
-
-            // Initial styling for GSAP to animate from
-            if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-                card.style.opacity = "0";
-                card.style.transform = "translateY(30px)";
-            }
 
             // Robust Poster URL Logic
             const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
@@ -559,16 +601,22 @@ export const ui = {
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && cards.length > 0) {
             gsap.registerPlugin(ScrollTrigger);
 
+            // Set initial state via GSAP instead of CSS to ensure they are visible if GSAP fails/triggers late
+            gsap.set(cards, { opacity: 0, y: 30 });
+
             ScrollTrigger.batch(cards, {
-                onEnter: batch => gsap.to(batch, {
-                    opacity: 1,
-                    y: 0,
-                    stagger: 0.1,
-                    duration: 0.6,
-                    ease: "power2.out",
-                    overwrite: true
-                }),
-                start: "top 90%",
+                onEnter: batch => gsap.fromTo(batch,
+                    { opacity: 0, y: 30 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        stagger: 0.1,
+                        duration: 0.6,
+                        ease: "power2.out",
+                        overwrite: true
+                    }
+                ),
+                start: "top 95%",
             });
         }
     },
@@ -644,7 +692,7 @@ export const ui = {
         });
 
         this.state.currentSlide = 0;
-        this.state.totalSlides = mockScenes.length;
+        this.state.totalSlides = scenes.length;
         this.updateCarouselPosition();
 
         this.elements.carouselPrev.onclick = () => this.prevSlide();
@@ -1282,19 +1330,34 @@ export const ui = {
 
     async loadInitialMovies() {
         this.showSpinner();
-        const popularMovies = [
-            "Breaking Bad", "The Shawshank Redemption", "The Godfather",
-            "The Dark Knight", "Inception", "Forrest Gump"
-        ];
 
-        const detailedMovies = await Promise.all(
-            popularMovies.map(title => api.fetchMovieByTitle(title))
-        );
-        const validMovies = detailedMovies.filter(Boolean);
+        try {
+            // Using the batch fetcher is more robust as it handles fallbacks internally
+            const validMovies = await api.fetchPopularMoviesBatch();
 
-        const { store } = await import('./store.js');
-        store.saveMoviesBatch(validMovies);
-
-        this.renderMovies(validMovies);
+            if (validMovies && validMovies.length > 0) {
+                const { store } = await import('./store.js');
+                store.saveMoviesBatch(validMovies);
+                this.renderMovies(validMovies);
+            } else {
+                throw new Error("No movies returned from batch fetch.");
+            }
+        } catch (e) {
+            console.error("Failed to load initial movies from API, checking local store:", e);
+            const { store } = await import('./store.js');
+            const localMovies = store.getAllMovies();
+            if (localMovies && localMovies.length > 0) {
+                // Shuffle or just show the first few cached ones
+                this.renderMovies(localMovies.slice(-10).reverse());
+            } else {
+                this.elements.movieResults.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: rgba(231, 76, 60, 0.1); border: 1px dashed var(--accent-primary); border-radius: 12px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: var(--accent-primary); margin-bottom: 15px;"></i>
+                        <p style="color: var(--text-light); font-weight: bold;">Movie APIs are currently unreachable.</p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Please check your internet connection or API keys in config.js.</p>
+                        <button onclick="window.location.reload()" style="margin-top: 15px; padding: 8px 20px; background: var(--accent-primary); color: white; border: none; border-radius: 20px; cursor: pointer;">Retry</button>
+                    </div>`;
+            }
+        }
     }
 };
