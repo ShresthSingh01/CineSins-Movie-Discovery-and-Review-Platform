@@ -2,6 +2,7 @@
     "name": "cinemadna",
     "version": "1.0.0",
     "description": "CinemaDNA — A privacy-first, offline-first movie analytics & personality product",
+    "type": "module",
     "scripts": {
         "start": "npx serve .",
         "build": "echo \"Build step placeholder\"",

@@ -62,7 +62,7 @@ export const store = {
     saveMoviesBatch(movies) {
         let existing = this.getAllMovies();
         const existingIds = new Set(existing.map(m => m.id));
-        const newMovies = movies.filter(m => !existingIds.has(m.id));
+        const newMovies = movies.filter(m => !existingIds.has(m.id)).map(normalizeMovieData);
         if (newMovies.length > 0) {
             existing = existing.concat(newMovies);
             localStorage.setItem("allMovies", JSON.stringify(existing));
@@ -168,6 +168,69 @@ export const store = {
         return false;
     }
 };
+
+/**
+ * Computes emotional metrics for a movie based on normalized data.
+ * @param {Object} movie The normalized movie object
+ * @returns {Object} { emotionalIntensity, cognitiveLoad, comfortScore } from 0-100
+ * 
+ * Formula:
+ * - emotionalIntensity: Base 50. +20 for Drama/Thriller/Action, -10 for Comedy/Family. + (imdbRating * 2). Max 100.
+ * - cognitiveLoad: Base 40. +20 for Sci-Fi/Mystery/Documentary, + (runtimeMin - 90)/2 if runtime > 90. Max 100.
+ * - comfortScore: Base 50. +30 for Comedy/Romance/Animation/Family, -20 for Horror/Thriller. + (imdbRating * 3). Max 100.
+ */
+export function computeMetrics(movie) {
+    const genres = movie.normalizedGenres || [];
+    const rating = Math.min(10, Math.max(0, movie.imdbRatingFloat || 5.0)); // Default 5.0 if missing
+    const runtime = Math.max(0, movie.runtimeMin || 90); // Default 90 if missing
+
+    // Emotional Intensity
+    let intensity = 50;
+    if (genres.some(g => ['Drama', 'Thriller', 'Action', 'Horror'].includes(g))) intensity += 20;
+    if (genres.some(g => ['Comedy', 'Family', 'Animation'].includes(g))) intensity -= 10;
+    intensity += (rating * 2);
+    intensity = Math.min(100, Math.max(0, Math.round(intensity)));
+
+    // Cognitive Load
+    let load = 40;
+    if (genres.some(g => ['Sci-Fi', 'Mystery', 'Documentary', 'Biography'].includes(g))) load += 20;
+    if (runtime > 90) {
+        load += (runtime - 90) / 2;
+    }
+    load = Math.min(100, Math.max(0, Math.round(load)));
+
+    // Comfort Score
+    let comfort = 50;
+    if (genres.some(g => ['Comedy', 'Romance', 'Animation', 'Family'].includes(g))) comfort += 30;
+    if (genres.some(g => ['Horror', 'Thriller', 'Crime'].includes(g))) comfort -= 20;
+    comfort += (rating * 3);
+    comfort = Math.min(100, Math.max(0, Math.round(comfort)));
+
+    return {
+        emotionalIntensity: intensity,
+        cognitiveLoad: load,
+        comfortScore: comfort
+    };
+}
+
+// Add a normalization helper for metrics persistence
+export function normalizeMovieData(movie) {
+    if (!movie) return movie;
+
+    // Create new normalized properties
+    movie.normalizedGenres = (movie.genres || movie.Genre || "").split(',').map(g => g.trim()).filter(Boolean);
+
+    const runtimeStr = String(movie.runtime || movie.Runtime || "0");
+    const runtimeMatch = runtimeStr.match(/\d+/);
+    movie.runtimeMin = runtimeMatch ? parseInt(runtimeMatch[0], 10) : 0;
+
+    movie.imdbRatingFloat = parseFloat(movie.imdbRating || 0) || 0;
+    movie.imdbVotesInt = parseInt(String(movie.imdbVotes || "0").replace(/,/g, '')) || 0;
+
+    // Attach core metrics
+    movie.metrics = computeMetrics(movie);
+    return movie;
+}
 
 export async function decisionEngine(options) {
     let movies = store.getAllMovies();
