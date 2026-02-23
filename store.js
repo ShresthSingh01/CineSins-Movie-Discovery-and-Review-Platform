@@ -425,6 +425,17 @@ export function computeUserAnalytics() {
     else if (avgEmotional > 0) moodTrend = "Calm/Relaxed";
     else moodTrend = "N/A";
 
+    let totalRuntime = 0;
+    userMovies.forEach(m => {
+        totalRuntime += (m.runtimeMin || 0);
+    });
+    const avgRuntime = userMovies.length > 0 ? Math.round(totalRuntime / userMovies.length) : 0;
+
+    // Format total watch time nicely
+    const hours = Math.floor(totalRuntime / 60);
+    const mins = totalRuntime % 60;
+    const totalWatchTimeString = `${hours}h ${mins}m`;
+
     const analytics = {
         totalMoviesSaved: userMovies.length,
         favoriteGenre,
@@ -433,7 +444,9 @@ export function computeUserAnalytics() {
         totalReviews: reviews.length,
         top5Directors,
         moodTrend,
-        avgEmotional
+        avgEmotional,
+        avgRuntime,
+        totalWatchTimeString
     };
 
     localStorage.setItem("cinemaDNA", JSON.stringify(analytics));

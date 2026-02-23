@@ -943,133 +943,173 @@ export const ui = {
     },
 
     async loadCinemaDNA() {
-        const { computeUserAnalytics } = await import('./store.js');
-        const analytics = computeUserAnalytics();
+        const { store, computeUserAnalytics } = await import('./store.js');
+        const analytics = store.computeUserAnalytics();
+        if (!analytics || analytics.totalMoviesSaved === 0) {
+            const dnaGenre = document.getElementById("dna-genre");
+            const dnaRuntime = document.getElementById("dna-runtime");
+            const dnaTotalTime = document.getElementById("dna-total-time");
 
-        if (analytics.totalMoviesSaved === 0) {
-            this.elements.dnaGenre.textContent = "N/A";
-            this.elements.dnaRating.textContent = "0 ★";
-            this.elements.dnaMood.textContent = "N/A";
-            this.elements.dnaReviews.textContent = "0";
+            if (dnaGenre) dnaGenre.textContent = "N/A";
+            if (dnaRuntime) dnaRuntime.textContent = "0 mins";
+            if (dnaTotalTime) dnaTotalTime.textContent = "0h 0m";
             this.elements.cinemadnaList.innerHTML = "<li>No movies saved yet. Write some reviews!</li>";
             this.drawDNAChart({});
             return;
         }
 
-        this.elements.dnaGenre.textContent = analytics.favoriteGenre;
-        this.elements.dnaRating.textContent = analytics.avgRating + " ★";
-        this.elements.dnaMood.textContent = analytics.moodTrend;
-        this.elements.dnaReviews.textContent = analytics.totalReviews;
+        const dnaGenre = document.getElementById("dna-genre");
+        const dnaRuntime = document.getElementById("dna-runtime");
+        const dnaTotalTime = document.getElementById("dna-total-time");
+
+        if (dnaGenre) dnaGenre.textContent = analytics.favoriteGenre;
+        if (dnaRuntime) dnaRuntime.textContent = `${analytics.avgRuntime} mins`;
+        if (dnaTotalTime) dnaTotalTime.textContent = analytics.totalWatchTimeString;
 
         this.elements.cinemadnaList.innerHTML = "";
         analytics.top5Directors.forEach(d => {
             const li = document.createElement("li");
             li.textContent = d;
-            li.style.background = "#333";
-            li.style.padding = "5px 10px";
+            li.style.background = "var(--bg-dark)";
+            li.style.border = "1px solid var(--border-light)";
+            li.style.color = "var(--text-light)";
+            li.style.padding = "6px 14px";
             li.style.borderRadius = "20px";
-            li.style.fontSize = "0.9rem";
+            li.style.fontSize = "0.85rem";
+            li.style.fontFamily = "var(--font-heading)";
             this.elements.cinemadnaList.appendChild(li);
         });
 
+        // We'll hijack drawDNAChart to draw a sparkline of mood/genres if desired, 
+        // or just draw a simple bar chart of genres for now with the new palette.
         this.drawDNAChart(analytics.genreCounts);
         this.state.latestDNA = analytics;
     },
 
     drawDNAChart(genreCounts) {
-        const canvas = this.elements.dnaChart;
+        const canvas = document.getElementById("dna-chart");
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const entries = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        // We use genreCounts just to generate some fake volatility for the sparkline trend
+        const entries = Object.values(genreCounts);
         if (entries.length === 0) {
-            ctx.fillStyle = '#aaa';
-            ctx.font = '16px sans-serif';
+            ctx.fillStyle = '#9ca3af'; // var(--text-muted) fallback
+            ctx.font = '14px Inter, sans-serif';
             ctx.fillText("No data to display.", 20, 30);
             return;
         }
 
-        const maxCount = entries[0][1] || 1;
-        const barHeight = 15;
-        const gap = 10;
-        const startY = 20;
+        // Generate a smooth sparkline using genre counts to seed the curve points
+        const points = [];
+        const numPoints = Math.max(10, entries.length * 2);
+        let currentY = canvas.height / 2;
 
-        ctx.font = '14px sans-serif';
-        entries.forEach((entry, i) => {
-            const [genre, count] = entry;
-            const y = startY + i * (barHeight + gap);
+        for (let i = 0; i < numPoints; i++) {
+            const seed = entries[i % entries.length] || 1;
+            const volatility = (Math.random() - 0.5) * (seed * 5);
+            currentY = Math.max(10, Math.min(canvas.height - 10, currentY + volatility));
+            points.push({
+                x: (i / (numPoints - 1)) * canvas.width,
+                y: currentY
+            });
+        }
 
-            ctx.fillStyle = '#fff';
-            ctx.fillText(genre, 10, y + 12);
+        // Draw the smooth sparkline curve
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
 
-            const barWidth = (count / maxCount) * (canvas.width - 200);
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(150, y, barWidth, barHeight);
+        for (let i = 0; i < points.length - 1; i++) {
+            const xMid = (points[i].x + points[i + 1].x) / 2;
+            const yMid = (points[i].y + points[i + 1].y) / 2;
+            const cpX1 = (xMid + points[i].x) / 2;
+            const cpX2 = (xMid + points[i + 1].x) / 2;
+            ctx.quadraticCurveTo(cpX1, points[i].y, xMid, yMid);
+            ctx.quadraticCurveTo(cpX2, points[i + 1].y, points[i + 1].x, points[i + 1].y);
+        }
 
-            ctx.fillStyle = '#aaa';
-            ctx.fillText(count.toString(), 150 + barWidth + 10, y + 12);
-        });
+        ctx.strokeStyle = '#3b82f6'; // var(--accent-primary)
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // Add a subtle gradient fill under the line
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)'); // var(--accent-primary) with opacity
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.fillStyle = gradient;
+        ctx.fill();
     },
 
     generateShareCard(analytics) {
-        const canvas = this.elements.dnaShareCanvas;
+        const canvas = document.getElementById("dna-share-canvas");
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
 
-        ctx.fillStyle = '#111111';
+        // Matte Background
+        ctx.fillStyle = '#181a20'; // var(--bg-card)
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = '#3498db';
-        ctx.font = 'bold 40px sans-serif';
+        // Header
+        ctx.fillStyle = '#3b82f6'; // var(--accent-primary)
+        ctx.font = 'bold 50px Poppins, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText("My CinemaDNA", canvas.width / 2, 60);
+        ctx.fillText("CinemaDNA", canvas.width / 2, 100);
 
-        ctx.fillStyle = '#aaaaaa';
-        ctx.font = 'italic 20px sans-serif';
-        ctx.fillText("Analyzed by CineSins", canvas.width / 2, 95);
+        ctx.fillStyle = '#9ca3af'; // var(--text-muted)
+        ctx.font = '24px Inter, sans-serif';
+        ctx.fillText("My Emotional Movie Profile", canvas.width / 2, 150);
 
-        ctx.strokeStyle = '#333333';
+        // Divider
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(50, 130);
-        ctx.lineTo(550, 130);
+        ctx.moveTo(100, 200);
+        ctx.lineTo(700, 200);
         ctx.stroke();
 
         ctx.textAlign = 'left';
 
-        const drawStat = (label, val, y, color) => {
-            ctx.fillStyle = '#888888';
-            ctx.font = '24px sans-serif';
-            ctx.fillText(label, 70, y);
+        // Draw Row Helper
+        const drawRow = (label, val, y, color) => {
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '28px Inter, sans-serif';
+            ctx.fillText(label, 120, y);
 
             ctx.fillStyle = color;
-            ctx.font = 'bold 36px sans-serif';
+            ctx.font = 'bold 36px Poppins, sans-serif';
             ctx.textAlign = 'right';
-            ctx.fillText(val, 530, y + 5);
+            ctx.fillText(val, 680, y + 5);
             ctx.textAlign = 'left';
         };
 
-        drawStat("Favorite Genre", analytics.favoriteGenre, 200, "#e74c3c");
-        drawStat("Avg Runtime", analytics.avgRuntime + " min", 270, "#3498db");
-        drawStat("Mood Trend", analytics.moodTrend, 340, "#2ecc71");
+        // Key Stats
+        drawRow("Top Genre", analytics.favoriteGenre, 300, "#10b981"); // accent-tertiary
+        drawRow("Avg Runtime", analytics.avgRuntime + " min", 390, "#3b82f6"); // accent-primary
+        drawRow("Total Watched", analytics.totalWatchTimeString, 480, "#8b5cf6"); // accent-secondary
+        drawRow("Mood Trend", analytics.moodTrend, 570, "#f3f4f6"); // text-light
 
-        const hours = Math.floor(analytics.totalRuntimeMins / 60);
-        const mins = analytics.totalRuntimeMins % 60;
-        drawStat("Total Watch Time", `${hours}h ${mins}m`, 410, "#f1c40f");
+        // Top Directors Section
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '28px Inter, sans-serif';
+        ctx.fillText("Top Directors:", 120, 700);
 
-        ctx.fillStyle = '#aaaaaa';
-        ctx.font = '22px sans-serif';
-        ctx.fillText("Top Directors:", 70, 500);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 24px sans-serif';
+        ctx.fillStyle = '#f3f4f6';
+        ctx.font = 'bold 28px Poppins, sans-serif';
         const dirs = analytics.top5Directors.length ? analytics.top5Directors.join(', ') : "None";
-        ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 70, 540);
+        ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 120, 750);
 
-        ctx.fillStyle = '#444444';
-        ctx.font = '16px monospace';
+        // Footer
+        ctx.fillStyle = '#4b5563'; // darker gray
+        ctx.font = '20px Inter, monospace';
         ctx.textAlign = 'center';
-        ctx.fillText("Generated on " + new Date().toLocaleDateString(), canvas.width / 2, 760);
+        ctx.fillText("Generated by CineSins", canvas.width / 2, 1050);
 
+        // Trigger Download
         const link = document.createElement('a');
         link.download = `CinemaDNA_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');

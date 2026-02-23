@@ -5,7 +5,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CineSins - Movie Reviews</title>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+    rel="stylesheet">
+
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles/palette.css">
   <link rel="manifest" href="manifest.json">
   <script type="module" src="main.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -170,51 +178,49 @@
   <!-- CinemaDNA -->
   <section id="cinemadna" class="page-section">
     <div class="container">
-      <h2 class="section-title" style="color: #3498db;"><i class="fas fa-chart-pie"></i> CinemaDNA</h2>
-      <p style="text-align: center; color: #aaa; margin-bottom: 20px;">Your personal movie analytics dashboard.</p>
+      <h2 class="section-title"><i class="fas fa-fingerprint"></i> CinemaDNA</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">Your personal movie analytics
+        dashboard.</p>
 
-      <div class="dna-stats-grid"
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
-        <div class="stat-card"
-          style="background:#222; padding:15px; border-radius:8px; border-bottom: 3px solid #e74c3c;">
-          <h4 style="color:#aaa; font-size:0.9rem;">Favorite Genre</h4>
-          <p id="dna-genre" style="font-size:1.5rem; font-weight:bold; color:#e74c3c;">-</p>
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <i class="fas fa-heart" style="color: var(--accent-tertiary); font-size: 1.5rem;"></i>
+          <p class="stat-label">Top Genres</p>
+          <p id="dna-genre" class="stat-value">-</p>
         </div>
-        <div class="stat-card"
-          style="background:#222; padding:15px; border-radius:8px; border-bottom: 3px solid #3498db;">
-          <h4 style="color:#aaa; font-size:0.9rem;">Avg Rating</h4>
-          <p id="dna-rating" style="font-size:1.5rem; font-weight:bold; color:#3498db;">-</p>
+        <div class="stat-card">
+          <i class="fas fa-clock" style="color: var(--accent-primary); font-size: 1.5rem;"></i>
+          <p class="stat-label">Avg Runtime</p>
+          <p id="dna-runtime" class="stat-value">-</p>
         </div>
-        <div class="stat-card"
-          style="background:#222; padding:15px; border-radius:8px; border-bottom: 3px solid #2ecc71;">
-          <h4 style="color:#aaa; font-size:0.9rem;">Mood Trend</h4>
-          <p id="dna-mood" style="font-size:1.5rem; font-weight:bold; color:#2ecc71;">-</p>
-        </div>
-        <div class="stat-card"
-          style="background:#222; padding:15px; border-radius:8px; border-bottom: 3px solid #f1c40f;">
-          <h4 style="color:#aaa; font-size:0.9rem;">Total Reviews</h4>
-          <p id="dna-reviews" style="font-size:1.5rem; font-weight:bold; color:#f1c40f;">-</p>
+        <div class="stat-card">
+          <i class="fas fa-film" style="color: var(--accent-secondary); font-size: 1.5rem;"></i>
+          <p class="stat-label">Total Time Watched</p>
+          <p id="dna-total-time" class="stat-value">-</p>
         </div>
       </div>
 
-      <div style="background:#222; padding:20px; border-radius:8px; margin-bottom: 30px;">
-        <h4 style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">Top Directors</h4>
-        <ul id="dna-directors" style="list-style:none; padding:0; display:flex; gap:10px; flex-wrap:wrap;"></ul>
+      <div class="canvas-container">
+        <h4 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px; font-family: var(--font-heading);">
+          Top 5 Directors</h4>
+        <ul id="dna-directors" style="list-style: none; padding: 0; display: flex; gap: 10px; flex-wrap: wrap;"></ul>
       </div>
 
-      <div style="background:#222; padding:20px; border-radius:8px; margin-bottom: 30px;">
-        <h4 style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">Genre Distribution</h4>
+      <div class="canvas-container">
+        <h4 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px; font-family: var(--font-heading);">
+          Mood Trend Sparkline</h4>
         <canvas id="dna-chart" width="800" height="200"
-          style="width:100%; max-width:800px; height:200px; background:#111; border-radius:4px;"></canvas>
+          style="width: 100%; max-width: 800px; height: 150px; border-radius: 4px;"></canvas>
       </div>
 
-      <div style="text-align: center;">
+      <div style="text-align: center; margin-top: 30px;">
         <button id="generate-share-btn" class="save-btn"
-          style="background:#3498db; padding: 12px 24px; font-size: 1.1rem;"><i class="fas fa-download"></i> Generate
-          Share Card</button>
+          style="background: var(--accent-primary); color: #fff; padding: 14px 28px; font-size: 1.1rem; border: none;">
+          <i class="fas fa-download"></i> Generate Share Card
+        </button>
       </div>
 
-      <canvas id="dna-share-canvas" width="600" height="800" style="display:none;"></canvas>
+      <canvas id="dna-share-canvas" width="800" height="1200" style="display:none;"></canvas>
     </div>
   </section>
 
