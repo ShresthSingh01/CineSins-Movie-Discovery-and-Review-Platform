@@ -247,6 +247,7 @@ export async function decisionEngine(options) {
     };
     const preferredGenres = moodMap[options.mood] || [];
 
+    // Filter by Runtime
     let candidates = movies.filter(m => {
         const runtimeMatch = (m.runtime || "").match(/\d+/);
         if (!runtimeMatch) return false;
@@ -259,32 +260,69 @@ export async function decisionEngine(options) {
         return timeFits;
     });
 
+    // We shouldn't drop all movies if none fit the exact time to prevent empty states
+    if (candidates.length < 3) {
+        candidates = movies;
+    }
+
+    const currentYear = new Date().getFullYear();
+
     candidates = candidates.map(m => {
-        const imdbRating = parseFloat(m.imdbRating) || 0;
-        const imdbVotes = parseInt((m.imdbVotes || "0").replace(/,/g, '')) || 0;
+        const imdbRating = parseFloat(m.imdbRating) || 5.0;
+        const year = parseInt(m.Year) || 2000;
 
+        const metrics = m.metrics || { comfortScore: 50, emotionalIntensity: 50, cognitiveLoad: 50 };
+
+        let moodScore = 50;
+        if (options.mood === 'Comfort' || options.mood === 'Laugh') moodScore = metrics.comfortScore;
+        else if (options.mood === 'Exciting') moodScore = metrics.emotionalIntensity;
+        else if (options.mood === 'Thoughtful') moodScore = metrics.cognitiveLoad;
+
+        const normalizedMood = moodScore / 100;
+        const normalizedRating = imdbRating / 10;
+
+        // Recency Bias (0 to 1, where current year is 1, and 50 years ago is 0)
+        let recency = 1 - Math.min(1, (currentYear - year) / 50);
+        if (recency < 0) recency = 0;
+
+        // Weights: 0.6 Mood Constraint, 0.3 IMDB Rating, 0.1 Recency Bias
+        const score = (0.6 * normalizedMood) + (0.3 * normalizedRating) + (0.1 * recency);
+
+        // Compute Dominant Metric
+        let dominant = "Comfort";
+        let maxVal = metrics.comfortScore;
+        if (metrics.emotionalIntensity > maxVal) { dominant = "Intensity"; maxVal = metrics.emotionalIntensity; }
+        if (metrics.cognitiveLoad > maxVal) { dominant = "Thought-Provoking"; }
+
+        // Determine if genre actually matched
         const movieGenres = (m.genres || '').split(',').map(g => g.trim());
-        let genreMatchCount = 0;
-        const matched = [];
-        for (const g of movieGenres) {
-            if (preferredGenres.includes(g)) {
-                genreMatchCount++;
-                matched.push(g);
-            }
-        }
+        const matched = movieGenres.filter(g => preferredGenres.includes(g));
 
-        const score = (imdbRating * Math.log(1 + imdbVotes)) + 0.5 * genreMatchCount;
-        return { movie: m, score, genreMatchCount, matchedGenres: matched };
+        return {
+            movie: m,
+            score,
+            moodScore,
+            dominant,
+            matchedGenres: matched
+        };
     });
 
-    candidates = candidates.filter(c => c.genreMatchCount > 0);
+    // Give slight edge to actual genre matches
+    candidates.forEach(c => {
+        if (c.matchedGenres.length > 0) c.score += 0.05;
+    });
+
     candidates.sort((a, b) => b.score - a.score);
 
     const top3 = candidates.slice(0, 3);
     return top3.map(c => {
         const m = c.movie;
-        const explain = `Matches your mood (${c.matchedGenres.join(', ')}) and fits ${m.runtime}.`;
-        return { ...m, explain };
+        const explain = `High ${c.dominant.toLowerCase()} score (${c.moodScore}) and runtime fits ${m.runtime}.`;
+        return {
+            ...m,
+            explain,
+            dominantMetric: c.dominant
+        };
     });
 }
 

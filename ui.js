@@ -322,7 +322,7 @@ export const ui = {
 
             this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
 
-            const { decisionEngine } = await import('./store.js');
+            const { store, decisionEngine } = await import('./store.js');
             const recommendations = await decisionEngine(options);
 
             this.elements.decisionResults.innerHTML = "";
@@ -330,38 +330,46 @@ export const ui = {
                 this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
                 return;
             }
+
             recommendations.forEach(m => {
-                const metricsHtml = m.metrics ? `
-                  <div class="metrics-container">
-                    <div class="metric-row">
-                      <span class="metric-label">Emotional</span>
-                      <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
-                      <span class="metric-value">${m.metrics.emotionalIntensity}</span>
-                    </div>
-                    <div class="metric-row">
-                      <span class="metric-label">Cognitive</span>
-                      <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
-                      <span class="metric-value">${m.metrics.cognitiveLoad}</span>
-                    </div>
-                    <div class="metric-row">
-                      <span class="metric-label">Comfort</span>
-                      <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
-                      <span class="metric-value">${m.metrics.comfortScore}</span>
-                    </div>
-                  </div>
-                ` : '';
+                const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+                const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+
+                // Create a sleek mini badge for the dominant metric
+                const badgeColor = m.dominantMetric === 'Intensity' ? 'var(--accent-secondary)' :
+                    m.dominantMetric === 'Thought-Provoking' ? 'var(--accent-primary)' : 'var(--accent-tertiary)';
+
+                const badgeHtml = m.metrics ?
+                    `<span style="background: ${badgeColor}; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; font-family: var(--font-heading); display: inline-block; margin-bottom: 8px;">
+                        Highest Metric: ${m.dominantMetric} (${m.metrics[m.dominantMetric === 'Intensity' ? 'emotionalIntensity' : m.dominantMetric === 'Thought-Provoking' ? 'cognitiveLoad' : 'comfortScore']})
+                    </span>` : '';
 
                 const card = document.createElement("div");
                 card.className = "movie-card";
                 card.innerHTML = `
-          <div class="movie-info">
-            <h3>${m.title}</h3>
-            <p>${m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtime}</p>
-            <p class="explain-string">${m.explain}</p>
-            ${metricsHtml}
-            <button class="review-btn" style="margin-top: 10px;">Add/Edit Review</button>
-          </div>`;
-                card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m));
+                  <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
+                  <div class="card-overlay" style="z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; text-align: left; padding: 20px;">
+                    <div style="background: rgba(15, 17, 21, 0.95); padding: 15px; border-radius: 8px; width: 100%; border: 1px solid var(--border-light); backdrop-filter: blur(8px);">
+                        ${badgeHtml}
+                        <h3 style="margin-bottom: 4px; font-size: 1.1rem;">${m.Title || m.title}</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+                            ${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtimeStr || m.runtime || "90 min"}
+                        </p>
+                        <p style="font-size: 0.85rem; line-height: 1.4; color: var(--text-light); margin-bottom: 15px; font-style: italic;">
+                            "${m.explain}"
+                        </p>
+                        <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="width: 100%; padding: 8px; font-size: 0.9rem;">
+                            <i class="fas fa-search"></i> Details
+                        </button>
+                    </div>
+                  </div>`;
+
+                // Event bindings
+                card.dataset.id = m.imdbID || m.id;
+                if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
+                this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+
+                card.querySelector(".review-btn").addEventListener("click", () => this.openModal(m, card.querySelector('img')));
                 this.elements.decisionResults.appendChild(card);
             });
         });
