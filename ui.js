@@ -1,5 +1,6 @@
 import { api } from './api.js';
 import { store } from './store.js';
+import { config } from './config.js';
 
 export const ui = {
     elements: {},
@@ -8,7 +9,37 @@ export const ui = {
         selectedRating: 0
     },
 
+    applyFeatureFlags() {
+        if (!config.FEATURES.sceneTags) {
+            const tagsContainer = document.getElementById("modal-tags")?.parentElement;
+            if (tagsContainer) tagsContainer.style.display = "none";
+        }
+        if (!config.FEATURES.watchNow) {
+            const watchBtn = document.getElementById("watch-now-btn");
+            if (watchBtn) watchBtn.style.display = "none";
+        }
+        if (!config.FEATURES.neonUI) {
+            // Can toggle off particles or specific glowing classes if needed
+            const particles = document.getElementById("particles-container");
+            if (particles) particles.style.display = "none";
+        }
+        if (!config.FEATURES.sceneTags) {
+            // Since sceneTags is false, we can also disable the carousel if that falls under it, or create a new flag.
+            // The prompt said: "Disable/flag for later: Scene Carousel... { FEATURES: { sceneTags: false, watchNow: false, compatibility: false, neonUI: false } }"
+            // Let's assume sceneTags flag covers carousel, or we add sceneCarousel to config.
+            // Since config only mentioned 4 keys, let's just piggyback or hide carousel by default.
+            const carousel = document.getElementById("modal-carousel");
+            if (carousel) carousel.style.display = "none";
+        }
+        if (!config.FEATURES.compatibility) {
+            const compatSection = document.getElementById("compatibility");
+            if (compatSection) compatSection.style.display = "none";
+        }
+    },
+
     init() {
+        this.applyFeatureFlags();
+
         this.elements = {
             searchInput: document.getElementById("search-input"),
             searchBtn: document.getElementById("search-btn"),
@@ -90,6 +121,12 @@ export const ui = {
                     mainNav.classList.remove("active");
                     if (mobileMenuBtn) mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
                 }
+
+                if (link.dataset.section === "decision-mode") {
+                    document.getElementById("decision-modal").classList.add("active");
+                    return;
+                }
+
                 document.querySelectorAll("nav a[data-section]").forEach(a => a.classList.remove("active"));
                 link.classList.add("active");
                 document.querySelectorAll(".page-section").forEach(sec => sec.classList.remove("active"));
