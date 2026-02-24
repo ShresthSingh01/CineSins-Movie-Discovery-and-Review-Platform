@@ -6,7 +6,9 @@ export const ui = {
     elements: {},
     state: {
         currentMovie: null,
-        selectedRating: 0
+        selectedRating: 0,
+        renderedMoviesMaps: {},
+        renderedWatchlistMap: {}
     },
 
     applyFeatureFlags() {
@@ -38,9 +40,12 @@ export const ui = {
     },
 
     init() {
+        this.initLoader();
         this.applyFeatureFlags();
 
         this.elements = {
+            loaderWrapper: document.getElementById("loader-wrapper"),
+            loaderBar: document.getElementById("loader-bar"),
             searchInput: document.getElementById("search-input"),
             searchBtn: document.getElementById("search-btn"),
             decisionBtn: document.getElementById("decision-mode-btn"),
@@ -55,12 +60,11 @@ export const ui = {
             recentList: document.getElementById("recent-list"),
             reviewsList: document.getElementById("reviews-list"),
             watchlistList: document.getElementById("watchlist-list"),
-            hiddenGemsList: document.getElementById("hidden-gems-list"),
+            hiddenGemsResults: document.getElementById("hidden-gems-results"),
             cinemadnaList: document.getElementById("dna-directors"),
             dnaGenre: document.getElementById("dna-genre"),
-            dnaRating: document.getElementById("dna-rating"),
-            dnaMood: document.getElementById("dna-mood"),
-            dnaReviews: document.getElementById("dna-reviews"),
+            dnaRating: document.getElementById("dna-avg-rating"),
+            dnaLogged: document.getElementById("dna-logged"),
             dnaChart: document.getElementById("dna-chart"),
             generateShareBtn: document.getElementById("generate-share-btn"),
             dnaShareCanvas: document.getElementById("dna-share-canvas"),
@@ -83,22 +87,184 @@ export const ui = {
             saveBtn: document.getElementById("save-review"),
             watchlistBtn: document.getElementById("watchlist-btn"),
             watchNowBtn: document.getElementById("watch-now-btn"),
-            importTagsBtn: document.getElementById("import-tags-btn"),
-            exportTagsBtn: document.getElementById("export-tags-btn"),
             importFile: document.getElementById("import-file"),
-            calcCompatBtn: document.getElementById("calc-compat-btn"),
-            compatResults: document.getElementById("compat-results"),
-            compatScore: document.getElementById("compat-score"),
-            compatGenres: document.getElementById("compat-genres"),
-            compatMoviesList: document.getElementById("compat-movies-list"),
-            generateCompatShareBtn: document.getElementById("generate-compat-share-btn"),
-            compatShareCanvas: document.getElementById("compat-share-canvas")
+            aiTrigger: document.getElementById("ai-guru-trigger"),
+            aiChat: document.getElementById("ai-guru-chat"),
+            closeAiChat: document.getElementById("close-ai-chat"),
+            aiChatBody: document.getElementById("ai-chat-messages"),
+            aiChatInput: document.getElementById("ai-chat-input"),
+            aiChatSend: document.getElementById("ai-chat-send")
         };
 
         this.setupNavigation();
         this.setupEventListeners();
+        this.initHeaderScroll();
+        this.initCursorGlow();
+        this.initScrollAnimations();
         this.loadRecent();
+        this.initAIGuru();
+
+        // Failsafe: Force complete loader after 6 seconds if it gets stuck
+        setTimeout(() => this.completeLoader(), 6000);
+
         this.loadInitialMovies();
+        this.loadHiddenGems();
+    },
+
+    initLoader() {
+        if (typeof gsap === 'undefined') return;
+
+        const tl = gsap.timeline();
+
+        // Rapid initial progress
+        tl.to("#loader-bar", {
+            width: "40%",
+            duration: 0.3,
+            ease: "power2.inOut"
+        })
+            .to("#loader-bar", {
+                width: "80%",
+                duration: 0.4,
+                ease: "power1.inOut"
+            });
+
+        this.loaderTimeline = tl;
+    },
+
+    completeLoader() {
+        if (!this.elements.loaderWrapper) return;
+        if (this.state.loaderCompleted) return; // Prevent double completion
+        this.state.loaderCompleted = true;
+
+        if (typeof gsap !== 'undefined') {
+            gsap.to("#loader-bar", {
+                width: "100%",
+                duration: 0.2,
+                ease: "power2.out",
+                onComplete: () => {
+                    gsap.to(this.elements.loaderWrapper, {
+                        opacity: 0,
+                        duration: 0.4,
+                        ease: "power2.inOut",
+                        onComplete: () => {
+                            this.elements.loaderWrapper.style.display = "none";
+                            this.animateHeroEntrance();
+                        }
+                    });
+                }
+            });
+        } else {
+            // Fallback for missing GSAP
+            this.elements.loaderWrapper.classList.add('loaded');
+            setTimeout(() => {
+                this.elements.loaderWrapper.style.display = "none";
+                document.body.style.overflow = "auto";
+            }, 800);
+        }
+    },
+
+    animateHeroEntrance() {
+        if (typeof gsap === 'undefined') return;
+
+        const tl = gsap.timeline();
+        tl.from(".hero-title", {
+            y: 60,
+            opacity: 0,
+            duration: 1,
+            ease: "power4.out"
+        })
+            .from(".hero-subtitle", {
+                y: 30,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power3.out"
+            }, "-=0.6")
+            .from(".hero-search", {
+                y: 30,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power3.out"
+            }, "-=0.6");
+    },
+
+    initScrollAnimations() {
+        if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Sections parallax/reveal
+        document.querySelectorAll('.page-section').forEach(section => {
+            gsap.from(section.querySelectorAll('.section-title, .dashboard-grid, .movie-grid'), {
+                scrollTrigger: {
+                    trigger: section,
+                    start: "top 80%",
+                    toggleActions: "play none none none"
+                },
+                y: 50,
+                opacity: 1, // Changed from 0 to 1 to ensure visibility even if animation is skipped
+                duration: 1,
+                stagger: 0.2,
+                ease: "power3.out"
+            });
+        });
+
+        // Hero Parallax
+        gsap.to(".hero-content", {
+            scrollTrigger: {
+                trigger: ".hero-section",
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            },
+            y: 200,
+            opacity: 0
+        });
+
+        gsap.to(".hero-gradient-overlay", {
+            scrollTrigger: {
+                trigger: ".hero-section",
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            },
+            opacity: 1
+        });
+    },
+
+    initHeaderScroll() {
+        const header = document.getElementById('header');
+        if (!header) return;
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    },
+
+    initCursorGlow() {
+        const glow = document.getElementById('cursor-glow');
+        if (!glow) return;
+
+        window.addEventListener('mousemove', (e) => {
+            gsap.to(glow, {
+                x: e.clientX,
+                y: e.clientY,
+                duration: 0.8,
+                ease: "power2.out"
+            });
+        });
+
+        // Add magnetic effect to specific elements
+        document.querySelectorAll('.ripple-btn, .nav-btn, .logo').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                gsap.to(glow, { scale: 2, backgroundColor: 'rgba(255, 46, 99, 0.4)', duration: 0.3 });
+            });
+            el.addEventListener('mouseleave', () => {
+                gsap.to(glow, { scale: 1, backgroundColor: 'rgba(255, 46, 99, 0.15)', duration: 0.3 });
+            });
+        });
     },
 
     setupNavigation() {
@@ -107,37 +273,48 @@ export const ui = {
 
         if (mobileMenuBtn && mainNav) {
             mobileMenuBtn.addEventListener("click", () => {
-                const isActive = mainNav.classList.toggle("active");
-                mobileMenuBtn.innerHTML = isActive ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+                mainNav.classList.toggle("active");
+                mobileMenuBtn.innerHTML = mainNav.classList.contains("active")
+                    ? '<i class="fas fa-times"></i>'
+                    : '<i class="fas fa-bars"></i>';
             });
         }
 
-        document.querySelectorAll("nav a[data-section]").forEach(link => {
+        document.querySelectorAll("[data-section]").forEach(link => {
             link.addEventListener("click", e => {
                 e.preventDefault();
+                const section = link.dataset.section;
 
-                // Close mobile menu on click
-                if (mainNav && mainNav.classList.contains("active")) {
+                if (section === "decision-mode") {
+                    this.elements.decisionModal.style.display = "flex";
+                    setTimeout(() => this.elements.decisionModal.classList.add("active"), 10);
+                    return;
+                }
+
+                // Close mobile menu
+                if (mainNav) {
                     mainNav.classList.remove("active");
                     if (mobileMenuBtn) mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
                 }
 
-                if (link.dataset.section === "decision-mode") {
-                    document.getElementById("decision-modal").classList.add("active");
-                    return;
+                document.querySelectorAll("nav a").forEach(a => a.classList.remove("active"));
+                const navLink = document.querySelector(`nav a[data-section="${section}"]`);
+                if (navLink) navLink.classList.add("active");
+
+                document.querySelectorAll(".page-section").forEach(sec => sec.classList.remove("active"));
+                const targetSec = document.getElementById(section);
+                if (targetSec) targetSec.classList.add("active");
+
+                if (section === "reviews") this.loadUserReviews();
+                if (section === "watchlist") this.loadWatchlist();
+                if (section === "cinemadna") this.loadCinemaDNA();
+
+                // Refresh ScrollTrigger to account for newly visible sections
+                if (typeof ScrollTrigger !== 'undefined') {
+                    ScrollTrigger.refresh();
                 }
 
-                document.querySelectorAll("nav a[data-section]").forEach(a => a.classList.remove("active"));
-                link.classList.add("active");
-                document.querySelectorAll(".page-section").forEach(sec => sec.classList.remove("active"));
-                document.getElementById(link.dataset.section).classList.add("active");
-                if (link.dataset.section === "reviews") this.loadUserReviews();
-                if (link.dataset.section === "watchlist") this.loadWatchlist();
-                if (link.dataset.section === "hidden-gems") this.loadHiddenGems();
-                if (link.dataset.section === "cinemadna") this.loadCinemaDNA();
-                if (link.dataset.section === "compatibility") {
-                    // Reset or prepare compatibility view if needed
-                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         });
     },
@@ -274,6 +451,10 @@ export const ui = {
                     this.elements.compatScore.textContent = storeCompatResult.percentage;
                     this.elements.compatGenres.textContent = storeCompatResult.commonGenres.length ? storeCompatResult.commonGenres.join(', ') : "None";
                     this.elements.compatMoviesList.innerHTML = storeCompatResult.suggestedMovies.length ? "" : "<p>No suggestions found.</p>";
+
+                    // Clear previous map for this container
+                    this.state.renderedMoviesMaps[this.elements.compatMoviesList.id] = {};
+
                     storeCompatResult.suggestedMovies.forEach(m => {
                         const card = document.createElement("div");
                         card.className = "movie-card";
@@ -293,8 +474,7 @@ export const ui = {
                           </div>`;
 
                         card.dataset.id = m.imdbID || m.id;
-                        if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
-                        this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+                        this.state.renderedMoviesMaps[this.elements.compatMoviesList.id][m.imdbID || m.id] = m;
 
                         card.querySelector(".review-btn").onclick = (e) => {
                             e.stopPropagation();
@@ -349,67 +529,96 @@ export const ui = {
             });
         }
         if (this.elements.getRecommendationsBtn) {
-            this.elements.getRecommendationsBtn.addEventListener('click', async (e) => {
+            const updateRecs = async (e) => {
                 if (e) e.preventDefault();
+                if (this.state.isRecommending) return;
+                this.state.isRecommending = true;
+
                 const options = {
                     mood: this.elements.decisionMood.value,
                     time: parseInt(this.elements.decisionTime.value, 10),
                     company: this.elements.decisionCompany.value
                 };
 
-                this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
+                this.elements.decisionResults.innerHTML = '<div class="spinner" style="margin: 40px auto; grid-column: 1/-1;"></div>';
 
-                const { decisionEngine } = await import('./store.js');
-                const recommendations = await decisionEngine(options);
+                try {
+                    const { decisionEngine } = await import('./store.js');
+                    const recommendations = await decisionEngine(options);
 
-                this.elements.decisionResults.innerHTML = "";
-                if (recommendations.length === 0) {
-                    this.elements.decisionResults.innerHTML = "<p>No matches found. Try changing filters.</p>";
-                    return;
-                }
+                    this.elements.decisionResults.innerHTML = "";
+                    if (!recommendations || recommendations.length === 0) {
+                        this.elements.decisionResults.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); font-style: italic;">No exact matches found. Try relaxing your filters.</p>`;
+                        return;
+                    }
 
-                recommendations.forEach(m => {
-                    const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-                    const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                    // Clear previous map for this container
+                    this.state.renderedMoviesMaps[this.elements.decisionResults.id] = {};
 
-                    const badgeColor = m.dominantMetric === 'Intensity' ? 'var(--accent-secondary)' :
-                        m.dominantMetric === 'Thought-Provoking' ? 'var(--accent-primary)' : 'var(--accent-tertiary)';
+                    recommendations.forEach(m => {
+                        const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+                        const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
 
-                    const badgeHtml = m.metrics ?
-                        `<span style="background: ${badgeColor}; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; font-family: var(--font-heading); display: inline-block; margin-bottom: 8px;">
-                                Highest Metric: ${m.dominantMetric} (${m.metrics[m.dominantMetric === 'Intensity' ? 'emotionalIntensity' : m.dominantMetric === 'Thought-Provoking' ? 'cognitiveLoad' : 'comfortScore']})
+                        const badgeColor = m.dominantMetric === 'Intensity' ? 'var(--accent-secondary)' :
+                            m.dominantMetric === 'Thought-Provoking' ? 'var(--accent-primary)' : 'var(--accent-tertiary)';
+
+                        const badgeHtml = m.metrics ?
+                            `<span class="metric-badge" style="background: ${badgeColor};">
+                                <i class="fas fa-chart-line"></i> ${m.dominantMetric} (${m.metrics[m.dominantMetric === 'Intensity' ? 'emotionalIntensity' : m.dominantMetric === 'Thought-Provoking' ? 'cognitiveLoad' : 'comfortScore']})
                             </span>` : '';
 
-                    const card = document.createElement("div");
-                    card.className = "movie-card";
-                    card.innerHTML = `
+                        const card = document.createElement("div");
+                        card.className = "movie-card decision-result-card";
+                        card.innerHTML = `
                           <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
-                          <div class="card-overlay" style="z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; text-align: left; padding: 20px;">
-                            <div style="background: rgba(15, 17, 21, 0.95); padding: 15px; border-radius: 8px; width: 100%; border: 1px solid var(--border-light); backdrop-filter: blur(8px);">
+                          <div class="card-overlay active">
+                            <div class="movie-info decision-info">
                                 ${badgeHtml}
-                                <h3 style="margin-bottom: 4px; font-size: 1.1rem;">${m.Title || m.title}</h3>
-                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+                                <h3>${m.Title || m.title}</h3>
+                                <p class="movie-meta">
                                     ${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.runtimeStr || m.runtime || "90 min"}
                                 </p>
-                                <p style="font-size: 0.85rem; line-height: 1.4; color: var(--text-light); margin-bottom: 15px; font-style: italic;">
-                                    "${m.explain}"
+                                <p class="plot-text decision-plot">
+                                    "${m.explain || 'Perfect match for your current vibes.'}"
                                 </p>
-                                <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="width: 100%; padding: 8px; font-size: 0.9rem;">
-                                    <i class="fas fa-search"></i> Details
+                                <button class="review-btn btn-primary" data-action="open-modal" data-id="${m.imdbID || m.id}">
+                                    <i class="fas fa-search"></i> View Discovery details
                                 </button>
                             </div>
                           </div>`;
 
-                    card.dataset.id = m.imdbID || m.id;
-                    if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
-                    this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+                        card.dataset.id = m.imdbID || m.id;
+                        this.state.renderedMoviesMaps[this.elements.decisionResults.id][m.imdbID || m.id] = m;
 
-                    card.querySelector(".review-btn").onclick = (e) => {
-                        e.stopPropagation();
-                        this.openModal(m, card.querySelector('img'));
-                    };
-                    this.elements.decisionResults.appendChild(card);
-                });
+                        card.onclick = async (e) => {
+                            if (e.target.closest('.review-btn')) return;
+                            await this.openModal(m, card.querySelector('img'));
+                        };
+
+                        const detailBtn = card.querySelector('.review-btn');
+                        if (detailBtn) {
+                            detailBtn.onclick = async (e) => {
+                                e.stopPropagation();
+                                await this.openModal(m, card.querySelector('img'));
+                            };
+                        }
+
+                        this.elements.decisionResults.appendChild(card);
+                    });
+                } catch (err) {
+                    console.error("Decision Mode Error:", err);
+                    this.elements.decisionResults.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--accent-primary);">Something went wrong. Please try again.</p>`;
+                } finally {
+                    this.state.isRecommending = false;
+                }
+            };
+
+            this.elements.getRecommendationsBtn.addEventListener('click', updateRecs);
+
+            // Add automatic update when filters change
+            ["decisionMood", "decisionTime", "decisionCompany"].forEach(id => {
+                const el = this.elements[id] || document.getElementById(id);
+                if (el) el.addEventListener('change', () => updateRecs());
             });
         }
 
@@ -427,6 +636,60 @@ export const ui = {
                 }, 400);
             }
         };
+    },
+
+    initAIGuru() {
+        if (!this.elements.aiTrigger) return;
+
+        this.elements.aiTrigger.onclick = () => {
+            this.elements.aiChat.classList.toggle('active');
+        };
+
+        this.elements.closeAiChat.onclick = () => {
+            this.elements.aiChat.classList.remove('active');
+        };
+
+        const sendMessage = async () => {
+            const text = this.elements.aiChatInput.value.trim();
+            if (!text) return;
+
+            // Add user message to UI
+            this.addChatMessage(text, 'user');
+            this.elements.aiChatInput.value = "";
+
+            // Show typing indicator
+            const typingId = this.addChatMessage("CineMind is thinking...", 'bot typing');
+
+            try {
+                const { aiService } = await import('./ai_service.js');
+                const response = await aiService.generateResponse(text, "You are CineMind AI Guru, a sophisticated movie expert. Keep answers concise but premium.");
+
+                // Remove typing indicator and add response
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+
+                this.addChatMessage(response, 'bot');
+            } catch (err) {
+                console.error("AI Error:", err);
+            }
+        };
+
+        this.elements.aiChatSend.onclick = sendMessage;
+        this.elements.aiChatInput.onkeypress = (e) => {
+            if (e.key === 'Enter') sendMessage();
+        };
+    },
+
+    addChatMessage(text, type) {
+        if (!this.elements.aiChatBody) return;
+        const msg = document.createElement('div');
+        const id = 'msg-' + Date.now();
+        msg.id = id;
+        msg.className = `ai-message ${type}`;
+        msg.textContent = text;
+        this.elements.aiChatBody.appendChild(msg);
+        this.elements.aiChatBody.scrollTop = this.elements.aiChatBody.scrollHeight;
+        return id;
     },
 
     bindAutocomplete(inputNode) {
@@ -505,17 +768,20 @@ export const ui = {
                 const { store } = await import('./store.js');
                 store.saveMoviesBatch(validDetailed);
             }
-            this.renderMovies(validDetailed);
+            this.renderMovies(validDetailed, this.elements.movieResults);
         } else {
             this.elements.movieResults.innerHTML = "<p>No movies found.</p>";
         }
     },
 
-    renderMovies(movies) {
-        this.elements.movieResults.innerHTML = "";
+    renderMovies(movies, container = null) {
+        const target = container || this.elements.movieResults;
+        if (!target) return;
+
+        target.innerHTML = "";
 
         if (!movies || movies.length === 0) {
-            this.elements.movieResults.innerHTML = `
+            target.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px;"></i>
                     <p>No movies found matching your request.</p>
@@ -524,66 +790,46 @@ export const ui = {
         }
 
         const cards = [];
+        // Initialize or clear the specific map for this container
+        this.state.renderedMoviesMaps[target.id] = {};
+        const currentContainerMap = this.state.renderedMoviesMaps[target.id];
 
         movies.forEach(m => {
-            const metricsHtml = m.metrics ? `
-              <div class="metrics-container">
-                <div class="metric-row">
-                  <span class="metric-label">Emotional</span>
-                  <div class="metric-bar"><div class="metric-fill emotional" style="width: ${m.metrics.emotionalIntensity}%"></div></div>
-                  <span class="metric-value">${m.metrics.emotionalIntensity}</span>
-                </div>
-                <div class="metric-row">
-                  <span class="metric-label">Cognitive</span>
-                  <div class="metric-bar"><div class="metric-fill cognitive" style="width: ${m.metrics.cognitiveLoad}%"></div></div>
-                  <span class="metric-value">${m.metrics.cognitiveLoad}</span>
-                </div>
-                <div class="metric-row">
-                  <span class="metric-label">Comfort</span>
-                  <div class="metric-bar"><div class="metric-fill comfort" style="width: ${m.metrics.comfortScore}%"></div></div>
-                  <span class="metric-value">${m.metrics.comfortScore}</span>
-                </div>
-              </div>
-            ` : '';
-
             const card = document.createElement("div");
             card.className = "movie-card";
 
-            // Robust Poster URL Logic
             const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
             const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
 
             card.innerHTML = `
               <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
-              <div class="card-overlay" style="z-index: 2;">
-                <div class="movie-info" style="pointer-events: none;">
+              <div class="card-overlay">
+                <div class="movie-info">
                   <h3>${m.Title || m.title}</h3>
-                  <p>${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
-                  <p class="plot-text" style="font-size: 0.85rem; margin-top: 5px; opacity: 0.8; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">${m.plot || m.Plot || m.genres || "No description."}</p>
-                  ${metricsHtml}
-                  <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" style="pointer-events: auto; position: relative; z-index: 10;"><i class="fas fa-plus"></i> Watchlist / Review</button>
+                  <p class="movie-meta">${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"}</p>
+                  <p class="plot-text">${m.plot || m.Plot || "No description."}</p>
+                  <button class="review-btn btn-primary" data-action="open-modal" data-id="${m.imdbID || m.id}">
+                    <i class="fas fa-plus"></i> View Details
+                  </button>
                 </div>
               </div>`;
 
-            // Give the card an identifier to fetch the movie object during delegation
             card.dataset.id = m.imdbID || m.id;
+            currentContainerMap[m.imdbID || m.id] = m;
 
-            // Temporary store to easily map dataset ID to object
-            if (!this.state.renderedMoviesMap) this.state.renderedMoviesMap = {};
-            this.state.renderedMoviesMap[m.imdbID || m.id] = m;
-
-            this.elements.movieResults.appendChild(card);
+            target.appendChild(card);
             cards.push(card);
         });
 
         // Event Delegation Pattern for robustness
-        this.elements.movieResults.onclick = (e) => {
+        target.onclick = (e) => {
             const btn = e.target.closest('.review-btn');
             const card = e.target.closest('.movie-card');
+            const containerId = target.id; // Get the ID of the container that was clicked
 
             if (btn && btn.dataset.action === "open-modal") {
                 const movieId = btn.dataset.id;
-                const movie = this.state.renderedMoviesMap[movieId];
+                const movie = this.state.renderedMoviesMaps[containerId]?.[movieId]; // Use the specific map
                 const posterImg = btn.closest('.movie-card').querySelector('img');
                 if (movie) this.openModal(movie, posterImg);
                 return;
@@ -622,10 +868,22 @@ export const ui = {
     },
 
     async openModal(movie, sourceImgElement = null) {
-        this.state.currentMovie = movie;
-        this.elements.modalTitle.textContent = movie.Title || movie.title;
+        // Hydrate movie data if it's missing details (like actors or watch providers)
+        // because initial batch load is now basic for speed.
+        let detailedMovie = movie;
+        if (!movie.actors || movie.actors === "N/A" || !movie.scenes || movie.scenes.length <= 1) {
+            try {
+                const refreshed = await api.fetchMovieById(movie.imdbID || movie.id);
+                if (refreshed) detailedMovie = refreshed;
+            } catch (e) {
+                console.warn("Could not hydrate movie details, showing basic info:", e);
+            }
+        }
+
+        this.state.currentMovie = detailedMovie;
+        this.elements.modalTitle.textContent = detailedMovie.Title || detailedMovie.title;
         const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-        const posterUrl = (movie.Poster && movie.Poster !== "N/A") ? movie.Poster : (movie.poster && movie.poster !== "N/A") ? movie.poster : fallback;
+        const posterUrl = (detailedMovie.Poster && detailedMovie.Poster !== "N/A") ? detailedMovie.Poster : (detailedMovie.poster && detailedMovie.poster !== "N/A") ? detailedMovie.poster : fallback;
         this.elements.modalPoster.src = posterUrl;
         this.elements.modalPoster.onerror = function () { this.src = fallback; };
 
@@ -759,30 +1017,69 @@ export const ui = {
             const star = document.createElement("span");
             star.textContent = "★";
             star.className = i <= this.state.selectedRating ? "star active" : "star";
-            star.onclick = () => {
+            star.style.cursor = "pointer";
+            star.style.transition = "color 0.2s, transform 0.2s";
+
+            star.onclick = (e) => {
+                e.stopPropagation();
                 this.state.selectedRating = i;
                 this.renderStars();
             };
+
+            star.onmouseenter = () => {
+                const allStars = this.elements.starContainer.querySelectorAll('.star');
+                allStars.forEach((s, idx) => {
+                    if (idx < i) s.classList.add('hover');
+                    else s.classList.remove('hover');
+                });
+            };
+
+            star.onmouseleave = () => {
+                const allStars = this.elements.starContainer.querySelectorAll('.star');
+                allStars.forEach(s => s.classList.remove('hover'));
+            };
+
             this.elements.starContainer.appendChild(star);
         }
     },
 
     async saveReview() {
-        if (!this.state.currentMovie) return;
-        const newReview = {
-            id: this.state.currentMovie.imdbID || this.state.currentMovie.id,
-            title: this.state.currentMovie.Title || this.state.currentMovie.title,
-            rating: this.state.selectedRating,
-            text: this.elements.reviewText.value,
-            date: new Date().toLocaleDateString()
-        };
-        const { store } = await import('./store.js');
-        store.saveReview(newReview);
-        store.saveMoviesBatch([this.state.currentMovie]);
+        if (!this.state.currentMovie || this.state.isSaving) return;
+        this.state.isSaving = true;
 
-        this.closeReviewModal();
-        if (document.getElementById("reviews").classList.contains("active")) {
-            this.loadUserReviews();
+        try {
+            let aiSentiment = null;
+            if (this.elements.reviewText.value.length > 5) {
+                try {
+                    const { aiService } = await import('./ai_service.js');
+                    aiSentiment = await aiService.analyzeReviewSentiment(this.elements.reviewText.value);
+                } catch (e) {
+                    console.warn("AI Sentiment failed, ignoring.");
+                }
+            }
+
+            const newReview = {
+                id: this.state.currentMovie.imdbID || this.state.currentMovie.id,
+                title: this.state.currentMovie.Title || this.state.currentMovie.title,
+                poster: this.state.currentMovie.Poster || this.state.currentMovie.poster,
+                rating: this.state.selectedRating,
+                text: this.elements.reviewText.value,
+                aiMood: aiSentiment,
+                date: new Date().toLocaleDateString()
+            };
+            const { store } = await import('./store.js');
+            store.saveReview(newReview);
+            store.saveMoviesBatch([this.state.currentMovie]);
+
+            this.closeReviewModal();
+            if (document.getElementById("reviews").classList.contains("active")) {
+                this.loadUserReviews();
+            }
+            if (document.getElementById("cinemadna").classList.contains("active")) {
+                this.loadCinemaDNA();
+            }
+        } finally {
+            this.state.isSaving = false;
         }
     },
 
@@ -806,8 +1103,20 @@ export const ui = {
     },
 
     loadUserReviews() {
+        if (!this.elements.reviewsList) return;
         const reviews = store.getReviews();
-        this.elements.reviewsList.innerHTML = reviews.length ? "" : "<p>No reviews yet.</p>";
+
+        if (!reviews.length) {
+            this.elements.reviewsList.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px; opacity: 0.5;">
+                    <i class="fas fa-film" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                    <p style="font-size: 1.2rem; font-weight: 500;">No reviews yet.</p>
+                    <p style="color: var(--text-muted);">Start your journey by reviewing a movie!</p>
+                </div>`;
+            return;
+        }
+
+        this.elements.reviewsList.innerHTML = "";
 
         const spoilerTokens = ['ending', 'twist is', 'spoiler', 'dies', 'the killer is'];
 
@@ -854,11 +1163,38 @@ export const ui = {
             const emptyStars = "☆".repeat(5 - r.rating);
             let starsHtml = `<span class="stars-fill">${fullStars}</span><span class="stars-empty">${emptyStars}</span>`;
 
+            // Dynamic Avatar Mapping based on rating
+            let expression = "";
+            switch (r.rating) {
+                case 1:
+                    expression = "&mouthType=Sad&eyesType=Cry&eyebrowsType=SadConcerned";
+                    break;
+                case 2:
+                    expression = "&mouthType=Grimace&eyesType=Side&eyebrowsType=SadConcerned";
+                    break;
+                case 3:
+                    expression = "&mouthType=Serious&eyesType=Default&eyebrowsType=Default";
+                    break;
+                case 4:
+                    expression = "&mouthType=Smile&eyesType=Default&eyebrowsType=RaisedExcited";
+                    break;
+                case 5:
+                    expression = "&mouthType=Twinkle&eyesType=Hearts&eyebrowsType=RaisedExcited";
+                    break;
+                default:
+                    expression = "&mouthType=Smile";
+            }
+
+            const aiMoodHtml = r.aiMood ? `<span class="ai-tag-inline" title="AI Insight"><i class="fas fa-brain"></i> ${r.aiMood}</span>` : "";
+
             div.innerHTML = `
             <div class="review-header">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${r.id}" alt="Avatar" class="user-avatar">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${r.id}${expression}" alt="Avatar" class="user-avatar">
                 <div class="user-info">
-                    <h3>${r.title}</h3>
+                    <h3 style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        ${r.title}
+                        ${aiMoodHtml}
+                    </h3>
                     <span class="review-meta">${r.date} • <span class="review-stars">${starsHtml}</span></span>
                 </div>
             </div>
@@ -866,8 +1202,8 @@ export const ui = {
                 ${reviewHtml}
             </div>
             <div class="review-actions">
-                <button class="edit ripple-btn"><i class="fas fa-edit"></i> Edit</button>
-                <button class="delete ripple-btn"><i class="fas fa-trash"></i> Delete</button>
+                <button class="edit btn-action"><i class="fas fa-edit"></i> Edit</button>
+                <button class="delete btn-action btn-danger"><i class="fas fa-trash"></i> Delete Review</button>
             </div>`;
             div.querySelector(".edit").onclick = async () => {
                 const movie = await api.fetchMovieById(r.id);
@@ -876,6 +1212,7 @@ export const ui = {
             div.querySelector(".delete").onclick = () => {
                 store.removeReview(r.id);
                 this.loadUserReviews();
+                this.loadCinemaDNA();
             };
             this.elements.reviewsList.appendChild(div);
         });
@@ -883,20 +1220,21 @@ export const ui = {
         // GSAP Staggered Entry for Review Cards
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && reviews.length > 0) {
             const premiumCards = document.querySelectorAll('#reviews .premium-card');
-            gsap.fromTo(premiumCards,
-                { opacity: 0, y: 30 },
-                {
-                    opacity: 1,
-                    y: 0,
-                    duration: 0.5,
-                    stagger: 0.1,
-                    ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: "#reviews",
-                        start: "top 80%"
-                    }
+            // Ensure they are visible if GSAP fails/delays
+            gsap.set(premiumCards, { opacity: 1, y: 0 });
+
+            gsap.from(premiumCards, {
+                opacity: 0,
+                y: 30,
+                duration: 0.5,
+                stagger: 0.1,
+                ease: "power2.out",
+                scrollTrigger: {
+                    trigger: "#reviews",
+                    start: "top 80%",
+                    once: true
                 }
-            );
+            });
         }
     },
 
@@ -999,47 +1337,54 @@ export const ui = {
     },
 
     async loadCinemaDNA() {
-        const { store, computeUserAnalytics } = await import('./store.js');
-        const analytics = store.computeUserAnalytics();
-        if (!analytics || analytics.totalMoviesSaved === 0) {
-            const dnaGenre = document.getElementById("dna-genre");
-            const dnaRuntime = document.getElementById("dna-runtime");
-            const dnaTotalTime = document.getElementById("dna-total-time");
+        try {
+            const { store } = await import('./store.js');
+            const analytics = store.computeUserAnalytics();
 
-            if (dnaGenre) dnaGenre.textContent = "N/A";
-            if (dnaRuntime) dnaRuntime.textContent = "0 mins";
-            if (dnaTotalTime) dnaTotalTime.textContent = "0h 0m";
-            this.elements.cinemadnaList.innerHTML = "<li>No movies saved yet. Write some reviews!</li>";
-            this.drawDNAChart({});
-            return;
+            this.state.latestDNA = analytics;
+
+            // Direct DOM access as fallback for ultra-robustness
+            const dnaGenre = this.elements.dnaGenre || document.getElementById("dna-genre");
+            const dnaRating = this.elements.dnaRating || document.getElementById("dna-avg-rating");
+            const dnaLogged = this.elements.dnaLogged || document.getElementById("dna-logged");
+            const cinemadnaList = this.elements.cinemadnaList || document.getElementById("dna-directors");
+
+            if (!analytics || analytics.totalReviews === 0) {
+                if (dnaGenre) dnaGenre.textContent = "-";
+                if (dnaRating) dnaRating.textContent = "0.0";
+                if (dnaLogged) dnaLogged.textContent = "0";
+                if (cinemadnaList) cinemadnaList.innerHTML = "<li style='opacity:0.6; font-style:italic;'>No reviews logged yet.</li>";
+                this.drawDNAChart({});
+                return;
+            }
+
+            if (dnaGenre) dnaGenre.textContent = analytics.favoriteGenre || "N/A";
+            if (dnaRating) dnaRating.textContent = analytics.avgRating || "0.0";
+            if (dnaLogged) dnaLogged.textContent = analytics.totalReviews || "0";
+
+            if (cinemadnaList) {
+                cinemadnaList.innerHTML = "";
+                if (analytics.top5Directors && analytics.top5Directors.length > 0) {
+                    analytics.top5Directors.forEach(d => {
+                        const li = document.createElement("li");
+                        li.style.cssText = "background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1);";
+                        li.textContent = d;
+                        cinemadnaList.appendChild(li);
+                    });
+                } else {
+                    cinemadnaList.innerHTML = "<li style='opacity:0.6; font-style:italic;'>Log more movies to see directors</li>";
+                }
+            }
+
+            this.drawDNAChart(analytics.genreCounts || {});
+        } catch (err) {
+            console.error("Failed to load CinemaDNA:", err);
+            // Fallback: update UI with 0s so it doesn't stay as "-"
+            const dnaRating = document.getElementById("dna-avg-rating");
+            const dnaLogged = document.getElementById("dna-logged");
+            if (dnaRating) dnaRating.textContent = "0.0";
+            if (dnaLogged) dnaLogged.textContent = "0";
         }
-
-        const dnaGenre = document.getElementById("dna-genre");
-        const dnaRuntime = document.getElementById("dna-runtime");
-        const dnaTotalTime = document.getElementById("dna-total-time");
-
-        if (dnaGenre) dnaGenre.textContent = analytics.favoriteGenre;
-        if (dnaRuntime) dnaRuntime.textContent = `${analytics.avgRuntime} mins`;
-        if (dnaTotalTime) dnaTotalTime.textContent = analytics.totalWatchTimeString;
-
-        this.elements.cinemadnaList.innerHTML = "";
-        analytics.top5Directors.forEach(d => {
-            const li = document.createElement("li");
-            li.textContent = d;
-            li.style.background = "var(--bg-dark)";
-            li.style.border = "1px solid var(--border-light)";
-            li.style.color = "var(--text-light)";
-            li.style.padding = "6px 14px";
-            li.style.borderRadius = "20px";
-            li.style.fontSize = "0.85rem";
-            li.style.fontFamily = "var(--font-heading)";
-            this.elements.cinemadnaList.appendChild(li);
-        });
-
-        // We'll hijack drawDNAChart to draw a sparkline of mood/genres if desired, 
-        // or just draw a simple bar chart of genres for now with the new palette.
-        this.drawDNAChart(analytics.genreCounts);
-        this.state.latestDNA = analytics;
     },
 
     drawDNAChart(genreCounts) {
@@ -1240,7 +1585,11 @@ export const ui = {
         this.elements.watchlistList.innerHTML = "";
 
         if (!wl.length) {
-            this.elements.watchlistList.innerHTML = "<p style='grid-column: 1 / -1; width: 100%; text-align: center; color: #aaa;'>Your watchlist is empty.</p>";
+            this.elements.watchlistList.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 60px; opacity: 0.5;">
+                    <i class="fas fa-bookmark" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                    <p>Your watchlist is empty.</p>
+                </div>`;
             return;
         }
 
@@ -1248,19 +1597,21 @@ export const ui = {
         wl.forEach(m => {
             const card = document.createElement("div");
             card.className = "movie-card";
-            card.style.opacity = "0";
-            card.style.transform = "translateY(30px)";
 
             const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
             const posterUrl = m.poster || m.Poster || fallback;
 
             card.innerHTML = `
               <img src="${posterUrl}" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
-              <div class="card-overlay" style="z-index: 2;">
-                <div class="movie-info" style="pointer-events: none;">
+              <div class="card-overlay">
+                <div class="movie-info">
                   <h3>${m.title || m.Title}</h3>
-                  <p>${m.year || m.Year}</p>
-                  <button class="review-btn" data-action="remove-watchlist" data-id="${m.imdbID || m.id}" style="pointer-events: auto; background: #e74c3c; position: relative; z-index: 10;"><i class="fas fa-trash"></i> Remove</button>
+                  <p class="movie-meta">${m.year || m.Year}</p>
+                  <div class="card-actions">
+                    <button class="review-btn btn-danger" data-action="remove-watchlist" data-id="${m.imdbID || m.id}">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                  </div>
                 </div>
               </div>`;
 
@@ -1332,32 +1683,47 @@ export const ui = {
         this.showSpinner();
 
         try {
-            // Using the batch fetcher is more robust as it handles fallbacks internally
             const validMovies = await api.fetchPopularMoviesBatch();
 
             if (validMovies && validMovies.length > 0) {
                 const { store } = await import('./store.js');
                 store.saveMoviesBatch(validMovies);
-                this.renderMovies(validMovies);
+                this.renderMovies(validMovies, this.elements.movieResults);
+                this.completeLoader();
             } else {
                 throw new Error("No movies returned from batch fetch.");
             }
         } catch (e) {
-            console.error("Failed to load initial movies from API, checking local store:", e);
+            console.error("Failed to load initial movies:", e);
             const { store } = await import('./store.js');
             const localMovies = store.getAllMovies();
             if (localMovies && localMovies.length > 0) {
-                // Shuffle or just show the first few cached ones
-                this.renderMovies(localMovies.slice(-10).reverse());
+                this.renderMovies(localMovies.slice(-10).reverse(), this.elements.movieResults);
+                this.completeLoader();
             } else {
+                this.completeLoader();
                 this.elements.movieResults.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: rgba(231, 76, 60, 0.1); border: 1px dashed var(--accent-primary); border-radius: 12px;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: var(--accent-primary); margin-bottom: 15px;"></i>
-                        <p style="color: var(--text-light); font-weight: bold;">Movie APIs are currently unreachable.</p>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Please check your internet connection or API keys in config.js.</p>
-                        <button onclick="window.location.reload()" style="margin-top: 15px; padding: 8px 20px; background: var(--accent-primary); color: white; border: none; border-radius: 20px; cursor: pointer;">Retry</button>
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: rgba(204, 0, 0, 0.1); border: 1px dashed #cc0000; border-radius: 12px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #cc0000; margin-bottom: 15px;"></i>
+                        <p style="color: white; font-weight: bold;">Movie APIs are currently unreachable.</p>
+                        <button onclick="window.location.reload()" style="margin-top: 15px; padding: 8px 20px; background: #cc0000; color: white; border: none; border-radius: 20px; cursor: pointer;">Retry</button>
                     </div>`;
             }
+        }
+    },
+
+    async loadHiddenGems() {
+        if (!this.elements.hiddenGemsResults) return;
+
+        try {
+            const gems = await api.fetchHiddenGemsBatch();
+            if (gems && gems.length > 0) {
+                const { store } = await import('./store.js');
+                store.saveMoviesBatch(gems);
+                this.renderMovies(gems, this.elements.hiddenGemsResults);
+            }
+        } catch (e) {
+            console.error("Failed to load hidden gems:", e);
         }
     }
 };

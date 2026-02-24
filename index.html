@@ -4,231 +4,218 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineSins - Movie Reviews</title>
-  <!-- Fonts -->
+  <title>CineSins - Discover Your Next Cinematic Obsession</title>
+
+  <!-- Fonts: Outfit for Headings, Inter for Body -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800;900&display=swap"
     rel="stylesheet">
 
-  <link rel="stylesheet" href="styles/vars.css">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="styles/palette.css">
-  <link rel="manifest" href="manifest.json">
-  <script type="module" src="main.js"></script>
+  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="manifest" href="manifest.json?v=5">
+  <script type="module" src="main.js?v=5"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 </head>
 
 <body>
-  <!-- Ambient Glow Cursor -->
-  <div class="cursor-glow"></div>
+  <!-- Preloader -->
+  <div id="loader-wrapper">
+    <div class="loader-content">
+      <div class="loader-logo">
+        <svg class="brand-logo loader-svg" width="90" height="90" viewBox="0 0 100 100" fill="none"
+          xmlns="http://www.w3.org/2000/svg">
+          <!-- The Film S -->
+          <path d="M75 25C75 10 30 15 30 35C30 55 70 45 70 70C70 90 25 85 25 75" stroke="url(#logo_grad_s_loader)"
+            stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Perforations -->
+          <path d="M75 25C75 10 30 15 30 35C30 55 70 45 70 70C70 90 25 85 25 75" stroke="#111" stroke-width="6"
+            stroke-dasharray="2 6" stroke-linecap="butt" />
+          <defs>
+            <linearGradient id="logo_grad_s_loader" x1="25" y1="15" x2="75" y2="85" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#cc0000" />
+              <stop offset="1" stop-color="#660000" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div style="margin-top: 15px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;">
+          <span style="color:#fff">Cine</span><span style="color:#cc0000">Sins</span>
+        </div>
+      </div>
+      <div class="loader-bar-container">
+        <div class="loader-bar" id="loader-bar"></div>
+      </div>
+      <p class="loader-text">Projecting your experience...</p>
+    </div>
+  </div>
 
-  <header>
+  <!-- Ambient Glow Cursor -->
+  <div class="cursor-glow" id="cursor-glow"></div>
+
+  <header id="header">
     <div class="container header-content">
-      <a href="#" class="logo"><i class="fa-solid fa-film"></i> CineSins</a>
+      <a href="#" class="logo-container" data-section="home"
+        style="text-decoration: none; display: flex; align-items: center; gap: 15px;">
+        <svg class="brand-logo" width="45" height="45" viewBox="0 0 100 100" fill="none"
+          xmlns="http://www.w3.org/2000/svg">
+          <path d="M75 25C75 10 30 15 30 35C30 55 70 45 70 70C70 90 25 85 25 75" stroke="url(#logo_grad_s)"
+            stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M75 25C75 10 30 15 30 35C30 55 70 45 70 70C70 90 25 85 25 75" stroke="#111" stroke-width="7"
+            stroke-dasharray="2 7" stroke-linecap="butt" />
+          <defs>
+            <linearGradient id="logo_grad_s" x1="25" y1="15" x2="75" y2="85" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#cc0000" />
+              <stop offset="1" stop-color="#770000" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div style="display: flex; flex-direction: column; line-height: 1;">
+          <div style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.8rem; letter-spacing: -1px;">
+            <span style="color: #fff;">Cine</span><span style="color: #cc0000;">Sins</span>
+          </div>
+          <div
+            style="font-size: 0.65rem; color: #aaa; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; margin-top: 2px;">
+            Discover. Review. Indulge.</div>
+        </div>
+      </a>
       <button id="mobile-menu-btn" class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
       <nav id="main-nav">
         <ul>
           <li><a href="#" data-section="home" class="active">Home</a></li>
-          <li><a href="#" data-section="cinemadna">CinemaDNA Dashboard</a></li>
+          <li><a href="#" data-section="cinemadna">CinemaDNA</a></li>
           <li><a href="#" data-section="decision-mode" id="nav-decision-mode">Decision Mode</a></li>
           <li><a href="#" data-section="reviews">My Reviews</a></li>
-          <li><a href="#" data-section="settings">Settings</a></li>
+          <li><a href="#" data-section="watchlist">Watchlist</a></li>
         </ul>
       </nav>
-      <div id="offline-badge"
-        style="display:none; background:#e67e22; color:#fff; padding:4px 8px; border-radius:4px; font-size:0.8rem; margin-left:10px;">
-        Offline Available</div>
-      <button id="install-btn"
-        style="display:none; background:#2ecc71; color:#fff; padding:6px 12px; border:none; border-radius:4px; margin-left:10px; cursor:pointer;">Install
-        App</button>
+
+      <div id="status-badges" style="display: flex; align-items: center; gap: 10px;">
+        <div id="offline-badge"
+          style="display:none; background:var(--accent-secondary); color:#000; padding:4px 12px; border-radius:var(--radius-round); font-size:0.75rem; font-weight:700;">
+          Offline</div>
+        <button id="install-btn"
+          style="display:none; background:var(--accent-tertiary); color:#000; padding:6px 16px; border:none; border-radius:var(--radius-round); font-weight:700; cursor:pointer; font-size:0.8rem;">Install</button>
+      </div>
       <input type="file" id="import-file" style="display:none;" accept=".json">
     </div>
   </header>
 
-  <!-- Home -->
+  <!-- Home Section -->
   <section id="home" class="page-section active" style="padding-top: 0;">
-    <div class="hero-section" id="hero-area">
-      <!-- Animated floating background elements -->
+    <div class="hero-section">
       <div id="particles-container"></div>
 
-
       <div class="hero-content container">
-        <h1 class="hero-title" id="main-heading">Discover Your Next Cinematic Obsession</h1>
-        <p class="hero-subtitle">Search millions of movies, log your reviews, and find hidden gems.</p>
+        <h1 class="hero-title text-gradient">Discover Your Next Cinematic Obsession</h1>
+        <p class="hero-subtitle">Search millions of movies, log your reviews, and find hidden gems with our AI-powered
+          discovery engine.</p>
 
-        <p style="font-size: 0.9rem; margin-bottom: 15px; color: var(--text-muted); opacity: 0.8;">Tip: Search
-          "scene:rain" to find movies tagged with "rain"</p>
-
-        <div class="search-container hero-search" role="search" aria-labelledby="main-heading">
-          <div class="autocomplete-wrapper" style="flex:1;">
-            <input type="text" id="search-input" aria-label="Search for a movie" placeholder="Enter a movie title..."
-              style="width:100%;">
+        <div class="search-container hero-search" role="search">
+          <div class="autocomplete-wrapper">
+            <input type="text" id="search-input" placeholder="Search by title, genre, or scene..." autocomplete="off">
           </div>
-          <button id="search-btn" class="search-btn" aria-label="Submit search"><i class="fas fa-search"
-              aria-hidden="true"></i> Search</button>
-          <button id="decision-mode-btn" class="search-btn" aria-label="Open Decision Mode"><i class="fas fa-magic"
-              aria-hidden="true"></i> Decide</button>
+          <button id="search-btn" class="search-btn"><i class="fas fa-search"></i> <span>Search</span></button>
+          <button id="decision-mode-btn" class="search-btn"><i class="fas fa-magic"></i> <span>Decide</span></button>
         </div>
+
+        <p style="font-size: 0.85rem; margin-top: 24px; color: var(--text-muted);">
+          <i class="fas fa-lightbulb" style="color: var(--accent-secondary); margin-right: 5px;"></i>
+          Pro Tip: Search <code
+            style="background: hsla(0,0%,100%,0.1); padding: 2px 6px; border-radius: 4px;">scene:rain</code> to find
+          specific moments.
+        </p>
       </div>
-      <div class="hero-gradient-overlay" aria-hidden="true"></div>
+      <div class="hero-gradient-overlay"></div>
     </div>
+
     <div class="container">
-      <h2 class="section-title">Popular Movies</h2>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
+        <div>
+          <h2 class="section-title" style="text-align: left; margin: 0;">Popular Now</h2>
+          <p style="color: var(--text-muted); margin-top: 8px;">Trending movies from around the globe.</p>
+        </div>
+        <div class="recent-searches-pill" style="display: flex; gap: 8px; flex-wrap: wrap;" id="recent-list"></div>
+      </div>
+
       <div id="movie-results" class="movie-grid" aria-live="polite"></div>
     </div>
-    <div class="recent-searches">
-      <h3>Recent Searches</h3>
-      <ul id="recent-list" aria-label="Recent Searches List"></ul>
+
+    <!-- Hidden Gems Section -->
+    <div class="container" style="margin-top: 80px; margin-bottom: 80px;">
+      <div style="margin-bottom: 40px;">
+        <h2 class="section-title" style="text-align: left; margin: 0;">Hidden Gems</h2>
+        <p style="color: var(--text-muted); margin-top: 8px;">Critically acclaimed masterpieces you might have missed.
+        </p>
+      </div>
+      <div id="hidden-gems-results" class="movie-grid" aria-live="polite"></div>
     </div>
   </section>
 
-  <!-- Reviews -->
-  <section id="reviews" class="page-section" role="region" aria-label="My Reviews">
+  <!-- Reviews Section -->
+  <section id="reviews" class="page-section">
     <div class="container">
       <h2 class="section-title">My Reviews</h2>
-      <div id="reviews-list" aria-live="polite"></div>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 48px;">Your personal journey through
+        cinema.</p>
+      <div id="reviews-list" class="movie-grid" aria-live="polite"></div>
     </div>
   </section>
 
-  <!-- Watchlist -->
-  <section id="watchlist" class="page-section" role="region" aria-label="Watchlist">
+  <!-- Watchlist Section -->
+  <section id="watchlist" class="page-section">
     <div class="container">
-      <h2 class="section-title" style="color: var(--accent-secondary);"><i class="fas fa-bookmark"
-          aria-hidden="true"></i> My Watchlist</h2>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">Movies you want to watch later.</p>
+      <h2 class="section-title">My Watchlist</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 48px;">Movies waiting for your next movie
+        night.</p>
       <div id="watchlist-list" class="movie-grid" aria-live="polite"></div>
     </div>
   </section>
 
-  <!-- Hidden Gems -->
-  <section id="hidden-gems" class="page-section" role="region" aria-label="Hidden Gems">
+  <!-- CinemaDNA Section (Bento Grid) -->
+  <section id="cinemadna" class="page-section">
     <div class="container">
-      <h2 class="section-title" style="color: var(--accent-secondary);"><i class="fas fa-gem" aria-hidden="true"></i>
-        Hidden Gems</h2>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">High rating, surprisingly low votes.
-        Top 20
-        calculated from local cache.</p>
-      <div id="hidden-gems-list" class="movie-grid" aria-live="polite"></div>
-    </div>
-  </section>
-
-  <!-- Compatibility Mode -->
-  <section id="compatibility" class="page-section" role="region" aria-label="Compatibility Mode">
-    <div class="container">
-      <h2 class="section-title" style="color: var(--accent-primary);"><i class="fas fa-heart" aria-hidden="true"></i>
-        Compatibility Mode</h2>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">Enter 3 favorite movies for each
-        person to
-        compute relationship compatibility & joint picks.</p>
-
-      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-        <div
-          style="flex: 1; background: var(--bg-card); padding: 20px; border-radius: var(--radius-md); min-width: 250px;">
-          <h3 style="color: var(--text-primary); margin-bottom: 15px;">Person A Favorites</h3>
-          <div class="autocomplete-wrapper">
-            <input type="text" id="pa-1" aria-label="Person A First Favorite" placeholder="1. e.g. The Matrix"
-              style="width:100%; margin:8px 0; padding:10px; background:rgba(0,0,0,0.3); color:var(--text-primary); border:1px solid var(--border-light); border-radius:var(--radius-sm);">
-          </div>
-          <div class="autocomplete-wrapper">
-            <input type="text" id="pa-2" aria-label="Person A Second Favorite" placeholder="2. e.g. Gladiator"
-              style="width:100%; margin:8px 0; padding:10px; background:rgba(0,0,0,0.3); color:var(--text-primary); border:1px solid var(--border-light); border-radius:var(--radius-sm);">
-          </div>
-          <div class="autocomplete-wrapper">
-            <input type="text" id="pa-3" aria-label="Person A Third Favorite" placeholder="3. e.g. Alien"
-              style="width:100%; margin:8px 0; padding:10px; background:rgba(0,0,0,0.3); color:var(--text-primary); border:1px solid var(--border-light); border-radius:var(--radius-sm);">
-          </div>
-        </div>
-        <div
-          style="flex: 1; background: var(--bg-card); padding: 20px; border-radius: var(--radius-md); min-width: 250px;">
-          <h3 style="color: var(--text-primary); margin-bottom: 15px;">Person B Favorites</h3>
-          <div class="autocomplete-wrapper">
-            <input type="text" id="pb-1" aria-label="Person B First Favorite" placeholder="1. e.g. Inception"
-              style="width:100%; margin:8px 0; padding:10px; background:rgba(0,0,0,0.3); color:var(--text-primary); border:1px solid var(--border-light); border-radius:var(--radius-sm);">
-          </div>
-          <div class="autocomplete-wrapper">
-            <input type="text" id="pb-2" aria-label="Person B Second Favorite" placeholder="2. e.g. The Notebook"
-              style="width:100%; margin:8px 0; padding:10px; background:rgba(0,0,0,0.3); color:var(--text-primary); border:1px solid var(--border-light); border-radius:var(--radius-sm);">
-          </div>
-          <div class="autocomplete-wrapper">
-            <input type="text" id="pb-3" aria-label="Person B Third Favorite" placeholder="3. e.g. Titanic"
-              style="width:100%; margin:8px 0; padding:10px; background:rgba(0,0,0,0.3); color:var(--text-primary); border:1px solid var(--border-light); border-radius:var(--radius-sm);">
-          </div>
-        </div>
-      </div>
-      <button id="calc-compat-btn" class="save-btn"
-        style="margin-top: 20px; width: 100%; padding: 15px; font-size: 1.1rem; background: #e74c3c;">Calculate
-        Compatibility</button>
-
-      <div id="compat-results"
-        style="display:none; margin-top: 30px; background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #333;">
-        <h3 style="text-align: center; color: #e74c3c; font-size: 2.5rem; margin-bottom: 5px;">Score: <span
-            id="compat-score"></span>%</h3>
-        <p style="text-align: center; margin-bottom: 20px; font-size: 1.1rem;">Common DNA: <span id="compat-genres"
-            style="color: gold; font-weight: bold;"></span></p>
-
-        <h4
-          style="margin-top: 20px; margin-bottom: 15px; color: #3498db; border-bottom: 1px solid #333; padding-bottom: 10px;">
-          Recommended Movie Date Picks</h4>
-        <div id="compat-movies-list" class="movie-grid"></div>
-
-        <div style="text-align: center; margin-top: 30px;">
-          <button id="generate-compat-share-btn" class="save-btn"
-            style="background:#2ecc71; padding: 12px 24px; font-size: 1.1rem;"><i class="fas fa-download"></i> Generate
-            Share Card</button>
-        </div>
-
-        <canvas id="compat-share-canvas" width="600" height="800" style="display:none;"></canvas>
-      </div>
-    </div>
-  </section>
-
-  <!-- CinemaDNA -->
-  <section id="cinemadna" class="page-section" role="region" aria-label="CinemaDNA Analytics">
-    <div class="container">
-      <h2 class="section-title"><i class="fas fa-fingerprint" aria-hidden="true"></i> CinemaDNA</h2>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">Your personal movie analytics
-        dashboard.</p>
+      <h2 class="section-title">CinemaDNA Dashboard</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 48px;">Visualizing your cinematic
+        fingerprints.</p>
 
       <div class="dashboard-grid">
         <div class="stat-card">
-          <i class="fas fa-heart" style="color: var(--accent-tertiary); font-size: 1.5rem;" aria-hidden="true"></i>
+          <i class="fas fa-heart" style="color: var(--accent-primary);"></i>
           <p class="stat-label">Top Genres</p>
           <p id="dna-genre" class="stat-value">-</p>
         </div>
+
         <div class="stat-card">
-          <i class="fas fa-clock" style="color: var(--accent-primary); font-size: 1.5rem;" aria-hidden="true"></i>
-          <p class="stat-label">Avg Runtime</p>
-          <p id="dna-runtime" class="stat-value">-</p>
+          <i class="fas fa-star" style="color: var(--accent-secondary);"></i>
+          <p class="stat-label">Avg Rating</p>
+          <p id="dna-avg-rating" class="stat-value">-</p>
         </div>
+
         <div class="stat-card">
-          <i class="fas fa-film" style="color: var(--accent-secondary); font-size: 1.5rem;" aria-hidden="true"></i>
-          <p class="stat-label">Total Time Watched</p>
-          <p id="dna-total-time" class="stat-value">-</p>
+          <i class="fas fa-check-double" style="color: var(--accent-tertiary);"></i>
+          <p class="stat-label">Movies Logged</p>
+          <p id="dna-logged" class="stat-value">-</p>
+        </div>
+
+        <div class="canvas-container">
+          <h4 style="margin-bottom: 24px; color: var(--text-secondary);"><i class="fas fa-user-tie"></i> Top Directors
+          </h4>
+          <ul id="dna-directors" style="list-style: none; padding: 0; display: flex; gap: 12px; flex-wrap: wrap;"></ul>
+        </div>
+
+        <div class="canvas-container">
+          <h4 style="margin-bottom: 24px; color: var(--text-secondary);"><i class="fas fa-chart-line"></i> Mood Velocity
+          </h4>
+          <canvas id="dna-chart" width="800" height="200" style="width: 100%; height: 150px;"></canvas>
         </div>
       </div>
 
-      <div class="canvas-container">
-        <h4 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px; font-family: var(--font-heading);">
-          Top 5 Directors</h4>
-        <ul id="dna-directors" style="list-style: none; padding: 0; display: flex; gap: 10px; flex-wrap: wrap;"
-          aria-label="Top Directors List"></ul>
-      </div>
-
-      <div class="canvas-container" aria-hidden="true">
-        <h4 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px; font-family: var(--font-heading);">
-          Mood Trend Sparkline</h4>
-        <canvas id="dna-chart" width="800" height="200"
-          style="width: 100%; max-width: 800px; height: 150px; border-radius: 4px;"></canvas>
-      </div>
-
-      <div style="text-align: center; margin-top: 30px;">
-        <button id="generate-share-btn" class="save-btn" aria-label="Generate and download share card"
-          style="background: var(--accent-primary); color: #fff; padding: 14px 28px; font-size: 1.1rem; border: none;">
-          <i class="fas fa-download" aria-hidden="true"></i> Generate Share Card
+      <div style="text-align: center; margin-top: 64px;">
+        <button id="generate-share-btn" class="save-btn btn-primary" style="padding: 16px 40px;">
+          <i class="fas fa-share-alt"></i> Generate DNA Share Card
         </button>
       </div>
 
@@ -236,98 +223,148 @@
     </div>
   </section>
 
-  <div id="review-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <!-- Movie Modal -->
+  <div id="review-modal" class="modal">
     <div class="modal-content">
-      <button id="close-modal" class="close" aria-label="Close dialog">&times;</button>
-      <h2 id="modal-title">...</h2>
-      <img id="modal-poster" src="" alt="Poster" aria-hidden="true">
+      <button id="close-modal" class="close"><i class="fas fa-times"></i></button>
+
+      <div class="modal-header">
+        <div class="modal-poster-wrapper">
+          <img id="modal-poster" src="" alt="Poster">
+        </div>
+        <div class="modal-header-info">
+          <h2 id="modal-title">...</h2>
+          <p id="modal-plot"></p>
+        </div>
+      </div>
 
       <!-- Movie Scene Carousel -->
-      <div id="modal-carousel" class="carousel-container" aria-label="Movie scenes carousel" role="region">
-        <div class="carousel-track" id="carousel-track" aria-live="polite"></div>
-        <button class="carousel-btn prev" id="carousel-prev" aria-label="Previous scene"><i class="fas fa-chevron-left"
-            aria-hidden="true"></i></button>
-        <button class="carousel-btn next" id="carousel-next" aria-label="Next scene"><i class="fas fa-chevron-right"
-            aria-hidden="true"></i></button>
-        <div class="carousel-dots" id="carousel-dots" aria-hidden="true"></div>
+      <div id="modal-carousel" class="carousel-container">
+        <div class="carousel-track" id="carousel-track"></div>
+        <button class="carousel-btn prev" id="carousel-prev"
+          style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);"><i
+            class="fas fa-chevron-left"></i></button>
+        <button class="carousel-btn next" id="carousel-next"
+          style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"><i
+            class="fas fa-chevron-right"></i></button>
+        <div class="carousel-dots" id="carousel-dots"></div>
       </div>
 
-      <p id="modal-plot" style="margin-bottom: 15px; color: var(--text-primary); line-height: 1.5; font-size: 0.95rem;">
-      </p>
       <div class="rating-system">
-        <p style="color: var(--text-muted);">Scene Tags:</p>
-        <div id="modal-tags" class="tag-list" aria-label="Current scene tags"></div>
-        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
-          <input type="text" id="new-tag-input" aria-label="New scene tag"
-            placeholder="Add a scene tag... (e.g. courtroom)">
-          <button id="add-tag-btn" class="save-btn" aria-label="Add tag"
-            style="flex: 0 0 60px; padding: 5px;">Add</button>
+        <div style="margin-bottom: 24px;">
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">SCENE TAGS</p>
+          <div id="modal-tags" class="tag-list"></div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="new-tag-input" placeholder="Add a scene tag... (e.g. rain, neon)">
+            <button id="add-tag-btn" class="save-btn" style="padding: 0 20px;">Add</button>
+          </div>
         </div>
 
-        <p style="color: var(--text-muted);">Rate this movie:</p>
-        <div id="star-container" role="radiogroup" aria-label="Movie rating"></div>
-        <p style="color: var(--text-muted);">Your review:</p>
-        <textarea id="review-text" aria-label="Write a review" maxlength="300"></textarea>
-        <div id="char-count" aria-live="polite">0/300</div>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-          <button id="watchlist-btn" class="save-btn" style="flex: 1; background: #34495e;"><i class="fas fa-bookmark"
-              aria-hidden="true"></i> Watchlist</button>
-          <a id="watch-now-btn" href="#" target="_blank" class="save-btn" aria-label="Watch movie online"
-            style="flex: 1; background: #e50914; text-decoration: none; display: flex; align-items: center; justify-content: center; color: white;"><i
-              class="fas fa-play" style="margin-right: 5px;" aria-hidden="true"></i> Watch</a>
-          <button id="save-review" class="save-btn" style="flex: 1;">Save Review</button>
+        <div style="margin-bottom: 24px;">
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">YOUR RATING</p>
+          <div id="star-container" style="display: flex; gap: 8px; font-size: 2rem;"></div>
+        </div>
+
+        <div style="margin-bottom: 32px;">
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">YOUR REVIEW</p>
+          <textarea id="review-text" maxlength="300" placeholder="What did you think of this masterpiece?"></textarea>
+          <div id="char-count"
+            style="text-align: right; font-size: 0.75rem; color: var(--text-muted); margin-top: -8px;">0/300</div>
+        </div>
+
+        <div style="display: flex; gap: 16px;">
+          <button id="watchlist-btn" class="save-btn" style="flex: 1;"><i class="fas fa-bookmark"></i>
+            Watchlist</button>
+          <a id="watch-now-btn" href="#" target="_blank" class="save-btn btn-primary" style="flex: 1;"><i
+              class="fas fa-play"></i> Watch Now</a>
+          <button id="save-review" class="save-btn" style="flex: 1; background: #fff; color: #000;">Save Review</button>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Settings -->
-  <section id="settings" class="page-section" role="region" aria-label="Settings">
-    <div class="container">
-      <h2 class="section-title"><i class="fas fa-cog" aria-hidden="true"></i> Settings</h2>
-      <p style="text-align: center; color: var(--text-muted);">Coming soon. Manage your offline cache, data exports, and
-        theme
-        preferences here.</p>
-    </div>
-  </section>
 
   <!-- Decision Modal -->
-  <div id="decision-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="decision-modal-title">
-    <div class="modal-content" style="max-width: 600px;">
-      <button id="close-decision-modal" class="close" aria-label="Close decision mode">&times;</button>
-      <h2 id="decision-modal-title" class="section-title">Decision Mode</h2>
+  <div id="decision-modal" class="modal">
+    <div class="modal-content">
+      <button id="close-decision-modal" class="close"><i class="fas fa-times"></i></button>
+      <h2 class="section-title">Decision Mode</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 32px;">Let our AI help you choose your next
+        watch.</p>
+
       <div class="decision-form">
-        <label for="decision-mood">Mood:</label>
-        <select id="decision-mood" aria-label="Select preferred mood">
-          <option value="Comfort">Comfort</option>
-          <option value="Exciting">Exciting</option>
-          <option value="Thoughtful">Thoughtful</option>
-          <option value="Laugh">Laugh</option>
-        </select>
+        <div class="form-group">
+          <label>What's the mood?</label>
+          <select id="decision-mood">
+            <option value="Comfort">Chill & Comfort</option>
+            <option value="Vibing">Aesthetic & Vibing</option>
+            <option value="Good">The "Good" Stuff (Classics)</option>
+            <option value="Exciting">Action & Adrenaline</option>
+            <option value="Thoughtful">Thought-Provoking</option>
+          </select>
+        </div>
 
-        <label for="decision-time" style="margin-top: 10px; display: block;">Available Time:</label>
-        <select id="decision-time" aria-label="Select available watch time">
-          <option value="90">&lt;= 90 mins</option>
-          <option value="120">&lt;= 120 mins</option>
-          <option value="999">&gt; 120 mins</option>
-        </select>
+        <div class="form-group">
+          <label>How much time?</label>
+          <select id="decision-time">
+            <option value="90">&lt;= 90 mins (Short & Sweet)</option>
+            <option value="120">&lt;= 120 mins (Standard)</option>
+            <option value="999">&gt; 120 mins (Epic Journey)</option>
+          </select>
+        </div>
 
-        <label for="decision-company" style="margin-top: 10px; display: block;">Company:</label>
-        <select id="decision-company" aria-label="Select viewing company">
-          <option value="Alone">Alone</option>
-          <option value="Couple">Couple</option>
-          <option value="Family">Family</option>
-        </select>
-
-        <button id="get-recommendations-btn" class="save-btn" style="margin-top: 15px;"
-          aria-label="Generate recommendations">Get Recommendations</button>
+        <div class="form-group">
+          <label>Who's watching?</label>
+          <select id="decision-company">
+            <option value="Alone">Just Me</option>
+            <option value="Couple">Date Night</option>
+            <option value="Family">Family Friendly</option>
+          </select>
+        </div>
       </div>
-      <div id="decision-results" class="movie-grid" style="margin-top: 20px;" aria-live="polite"></div>
+
+      <button id="get-recommendations-btn" class="save-btn btn-primary">
+        <i class="fas fa-magic"></i> Find My Next Favorite
+      </button>
+
+      <div id="decision-results" class="movie-grid"
+        style="margin-top: 40px; border-top: 1px solid var(--border-light);"></div>
     </div>
   </div>
 
-  <footer>
-    <p>&copy; 2025 CineSins</p>
+  <!-- AI Guru Interface -->
+  <div id="ai-guru-trigger" class="ai-fab">
+    <div class="ai-fab-glow"></div>
+    <i class="fas fa-robot"></i>
+    <span class="ai-fab-tooltip">CineMind AI</span>
+  </div>
+
+  <div id="ai-guru-chat" class="ai-chat-window">
+    <div class="ai-chat-header">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="ai-status-dot"></div>
+        <span style="font-weight: 700; font-family: 'Outfit';">CineMind AI Guru</span>
+      </div>
+      <button id="close-ai-chat" style="background:none; border:none; color:#fff; cursor:pointer;"><i
+          class="fas fa-times"></i></button>
+    </div>
+    <div id="ai-chat-messages" class="ai-chat-body">
+      <div class="ai-message bot">
+        Hello! I'm the CineMind AI. Ask me for a recommendation or tell me what vibe you're looking for! 🍿
+      </div>
+    </div>
+    <div class="ai-chat-input-area">
+      <input type="text" id="ai-chat-input" placeholder="e.g. Find me a mind-bending thriller...">
+      <button id="ai-chat-send"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <footer style="padding: 80px 0; border-top: 1px solid var(--border-light); text-align: center;">
+    <p style="color: var(--text-muted); font-size: 0.9rem;">&copy; 2025 CineSins. All Rights Reserved.</p>
+    <div style="margin-top: 16px; display: flex; justify-content: center; gap: 24px;">
+      <a href="#" style="color: var(--text-muted);"><i class="fab fa-github"></i></a>
+      <a href="#" style="color: var(--text-muted);"><i class="fab fa-twitter"></i></a>
+      <a href="#" style="color: var(--text-muted);"><i class="fab fa-instagram"></i></a>
+    </div>
   </footer>
 </body>
 

@@ -81,10 +81,24 @@ export const store = {
         let movies = this.getAllMovies();
         let updated = false;
 
-        // LRU cap: if over 1000 movies, prune down to 500 sorted by recency or keep the highest rated.
-        // Given we just have an array without explicit timestamps, we'll keep the newest 500 (end of array).
+        // SMART Pruning: Over 1000 movies can exceed localStorage (5MB).
+        // Prune down to 500, but PROTECT movies that are in reviews or watchlist.
         if (movies.length > 1000) {
-            movies = movies.slice(-500);
+            const reviews = this.getReviews();
+            const watchlist = this.getWatchlist();
+            const protectedIds = new Set([
+                ...reviews.map(r => r.id),
+                ...watchlist.map(m => m.id)
+            ]);
+
+            const protectedMovies = movies.filter(m => protectedIds.has(m.id || m.imdbID));
+            const others = movies.filter(m => !protectedIds.has(m.id || m.imdbID));
+
+            // Keep all protected movies, then fill remainder with highest rated "others"
+            const remainingSpace = Math.max(0, 700 - protectedMovies.length);
+            const topOthers = others.sort((a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0)).slice(0, remainingSpace);
+
+            movies = [...protectedMovies, ...topOthers];
             updated = true;
         }
 
@@ -166,6 +180,103 @@ export const store = {
             return false;
         }
         return false;
+    },
+
+    computeUserAnalytics() {
+        try {
+            const reviews = this.getReviews();
+            const allMovies = this.getAllMovies();
+            const reviewedIds = new Set(reviews.map(r => String(r.id)));
+
+            // Robust matching: Check both .id and .imdbID, and ensure string comparison
+            const userMovies = allMovies.filter(m =>
+                m && (reviewedIds.has(String(m.id)) || reviewedIds.has(String(m.imdbID)))
+            );
+
+            const genreCounts = {};
+            const directorCounts = {};
+            let totalRating = 0;
+            let validRatingCount = 0;
+            let totalEmotional = 0;
+            let validEmotionalCount = 0;
+            let totalRuntime = 0;
+
+            userMovies.forEach(m => {
+                if (!m) return;
+                const genres = (m.genres || '').split(',').map(g => g.trim()).filter(Boolean);
+                genres.forEach(g => {
+                    genreCounts[g] = (genreCounts[g] || 0) + 1;
+                });
+
+                const directors = (m.director || '').split(',').map(d => d.trim()).filter(Boolean);
+                directors.forEach(d => {
+                    if (d && d !== "N/A") {
+                        directorCounts[d] = (directorCounts[d] || 0) + 1;
+                    }
+                });
+
+                if (m.metrics && typeof m.metrics.emotionalIntensity === 'number') {
+                    totalEmotional += m.metrics.emotionalIntensity;
+                    validEmotionalCount++;
+                }
+
+                if (m.runtimeMin) {
+                    totalRuntime += Number(m.runtimeMin);
+                }
+            });
+
+            reviews.forEach(r => {
+                if (r && r.rating !== undefined && !isNaN(r.rating)) {
+                    totalRating += Number(r.rating);
+                    validRatingCount++;
+                }
+            });
+
+            const sortedGenres = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]);
+            const favoriteGenre = sortedGenres.length > 0 ? sortedGenres[0][0] : "N/A";
+
+            const sortedDirectors = Object.entries(directorCounts).sort((a, b) => b[1] - a[1]);
+            const top5Directors = sortedDirectors.slice(0, 5).map(d => d[0]);
+
+            const avgRating = validRatingCount > 0 ? (totalRating / validRatingCount).toFixed(1) : "0.0";
+            const avgEmotional = validEmotionalCount > 0 ? Math.round(totalEmotional / validEmotionalCount) : 0;
+
+            let moodTrend = "Neutral";
+            if (avgEmotional > 70) moodTrend = "Intense/Exciting";
+            else if (avgEmotional > 40) moodTrend = "Balanced";
+            else if (avgEmotional > 0) moodTrend = "Calm/Relaxed";
+            else moodTrend = "N/A";
+
+            const avgRuntime = userMovies.length > 0 ? Math.round(totalRuntime / userMovies.length) : 0;
+
+            const hours = Math.floor(totalRuntime / 60);
+            const mins = totalRuntime % 60;
+            const totalWatchTimeString = `${hours}h ${mins}m`;
+
+            const analytics = {
+                totalMoviesSaved: userMovies.length,
+                favoriteGenre,
+                genreCounts,
+                avgRating,
+                totalReviews: reviews.length,
+                top5Directors,
+                moodTrend,
+                avgEmotional,
+                avgRuntime,
+                totalWatchTimeString
+            };
+
+            localStorage.setItem("cinemaDNA", JSON.stringify(analytics));
+            return analytics;
+        } catch (err) {
+            console.error("Critical error in computeUserAnalytics:", err);
+            return {
+                totalReviews: 0,
+                genreCounts: {},
+                top5Directors: [],
+                avgRating: "0.0"
+            };
+        }
     }
 };
 
@@ -232,98 +343,83 @@ export function normalizeMovieData(movie) {
     return movie;
 }
 
-export async function decisionEngine(options) {
-    let movies = store.getAllMovies();
-    if (movies.length < 50) {
-        await store.seedMoviesIfNeeded();
+export async function decisionEngine(options, movies) {
+    if (!movies) {
         movies = store.getAllMovies();
     }
 
     const moodMap = {
         'Comfort': ['Comedy', 'Romance', 'Animation', 'Family'],
-        'Exciting': ['Action', 'Adventure', 'Sci-Fi', 'Thriller'],
-        'Thoughtful': ['Drama', 'Mystery', 'Documentary', 'Biography'],
-        'Laugh': ['Comedy']
+        'Vibing': ['Animation', 'Adventure', 'Music', 'Sci-Fi', 'Fantasy'],
+        'Good': ['Drama', 'Crime', 'Biography', 'History'],
+        'Exciting': ['Action', 'Adventure', 'Sci-Fi', 'Thriller', 'Horror'],
+        'Thoughtful': ['Drama', 'Mystery', 'Documentary', 'Biography', 'Sci-Fi']
     };
     const preferredGenres = moodMap[options.mood] || [];
 
     // Filter by Runtime
     let candidates = movies.filter(m => {
         const runtimeMatch = (m.runtime || "").match(/\d+/);
-        if (!runtimeMatch) return false;
+        if (!runtimeMatch) return true; // Keep if unknown
         const mins = parseInt(runtimeMatch[0], 10);
 
         let timeFits = false;
-        if (options.time <= 90) timeFits = (mins <= 90);
-        else if (options.time <= 120) timeFits = (mins <= 120);
+        if (options.time <= 90) timeFits = (mins <= 95); // Slight buffer
+        else if (options.time <= 120) timeFits = (mins <= 125);
         else timeFits = (mins > 120);
         return timeFits;
     });
 
-    // We shouldn't drop all movies if none fit the exact time to prevent empty states
-    if (candidates.length < 3) {
-        candidates = movies;
-    }
+    if (candidates.length < 5) candidates = movies;
 
     const currentYear = new Date().getFullYear();
 
     candidates = candidates.map(m => {
         const imdbRating = parseFloat(m.imdbRating) || 5.0;
-        const year = parseInt(m.Year) || 2000;
-
+        const year = parseInt(m.Year || m.year) || 2000;
         const metrics = m.metrics || { comfortScore: 50, emotionalIntensity: 50, cognitiveLoad: 50 };
 
         let moodScore = 50;
-        if (options.mood === 'Comfort' || options.mood === 'Laugh') moodScore = metrics.comfortScore;
+        if (options.mood === 'Comfort') moodScore = metrics.comfortScore;
         else if (options.mood === 'Exciting') moodScore = metrics.emotionalIntensity;
         else if (options.mood === 'Thoughtful') moodScore = metrics.cognitiveLoad;
+        else if (options.mood === 'Vibing') moodScore = (metrics.comfortScore + metrics.cognitiveLoad) / 2;
+        else if (options.mood === 'Good') moodScore = (metrics.emotionalIntensity + metrics.cognitiveLoad) / 2;
 
-        const normalizedMood = moodScore / 100;
-        const normalizedRating = imdbRating / 10;
+        let score = (0.5 * (moodScore / 100)) + (0.3 * (imdbRating / 10));
 
-        // Recency Bias (0 to 1, where current year is 1, and 50 years ago is 0)
-        let recency = 1 - Math.min(1, (currentYear - year) / 50);
-        if (recency < 0) recency = 0;
+        // Recency Bias
+        const age = Math.max(0, currentYear - year);
+        score += (0.1 * (1 - Math.min(1, age / 50)));
 
-        // Weights: 0.6 Mood Constraint, 0.3 IMDB Rating, 0.1 Recency Bias
-        const score = (0.6 * normalizedMood) + (0.3 * normalizedRating) + (0.1 * recency);
+        // Company filter logic (The "FIX" for the user request)
+        if (options.company === 'Family') {
+            const isFamily = (m.genres || '').includes('Family') || (m.genres || '').includes('Animation');
+            if (isFamily) score += 0.2;
+            else score -= 0.1; // Penalty for non-family stuff
+        } else if (options.company === 'Couple') {
+            const isRomance = (m.genres || '').includes('Romance') || (m.genres || '').includes('Drama');
+            if (isRomance) score += 0.1;
+        }
 
-        // Compute Dominant Metric
+        // Small random factor to make it feel "live" on every click/change
+        score += (Math.random() * 0.05);
+
         let dominant = "Comfort";
         let maxVal = metrics.comfortScore;
         if (metrics.emotionalIntensity > maxVal) { dominant = "Intensity"; maxVal = metrics.emotionalIntensity; }
         if (metrics.cognitiveLoad > maxVal) { dominant = "Thought-Provoking"; }
 
-        // Determine if genre actually matched
-        const movieGenres = (m.genres || '').split(',').map(g => g.trim());
-        const matched = movieGenres.filter(g => preferredGenres.includes(g));
-
-        return {
-            movie: m,
-            score,
-            moodScore,
-            dominant,
-            matchedGenres: matched
-        };
-    });
-
-    // Give slight edge to actual genre matches
-    candidates.forEach(c => {
-        if (c.matchedGenres.length > 0) c.score += 0.05;
+        return { movie: m, score, dominant, moodScore };
     });
 
     candidates.sort((a, b) => b.score - a.score);
 
-    const top3 = candidates.slice(0, 3);
-    return top3.map(c => {
-        const m = c.movie;
-        const explain = `High ${c.dominant.toLowerCase()} score (${c.moodScore}) and runtime fits ${m.runtime}.`;
-        return {
-            ...m,
-            explain,
-            dominantMetric: c.dominant
-        };
-    });
+    return candidates.slice(0, 3).map(c => ({
+        ...c.movie,
+        explain: `Matches your ${options.mood.toLowerCase()} mood and ${options.company.toLowerCase()} viewing session.`,
+        dominantMetric: c.dominant
+    }));
 }
 
 export function computeCompatibility(personAMovies, personBMovies) {
@@ -408,85 +504,3 @@ export function computeCompatibility(personAMovies, personBMovies) {
     };
 }
 
-export function computeUserAnalytics() {
-    const reviews = store.getReviews();
-    const allMovies = store.getAllMovies();
-    const reviewedIds = new Set(reviews.map(r => r.id));
-
-    const userMovies = allMovies.filter(m => reviewedIds.has(m.id || m.imdbID));
-
-    const genreCounts = {};
-    const directorCounts = {};
-    let totalRating = 0;
-    let validRatingCount = 0;
-    let totalEmotional = 0;
-    let validEmotionalCount = 0;
-
-    userMovies.forEach(m => {
-        const genres = (m.genres || '').split(',').map(g => g.trim()).filter(Boolean);
-        genres.forEach(g => {
-            genreCounts[g] = (genreCounts[g] || 0) + 1;
-        });
-
-        const directors = (m.director || '').split(',').map(d => d.trim()).filter(Boolean);
-        directors.forEach(d => {
-            if (d !== "N/A") {
-                directorCounts[d] = (directorCounts[d] || 0) + 1;
-            }
-        });
-
-        if (m.metrics && m.metrics.emotionalIntensity !== undefined) {
-            totalEmotional += m.metrics.emotionalIntensity;
-            validEmotionalCount++;
-        }
-    });
-
-    reviews.forEach(r => {
-        if (r.rating !== undefined && !isNaN(r.rating)) {
-            totalRating += Number(r.rating);
-            validRatingCount++;
-        }
-    });
-
-    const sortedGenres = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]);
-    const favoriteGenre = sortedGenres.length > 0 ? sortedGenres[0][0] : "N/A";
-
-    const sortedDirectors = Object.entries(directorCounts).sort((a, b) => b[1] - a[1]);
-    const top5Directors = sortedDirectors.slice(0, 5).map(d => d[0]);
-
-    const avgRating = validRatingCount > 0 ? (totalRating / validRatingCount).toFixed(1) : 0;
-
-    const avgEmotional = validEmotionalCount > 0 ? Math.round(totalEmotional / validEmotionalCount) : 0;
-    let moodTrend = "Neutral";
-    if (avgEmotional > 70) moodTrend = "Intense/Exciting";
-    else if (avgEmotional > 40) moodTrend = "Balanced";
-    else if (avgEmotional > 0) moodTrend = "Calm/Relaxed";
-    else moodTrend = "N/A";
-
-    let totalRuntime = 0;
-    userMovies.forEach(m => {
-        totalRuntime += (m.runtimeMin || 0);
-    });
-    const avgRuntime = userMovies.length > 0 ? Math.round(totalRuntime / userMovies.length) : 0;
-
-    // Format total watch time nicely
-    const hours = Math.floor(totalRuntime / 60);
-    const mins = totalRuntime % 60;
-    const totalWatchTimeString = `${hours}h ${mins}m`;
-
-    const analytics = {
-        totalMoviesSaved: userMovies.length,
-        favoriteGenre,
-        genreCounts,
-        avgRating,
-        totalReviews: reviews.length,
-        top5Directors,
-        moodTrend,
-        avgEmotional,
-        avgRuntime,
-        totalWatchTimeString
-    };
-
-    localStorage.setItem("cinemaDNA", JSON.stringify(analytics));
-    return analytics;
-}

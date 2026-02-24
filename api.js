@@ -10,6 +10,18 @@ const OMDB_BASE_URL = "https://www.omdbapi.com";
 
 const cache = new Map();
 
+async function fetchWithTimeout(resource, options = {}) {
+    const { timeout = 8000 } = options;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    const response = await fetch(resource, {
+        ...options,
+        signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+}
+
 // Helper to convert OMDB movie object to our app's normalized format (Fallback)
 function normalizeOMDBMovie(raw) {
     const movie = {
@@ -114,7 +126,7 @@ export const api = {
 
         try {
             if (!isTmdbReady) throw new Error("TMDB Key Missing");
-            const res = await fetch(`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`);
+            const res = await fetchWithTimeout(`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`);
             if (!res.ok) throw new Error("TMDB failed");
             const data = await res.json();
             if (data.results && data.results.length > 0) {
@@ -128,7 +140,7 @@ export const api = {
                 console.warn("TMDB Search failed, falling back to OMDB:", e);
             }
             try {
-                const res = await fetch(`${OMDB_BASE_URL}/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}`);
+                const res = await fetchWithTimeout(`${OMDB_BASE_URL}/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 if (data.Response === "True") {
                     // OMDB Search doesn't return full details, but enough for a list
@@ -155,7 +167,7 @@ export const api = {
 
         if (isTmdbReady && id && id.toString().startsWith('tt')) {
             try {
-                const findRes = await fetch(`${TMDB_BASE_URL}/find/${id}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
+                const findRes = await fetchWithTimeout(`${TMDB_BASE_URL}/find/${id}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
                 if (findRes.ok) {
                     const findData = await findRes.json();
                     if (findData.movie_results && findData.movie_results.length > 0) {
@@ -172,7 +184,7 @@ export const api = {
 
         try {
             if (!isTmdbReady) throw new Error("TMDB Key Missing");
-            const res = await fetch(fetchUrl);
+            const res = await fetchWithTimeout(fetchUrl);
             if (!res.ok) throw new Error(`TMDB fetch failed with status ${res.status}`);
             const data = await res.json();
 
@@ -201,7 +213,7 @@ export const api = {
                     : null;
 
                 if (omdbUrl) {
-                    const fallbackRes = await fetch(omdbUrl);
+                    const fallbackRes = await fetchWithTimeout(omdbUrl);
                     const fallbackData = await fallbackRes.json();
                     if (fallbackData.Response === "True") {
                         const normalizedMovie = normalizeOMDBMovie(fallbackData);
@@ -234,7 +246,7 @@ export const api = {
         // TMDB Failed or returned nothing, Fallback to OMDB exact title search
         console.warn(`TMDB title search failed for ${title}, falling back to OMDB...`);
         try {
-            const res = await fetch(`${OMDB_BASE_URL}/?apikey=${OMDB_API_KEY}&t=${encodeURIComponent(title)}`);
+            const res = await fetchWithTimeout(`${OMDB_BASE_URL}/?apikey=${OMDB_API_KEY}&t=${encodeURIComponent(title)}`);
             const fallbackData = await res.json();
             if (fallbackData.Response === "True") {
                 const normalizedMovie = normalizeOMDBMovie(fallbackData);
@@ -306,36 +318,50 @@ export const api = {
         const isTmdbReady = TMDB_API_KEY && TMDB_API_KEY !== "INSERT_TMDB_API_KEY_HERE";
         try {
             if (!isTmdbReady) throw new Error("TMDB Key Missing");
-            const res = await fetch(`${TMDB_BASE_URL}/trending/movie/week?api_key=${TMDB_API_KEY}`);
+            const res = await fetchWithTimeout(`${TMDB_BASE_URL}/trending/movie/week?api_key=${TMDB_API_KEY}`);
             const data = await res.json();
             if (data.results && data.results.length > 0) {
-                const resultsIds = data.results.slice(0, 25).map(m => m.id);
-                const detailed = [];
-                for (let i = 0; i < resultsIds.length; i += 5) {
-                    const batch = resultsIds.slice(i, i + 5);
-                    const batchDetails = await Promise.all(batch.map(id => this.fetchMovieById(id)));
-                    for (const movie of batchDetails) {
-                        if (movie && movie.id && movie.title) {
-                            detailed.push(movie);
-                        }
-                    }
-                }
-                return detailed;
+                // Return normalized basic data for many movies quickly
+                return data.results.slice(0, 24).map(m => normalizeTMDBMovie(m));
             }
             return [];
         } catch (e) {
             console.error("fetchPopularMoviesBatch TMDB error, falling back to OMDB manually:", e);
             const popularMovies = [
-                "Breaking Bad", "The Shawshank Redemption", "The Godfather",
-                "The Dark Knight", "Inception", "Forrest Gump",
-                "The Matrix", "Pulp Fiction", "Interstellar", "Gladiator"
+                "Deadpool & Wolverine", "Inside Out 2", "Dune: Part Two",
+                "Oppenheimer", "Poor Things", "The Fall Guy", "Furiosa: A Mad Max Saga",
+                "Kingdom of the Planet of the Apes", "Challengers", "Civil War",
+                "The Batman", "Spider-Man: Across the Spider-Verse", "Barbie"
             ];
-            const detailed = [];
-            for (const title of popularMovies) {
-                const movie = await this.fetchMovieByTitle(title);
-                if (movie) detailed.push(movie);
+            const detailed = await Promise.all(
+                popularMovies.map(title => this.fetchMovieByTitle(title))
+            );
+            return detailed.filter(m => m !== null);
+        }
+    },
+
+    async fetchHiddenGemsBatch() {
+        // Without TMDB discovery, we use a curated list of high-quality "gems"
+        const isTmdbReady = TMDB_API_KEY && TMDB_API_KEY !== "INSERT_TMDB_API_KEY_HERE";
+        try {
+            if (isTmdbReady) {
+                // Fetch high rated but slightly less popular movies
+                const res = await fetchWithTimeout(`${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&vote_count.gte=500&with_original_language=en&page=1`);
+                const data = await res.json();
+                if (data.results) return data.results.slice(0, 12).map(m => normalizeTMDBMovie(m));
             }
-            return detailed;
+            throw new Error("Using fallback gems");
+        } catch (e) {
+            const gems = [
+                "The Holdovers", "The Zone of Interest", "Past Lives",
+                "Anatomy of a Fall", "Everything Everywhere All at Once",
+                "Aftersun", "Portrait of a Lady on Fire", "Whiplash",
+                "The Night of the Hunter", "Paths of Glory"
+            ];
+            const detailed = await Promise.all(
+                gems.map(title => this.fetchMovieByTitle(title))
+            );
+            return detailed.filter(m => m !== null);
         }
     }
 };
