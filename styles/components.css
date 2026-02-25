@@ -1,0 +1,283 @@
+/* Cinemaholic Component Styles */
+
+/* Poster Cards */
+.movie-card {
+    position: relative;
+    aspect-ratio: 2/3;
+    background: var(--cin-bg-800);
+    border-radius: var(--cin-radius);
+    overflow: hidden;
+    transition: all var(--cin-duration-mid) var(--cin-ease);
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: var(--cin-shadow-1);
+}
+
+.movie-card:hover {
+    transform: translateY(-8px) scale(1.04);
+    border-color: var(--cin-accent-2);
+    box-shadow: 0 12px 24px rgba(230, 185, 30, 0.2);
+}
+
+.movie-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--cin-duration-slow) var(--cin-ease);
+}
+
+.movie-card:hover .movie-card-img {
+    transform: scale(1.1);
+}
+
+.movie-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(5, 5, 8, 0.9) 0%, transparent 60%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: var(--cin-spacing-2);
+    transition: opacity var(--cin-duration-mid) var(--cin-ease);
+}
+
+.movie-card-info {
+    transform: translateY(10px);
+    transition: transform var(--cin-duration-mid) var(--cin-ease);
+}
+
+.movie-card:hover .movie-card-info {
+    transform: translateY(0);
+}
+
+.movie-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--cin-text);
+    margin-bottom: 4px;
+}
+
+.movie-card-meta {
+    font-size: 0.75rem;
+    color: var(--cin-muted);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Movie Detail Modal */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    align-items: center;
+    justify-content: center;
+    padding: var(--cin-spacing-3);
+    opacity: 0;
+    transition: opacity var(--cin-duration-mid) var(--cin-ease);
+}
+
+.modal.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background: var(--cin-bg-800);
+    width: 100%;
+    max-width: var(--cin-max-width);
+    max-height: 90vh;
+    border-radius: var(--cin-radius);
+    border: 1px solid var(--cin-glass);
+    overflow: hidden;
+    display: flex;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+    transform: scale(0.95) translateY(20px);
+    transition: transform var(--cin-duration-mid) var(--cin-ease);
+}
+
+.modal.active .modal-content {
+    transform: scale(1) translateY(0);
+}
+
+.close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    background: var(--cin-surface);
+    color: var(--cin-text);
+    border: 1px solid var(--cin-glass);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--cin-duration-fast) var(--cin-ease);
+}
+
+.close:hover {
+    background: var(--cin-glass);
+    color: var(--cin-accent-2);
+    transform: rotate(90deg);
+}
+
+/* Dashboard Cards */
+.stat-card {
+    background: var(--cin-surface);
+    border: 1px solid var(--cin-glass);
+    padding: var(--cin-spacing-3);
+    border-radius: var(--cin-radius);
+    transition: all var(--cin-duration-mid) var(--cin-ease);
+}
+
+.stat-card:hover {
+    background: var(--cin-glass);
+    border-color: var(--cin-accent-1);
+}
+
+/* Glassy metadata bar */
+.glass-bar {
+    background: var(--cin-glass);
+    backdrop-filter: blur(5px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: var(--cin-spacing-2);
+}
+
+/* Badges */
+.badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-gold {
+    background: var(--cin-accent-2);
+    color: var(--cin-bg-900);
+}
+
+.badge-velvet {
+    background: var(--cin-velvet);
+    color: #fff;
+}
+
+.badge-copper {
+    background: var(--cin-accent-1);
+    color: #fff;
+}
+
+/* Spotlight (Decision) Modal Specialized Styles */
+.modal-spotlight {
+    background: radial-gradient(circle at center, rgba(184, 107, 62, 0.2) 0%, rgba(5, 5, 8, 0.98) 70%);
+}
+
+.spotlight-content {
+    flex-direction: column;
+    align-items: center;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 100%;
+    max-width: 800px !important;
+    overflow-y: auto;
+    padding: var(--cin-spacing-4) var(--cin-spacing-3);
+    text-align: center;
+}
+
+.spotlight-header {
+    margin-bottom: var(--cin-spacing-4);
+}
+
+.spotlight-title {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    margin: var(--cin-spacing-1) 0;
+    line-height: 1;
+}
+
+.spotlight-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--cin-spacing-3);
+    width: 100%;
+    background: var(--cin-surface);
+    padding: var(--cin-spacing-3);
+    border-radius: var(--cin-radius);
+    border: 1px solid var(--cin-glass);
+    backdrop-filter: blur(20px);
+    text-align: left;
+}
+
+.spotlight-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.spotlight-control label {
+    color: var(--cin-accent-2);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+}
+
+.spotlight-control select {
+    width: 100%;
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #fff;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--cin-glass);
+    outline: none;
+    cursor: pointer;
+    transition: border-color var(--cin-duration-fast) var(--cin-ease);
+}
+
+.spotlight-control select:focus {
+    border-color: var(--cin-accent-2);
+}
+
+.spotlight-action {
+    margin-top: var(--cin-spacing-4);
+    background: var(--cin-accent-2);
+    color: var(--cin-bg-900);
+    border: none;
+    padding: 20px 60px;
+    border-radius: 4px;
+    font-weight: 900;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    letter-spacing: 1.5px;
+    box-shadow: 0 0 30px rgba(230, 185, 30, 0.3);
+    transition: all var(--cin-duration-mid) var(--cin-ease);
+}
+
+.spotlight-action:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(230, 185, 30, 0.5);
+}
+
+@media (max-width: 600px) {
+    .spotlight-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile Modal Layout */
+@media (max-width: 992px) {
+    .modal-content {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+}
