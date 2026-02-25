@@ -1,0 +1,90 @@
+/* Cinemaholic Motion System */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes staggerReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn var(--cin-duration-mid) var(--cin-ease) forwards;
+}
+
+/* Skeleton Loaders */
+.skeleton {
+    position: relative;
+    background: var(--cin-surface);
+    overflow: hidden;
+    border-radius: var(--cin-radius);
+}
+
+.skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(230, 185, 30, 0.1),
+            transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+/* Button Ripple (logic in JS, style here) */
+.ripple {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    border-radius: 50%;
+    animation: ripple-effect 600ms var(--cin-ease);
+}
+
+@keyframes ripple-effect {
+    from {
+        width: 0;
+        height: 0;
+        opacity: 0.5;
+    }
+
+    to {
+        width: 500px;
+        height: 500px;
+        opacity: 0;
+    }
+}
+
+/* Spotlight Sequence */
+.spotlight-reveal {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* GSAP staggers will handle the class toggling or direct manipulation */

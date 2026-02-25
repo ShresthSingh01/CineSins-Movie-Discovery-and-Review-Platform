@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cinesins-cache-v5';
+const CACHE_NAME = 'cinesins-cache-v6';
 const IMAGE_CACHE_NAME = 'cinesins-images-v2';
 const MAX_IMAGE_CACHE_SIZE_MB = 20;
 

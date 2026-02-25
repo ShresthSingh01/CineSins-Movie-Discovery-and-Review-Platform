@@ -4,17 +4,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineSins - Discover Your Next Cinematic Obsession</title>
+  <title>CinemaDNA - Understand Your Cinematic Personality</title>
 
-  <!-- Fonts: Outfit for Headings, Inter for Body -->
+  <!-- Fonts: Playfair Display for Headings, Inter for Body -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800;900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
     rel="stylesheet">
+
+  <!-- Core Theme & Design System -->
+  <link rel="stylesheet" href="styles/vars.css">
+  <link rel="stylesheet" href="styles/palette.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/animations.css">
 
   <link rel="stylesheet" href="styles.css?v=5">
   <link rel="manifest" href="manifest.json?v=5">
+
   <script type="module" src="main.js?v=5"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -42,7 +51,7 @@
           </defs>
         </svg>
         <div style="margin-top: 15px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;">
-          <span style="color:#fff">Cine</span><span style="color:#cc0000">Sins</span>
+          <span style="color:#fff">Cinema</span><span style="color:#00c2cc">DNA</span>
         </div>
       </div>
       <div class="loader-bar-container">
@@ -73,19 +82,22 @@
           </defs>
         </svg>
         <div style="display: flex; flex-direction: column; line-height: 1;">
-          <div style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.8rem; letter-spacing: -1px;">
-            <span style="color: #fff;">Cine</span><span style="color: #cc0000;">Sins</span>
+          <div
+            style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.8rem; letter-spacing: -0.5px;">
+            <span style="color: var(--cin-text);">Cinema</span><span style="color: var(--cin-accent-2);">DNA</span>
           </div>
           <div
-            style="font-size: 0.65rem; color: #aaa; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; margin-top: 2px;">
-            Discover. Review. Indulge.</div>
+            style="font-size: 0.6rem; color: var(--cin-muted); letter-spacing: 2px; text-transform: uppercase; font-weight: 500; margin-top: 4px;">
+            The Art of Self-Discovery</div>
         </div>
       </a>
       <button id="mobile-menu-btn" class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
       <nav id="main-nav">
         <ul>
           <li><a href="#" data-section="home" class="active">Home</a></li>
+          <li><a href="#" data-section="hidden-gems">Hidden Gems</a></li>
           <li><a href="#" data-section="cinemadna">CinemaDNA</a></li>
+          <li><a href="#" data-section="regions">Regions</a></li>
           <li><a href="#" data-section="decision-mode" id="nav-decision-mode">Decision Mode</a></li>
           <li><a href="#" data-section="reviews">My Reviews</a></li>
           <li><a href="#" data-section="watchlist">Watchlist</a></li>
@@ -106,29 +118,38 @@
   <!-- Home Section -->
   <section id="home" class="page-section active" style="padding-top: 0;">
     <div class="hero-section">
-      <div id="particles-container"></div>
-
       <div class="hero-content container">
-        <h1 class="hero-title text-gradient">Discover Your Next Cinematic Obsession</h1>
-        <p class="hero-subtitle">Search millions of movies, log your reviews, and find hidden gems with our AI-powered
-          discovery engine.</p>
+        <h1 class="hero-title">Discover Your <span style="color: var(--cin-accent-2);">CinemaDNA</span></h1>
+        <p class="hero-subtitle">Stop scrolling. Start discovering. Understand your unique cinematic fingerprints and
+          reclaim your time.</p>
 
-        <div class="search-container hero-search" role="search">
+        <div class="search-container hero-search" role="search"
+          style="border: 1px solid var(--cin-glass); background: var(--cin-surface); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
           <div class="autocomplete-wrapper">
-            <input type="text" id="search-input" placeholder="Search by title, genre, or scene..." autocomplete="off">
+            <input type="text" id="search-input" placeholder="What are you in the mood for?" autocomplete="off"
+              style="color: var(--cin-text); font-size: 1.1rem;">
           </div>
-          <button id="search-btn" class="search-btn"><i class="fas fa-search"></i> <span>Search</span></button>
-          <button id="decision-mode-btn" class="search-btn"><i class="fas fa-magic"></i> <span>Decide</span></button>
+          <button id="ai-toggle-btn" class="search-btn ai-toggle" title="Toggle AI Discovery"
+            style="background: none; border-right: 1px solid var(--cin-glass); color: var(--cin-muted);">
+            <i class="fas fa-brain"></i>
+          </button>
+          <button id="search-btn" class="search-btn"
+            style="background: var(--cin-accent-2); color: var(--cin-bg-900); font-weight: 800;">Search</button>
         </div>
 
-        <p style="font-size: 0.85rem; margin-top: 24px; color: var(--text-muted);">
-          <i class="fas fa-lightbulb" style="color: var(--accent-secondary); margin-right: 5px;"></i>
-          Pro Tip: Search <code
-            style="background: hsla(0,0%,100%,0.1); padding: 2px 6px; border-radius: 4px;">scene:rain</code> to find
-          specific moments.
-        </p>
+        <div id="ai-search-hint"
+          style="display: none; margin-top: 24px; padding: 16px 24px; background: var(--cin-surface); border: 1px solid var(--cin-accent-2); border-radius: 12px; font-size: 0.9rem; color: var(--cin-text); animation: fadeIn 0.4s var(--cin-ease);">
+          <i class="fas fa-brain" style="color: var(--cin-accent-2); margin-right: 12px;"></i>
+          <strong>AI Engine Engaged</strong> — Describe a vibe, a scene, or a feeling.
+        </div>
+
+        <div style="margin-top: 64px; display: flex; justify-content: flex-start;">
+          <button id="zero-scroll-cta"
+            style="background: var(--cin-velvet); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 16px 32px; border-radius: 4px; font-family: 'Playfair Display', serif; font-size: 1.1rem; letter-spacing: 1px; cursor: pointer; transition: all var(--cin-duration-mid) var(--cin-ease); box-shadow: var(--cin-shadow-1);">
+            <i class="fas fa-film" style="margin-right: 10px;"></i> <span>Find Tonight's Three</span>
+          </button>
+        </div>
       </div>
-      <div class="hero-gradient-overlay"></div>
     </div>
 
     <div class="container">
@@ -142,20 +163,37 @@
 
       <div id="movie-results" class="movie-grid" aria-live="polite"></div>
     </div>
+  </section>
 
-    <!-- Hidden Gems Section -->
-    <div class="container" style="margin-top: 80px; margin-bottom: 80px;">
-      <div style="margin-bottom: 40px;">
-        <h2 class="section-title" style="text-align: left; margin: 0;">Hidden Gems</h2>
-        <p style="color: var(--text-muted); margin-top: 8px;">Critically acclaimed masterpieces you might have missed.
+  <!-- Hidden Gems Section -->
+  <section id="hidden-gems" class="page-section">
+    <div class="container">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <h2 class="section-title"><i class="fas fa-gem"
+            style="color: var(--accent-secondary); margin-right: 12px;"></i>Hidden Gems</h2>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 12px auto 0;">Critically acclaimed masterpieces
+          that flew under the mainstream radar. Each gem comes with an AI-curated reason why it deserves your attention.
         </p>
       </div>
-      <div id="hidden-gems-results" class="movie-grid" aria-live="polite"></div>
+      <div id="hidden-gems-results" class="gems-grid" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- Regions Section -->
+  <section id="regions" class="page-section" style="display: none;">
+    <div class="container">
+      <h2 class="section-title">Explore by Region</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px;">Discover the rich diversity of
+        global cinema.</p>
+
+      <div id="regions-container" style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Regions rendered dynamically -->
+      </div>
     </div>
   </section>
 
   <!-- Reviews Section -->
-  <section id="reviews" class="page-section">
+  <section id="reviews" class="page-section" style="display: none;">
     <div class="container">
       <h2 class="section-title">My Reviews</h2>
       <p style="text-align: center; color: var(--text-muted); margin-bottom: 48px;">Your personal journey through
@@ -181,139 +219,226 @@
       <p style="text-align: center; color: var(--text-muted); margin-bottom: 48px;">Visualizing your cinematic
         fingerprints.</p>
 
-      <div class="dashboard-grid">
-        <div class="stat-card">
-          <i class="fas fa-heart" style="color: var(--accent-primary);"></i>
-          <p class="stat-label">Top Genres</p>
-          <p id="dna-genre" class="stat-value">-</p>
+      <div class="dashboard-grid"
+        style="display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--cin-spacing-3); margin-top: 40px;">
+
+        <!-- Archetype Card -->
+        <div class="stat-card" id="archetype-container"
+          style="grid-column: span 8; grid-row: span 2; display: none; padding: var(--cin-spacing-4); border: 1px solid var(--cin-glass); background: radial-gradient(circle at top right, var(--cin-velvet) -50%, var(--cin-bg-800) 100%);">
+          <div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
+            <div id="archetype-icon-wrapper"
+              style="width: 100px; height: 100px; border: 2px solid var(--cin-accent-2); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--cin-accent-2); box-shadow: 0 0 20px rgba(230, 185, 30, 0.2);">
+              <i class="fas fa-crown"></i>
+            </div>
+            <div style="flex: 1; min-width: 250px;">
+              <span class="badge badge-velvet" style="margin-bottom: 12px; display: inline-block;">Primary
+                Archetype</span>
+              <h3 id="archetype-label" style="font-size: 3rem; line-height: 1; margin-bottom: 16px;">The Explorer</h3>
+              <p id="archetype-description" style="font-size: 1rem; color: var(--cin-muted); line-height: 1.6;">
+                Your cinematic soul is defined by deep emotional resonance.
+              </p>
+              <div id="archetype-traits" style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="stat-card">
-          <i class="fas fa-star" style="color: var(--accent-secondary);"></i>
-          <p class="stat-label">Avg Rating</p>
-          <p id="dna-avg-rating" class="stat-value">-</p>
+        <!-- Quick Stats -->
+        <div class="stat-card" style="grid-column: span 4; background: var(--cin-surface);">
+          <p style="font-size: 0.75rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 8px;">
+            Favorite Genre</p>
+          <p id="dna-genre" style="font-size: 2rem; font-weight: 800; color: var(--cin-accent-2);">-</p>
         </div>
 
-        <div class="stat-card">
-          <i class="fas fa-check-double" style="color: var(--accent-tertiary);"></i>
-          <p class="stat-label">Movies Logged</p>
-          <p id="dna-logged" class="stat-value">-</p>
+        <div class="stat-card" style="grid-column: span 4; background: var(--cin-surface);">
+          <p style="font-size: 0.75rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 8px;">Avg
+            Rating</p>
+          <p id="dna-avg-rating" style="font-size: 2rem; font-weight: 800; color: var(--cin-accent-1);">-</p>
         </div>
 
-        <div class="canvas-container">
-          <h4 style="margin-bottom: 24px; color: var(--text-secondary);"><i class="fas fa-user-tie"></i> Top Directors
-          </h4>
-          <ul id="dna-directors" style="list-style: none; padding: 0; display: flex; gap: 12px; flex-wrap: wrap;"></ul>
+        <!-- Trend Sparkline -->
+        <div class="stat-card" id="trends-container"
+          style="grid-column: span 4; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <p style="font-size: 0.75rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 4px;">
+              Behavior Hub</p>
+            <h4 id="trends-insight"
+              style="font-family: inherit; font-size: 1rem; font-weight: 500; color: var(--cin-text);">Analyzing
+              patterns...</h4>
+          </div>
+          <div style="height: 50px; margin-top: 12px;">
+            <canvas id="trends-canvas"></canvas>
+          </div>
         </div>
 
-        <div class="canvas-container">
-          <h4 style="margin-bottom: 24px; color: var(--text-secondary);"><i class="fas fa-chart-line"></i> Mood Velocity
-          </h4>
-          <canvas id="dna-chart" width="800" height="200" style="width: 100%; height: 150px;"></canvas>
+        <!-- Directors & Distribution -->
+        <div class="stat-card" style="grid-column: span 6; padding: var(--cin-spacing-3);">
+          <h4
+            style="margin-bottom: 24px; color: var(--cin-text); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">
+            Top Directors</h4>
+          <ul id="dna-directors" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px;"></ul>
+        </div>
+
+        <div class="stat-card" style="grid-column: span 6; padding: var(--cin-spacing-3);">
+          <h4
+            style="margin-bottom: 24px; color: var(--cin-text); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">
+            Emotional Map</h4>
+          <canvas id="dna-chart" style="width: 100%; height: 180px;"></canvas>
         </div>
       </div>
 
-      <div style="text-align: center; margin-top: 64px;">
-        <button id="generate-share-btn" class="save-btn btn-primary" style="padding: 16px 40px;">
-          <i class="fas fa-share-alt"></i> Generate DNA Share Card
-        </button>
+      <!-- Taste Graph Card -->
+      <div class="stat-card"
+        style="grid-column: span 4; background: linear-gradient(135deg, rgba(255, 15, 123, 0.1) 0%, rgba(45, 249, 254, 0.1) 100%);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+          <div>
+            <h3 style="color: #fff; margin-bottom: 8px;"><i class="fas fa-fingerprint"
+                style="margin-right: 10px; color: var(--accent-primary);"></i>Taste Graph Comparison</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Share your cinemographic DNA anonymously and
+              compare with friends.</p>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button id="export-taste-btn" class="save-btn"
+              style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-light);"><i
+                class="fas fa-file-export"></i> Export My Card</button>
+            <button id="compare-taste-btn" class="save-btn btn-primary"><i class="fas fa-users-rays"></i> Compare with
+              Friend</button>
+          </div>
+        </div>
       </div>
+    </div>
 
-      <canvas id="dna-share-canvas" width="800" height="1200" style="display:none;"></canvas>
+    <div style="text-align: center; margin-top: 64px;">
+      <button id="generate-share-btn" class="save-btn btn-primary" style="padding: 16px 40px;">
+        <i class="fas fa-share-alt"></i> Generate DNA Share Card
+      </button>
+    </div>
+
+    <canvas id="dna-share-canvas" width="800" height="1200" style="display:none;"></canvas>
     </div>
   </section>
 
   <!-- Movie Modal -->
   <div id="review-modal" class="modal">
-    <div class="modal-content">
-      <button id="close-modal" class="close"><i class="fas fa-times"></i></button>
+    <div class="modal-content"
+      style="display: grid; grid-template-columns: 350px 1fr; border: 1px solid var(--cin-glass); background: var(--cin-bg-800); position: relative;">
+      <button id="close-modal" class="close"
+        style="z-index: 10; background: var(--cin-bg-900); color: #fff; width: 40px; height: 40px; border-radius: 50%; opacity: 0.8; top: 20px; right: 20px;"><i
+          class="fas fa-times"></i></button>
 
-      <div class="modal-header">
-        <div class="modal-poster-wrapper">
-          <img id="modal-poster" src="" alt="Poster">
-        </div>
-        <div class="modal-header-info">
-          <h2 id="modal-title">...</h2>
-          <p id="modal-plot"></p>
+      <!-- Left Column: Poster & Media -->
+      <div style="position: relative; overflow: hidden; border-right: 1px solid var(--cin-glass);">
+        <img id="modal-poster" src="" alt="Movie Poster" style="width: 100%; height: 100%; object-fit: cover;">
+        <div style="position: absolute; inset: 0; background: linear-gradient(to top, var(--cin-bg-900), transparent);">
         </div>
       </div>
 
-      <!-- Movie Scene Carousel -->
-      <div id="modal-carousel" class="carousel-container">
-        <div class="carousel-track" id="carousel-track"></div>
-        <button class="carousel-btn prev" id="carousel-prev"
-          style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);"><i
-            class="fas fa-chevron-left"></i></button>
-        <button class="carousel-btn next" id="carousel-next"
-          style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"><i
-            class="fas fa-chevron-right"></i></button>
-        <div class="carousel-dots" id="carousel-dots"></div>
-      </div>
-
-      <div class="rating-system">
-        <div style="margin-bottom: 24px;">
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">SCENE TAGS</p>
-          <div id="modal-tags" class="tag-list"></div>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="new-tag-input" placeholder="Add a scene tag... (e.g. rain, neon)">
-            <button id="add-tag-btn" class="save-btn" style="padding: 0 20px;">Add</button>
+      <!-- Right Column: Content -->
+      <div
+        style="padding: var(--cin-spacing-4); overflow-y: auto; display: flex; flex-direction: column; gap: var(--cin-spacing-3);">
+        <div>
+          <h2 id="modal-title" style="font-size: 3rem; margin-bottom: var(--cin-spacing-1);">Movie Title</h2>
+          <div id="modal-meta-row"
+            style="display: flex; gap: 16px; color: var(--cin-muted); font-size: 0.9rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">
+            <span id="modal-year">2024</span>
+            <span id="modal-runtime">120 min</span>
+            <span id="modal-rating" style="color: var(--cin-accent-2);">★ 8.5</span>
           </div>
         </div>
 
-        <div style="margin-bottom: 24px;">
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">YOUR RATING</p>
-          <div id="star-container" style="display: flex; gap: 8px; font-size: 2rem;"></div>
+        <p id="modal-plot" style="font-size: 1.1rem; line-height: 1.8; color: var(--cin-text); opacity: 0.9;">
+          Plot summary goes here.
+        </p>
+
+        <!-- Cinematic Metrics -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: var(--cin-spacing-2) 0;">
+          <div class="stat-card" style="text-align: center;">
+            <p style="font-size: 0.7rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 4px;">
+              Emotional</p>
+            <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+              <div id="metric-emotional" style="width: 70%; height: 100%; background: var(--cin-velvet);"></div>
+            </div>
+          </div>
+          <div class="stat-card" style="text-align: center;">
+            <p style="font-size: 0.7rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 4px;">
+              Cognitive</p>
+            <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+              <div id="metric-cognitive" style="width: 50%; height: 100%; background: var(--cin-accent-2);"></div>
+            </div>
+          </div>
+          <div class="stat-card" style="text-align: center;">
+            <p style="font-size: 0.7rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 4px;">
+              Comfort</p>
+            <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+              <div id="metric-comfort" style="width: 90%; height: 100%; background: var(--cin-accent-1);"></div>
+            </div>
+          </div>
         </div>
 
-        <div style="margin-bottom: 32px;">
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">YOUR REVIEW</p>
-          <textarea id="review-text" maxlength="300" placeholder="What did you think of this masterpiece?"></textarea>
-          <div id="char-count"
-            style="text-align: right; font-size: 0.75rem; color: var(--text-muted); margin-top: -8px;">0/300</div>
+        <!-- Review Section -->
+        <div
+          style="background: var(--cin-surface); padding: var(--cin-spacing-3); border-radius: var(--cin-radius); border: 1px solid var(--cin-glass);">
+          <div id="star-container" style="margin-bottom: 16px; font-size: 1.5rem; color: var(--cin-accent-2);"></div>
+          <textarea id="review-text" placeholder="Write your cinematic reflection..."
+            style="width: 100%; background: none; border: none; color: var(--cin-text); font-size: 1rem; resize: none; min-height: 100px; outline: none;"></textarea>
+          <div id="char-count" style="text-align: right; font-size: 0.75rem; color: var(--cin-muted);">0/300</div>
         </div>
 
-        <div style="display: flex; gap: 16px;">
-          <button id="watchlist-btn" class="save-btn" style="flex: 1;"><i class="fas fa-bookmark"></i>
-            Watchlist</button>
-          <a id="watch-now-btn" href="#" target="_blank" class="save-btn btn-primary" style="flex: 1;"><i
-              class="fas fa-play"></i> Watch Now</a>
-          <button id="save-review" class="save-btn" style="flex: 1; background: #fff; color: #000;">Save Review</button>
+        <div style="display: flex; gap: 16px; margin-top: auto;">
+          <button id="watchlist-btn"
+            style="flex: 1; padding: 14px; border-radius: 4px; border: 1px solid var(--cin-glass); background: none; color: #fff; cursor: pointer; font-weight: 600;"><i
+              class="fas fa-bookmark"></i> Watchlist</button>
+          <button id="save-review"
+            style="flex: 1; padding: 14px; border-radius: 4px; border: none; background: var(--cin-accent-2); color: var(--cin-bg-900); cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Save
+            Reflection</button>
         </div>
       </div>
     </div>
   </div>
+  <!-- Decision Modal (The Spotlight) -->
+  <div id="decision-modal" class="modal modal-spotlight">
+    <div class="modal-content spotlight-content">
+      <button id="close-decision-modal" class="close" title="Close Spotlight"><i class="fas fa-times"></i></button>
 
-  <!-- Decision Modal -->
-  <div id="decision-modal" class="modal">
-    <div class="modal-content">
-      <button id="close-decision-modal" class="close"><i class="fas fa-times"></i></button>
-      <h2 class="section-title">Decision Mode</h2>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 32px;">Let our AI help you choose your next
-        watch.</p>
+      <div class="spotlight-header">
+        <span class="badge badge-gold">Intelligence Engine v2</span>
+        <h2 class="spotlight-title">The Spotlight</h2>
+        <p style="color: var(--cin-muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto;">Zero-scroll discovery.
+          Three masterpieces, selected for your current soul-state.</p>
+      </div>
 
-      <div class="decision-form">
-        <div class="form-group">
-          <label>What's the mood?</label>
+      <div class="decision-form spotlight-grid">
+        <div class="spotlight-control">
+          <label>Mood</label>
           <select id="decision-mood">
             <option value="Comfort">Chill & Comfort</option>
-            <option value="Vibing">Aesthetic & Vibing</option>
-            <option value="Good">The "Good" Stuff (Classics)</option>
-            <option value="Exciting">Action & Adrenaline</option>
-            <option value="Thoughtful">Thought-Provoking</option>
+            <option value="Vibing">Stylized & Vibing</option>
+            <option value="Good">Critically Acclaimed</option>
+            <option value="Exciting">High Octane</option>
+            <option value="Thoughtful">Intellectual/Experimental</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>How much time?</label>
+        <div class="spotlight-control">
+          <label>Time</label>
           <select id="decision-time">
-            <option value="90">&lt;= 90 mins (Short & Sweet)</option>
-            <option value="120">&lt;= 120 mins (Standard)</option>
-            <option value="999">&gt; 120 mins (Epic Journey)</option>
+            <option value="90">&lt;= 90 mins</option>
+            <option value="120">&lt;= 120 mins</option>
+            <option value="999">&gt; 120 mins</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>Who's watching?</label>
+        <div class="spotlight-control">
+          <label>Region</label>
+          <select id="decision-region">
+            <option value="all">Global (Any)</option>
+            <option value="indian">Indian</option>
+            <option value="east_asia">East Asian</option>
+            <option value="european">European Arthouse</option>
+          </select>
+        </div>
+
+        <div class="spotlight-control">
+          <label>Company</label>
           <select id="decision-company">
             <option value="Alone">Just Me</option>
             <option value="Couple">Date Night</option>
@@ -322,39 +447,47 @@
         </div>
       </div>
 
-      <button id="get-recommendations-btn" class="save-btn btn-primary">
-        <i class="fas fa-magic"></i> Find My Next Favorite
+      <button id="get-recommendations-btn" class="spotlight-action">
+        Analyze Local DNA
       </button>
 
-      <div id="decision-results" class="movie-grid"
-        style="margin-top: 40px; border-top: 1px solid var(--border-light);"></div>
+      <div id="decision-results" class="movie-grid" style="margin-top: 64px; width: 100%; min-height: 400px;"></div>
     </div>
   </div>
 
-  <!-- AI Guru Interface -->
-  <div id="ai-guru-trigger" class="ai-fab">
-    <div class="ai-fab-glow"></div>
-    <i class="fas fa-robot"></i>
-    <span class="ai-fab-tooltip">CineMind AI</span>
-  </div>
 
-  <div id="ai-guru-chat" class="ai-chat-window">
-    <div class="ai-chat-header">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="ai-status-dot"></div>
-        <span style="font-weight: 700; font-family: 'Outfit';">CineMind AI Guru</span>
+
+  <!-- Trends Modal -->
+  <div id="trends-detail-modal" class="modal"
+    style="display: none; align-items: center; justify-content: center; z-index: 10002;">
+    <div class="modal-content" style="max-width: 600px; padding: 40px; text-align: left;">
+      <button class="close-modal" id="close-trends-modal"
+        style="top: 20px; right: 20px; color: #fff; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <h2 style="margin-bottom: 24px;"><i class="fas fa-chart-line"
+          style="color: var(--accent-primary); margin-right: 12px;"></i>Long-term Trends</h2>
+
+      <div id="trends-detailed-graph"
+        style="height: 200px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 32px; position: relative; width: 100%;">
+        <canvas id="detailed-trends-canvas" style="width: 100%; height: 100%;"></canvas>
       </div>
-      <button id="close-ai-chat" style="background:none; border:none; color:#fff; cursor:pointer;"><i
-          class="fas fa-times"></i></button>
-    </div>
-    <div id="ai-chat-messages" class="ai-chat-body">
-      <div class="ai-message bot">
-        Hello! I'm the CineMind AI. Ask me for a recommendation or tell me what vibe you're looking for! 🍿
+
+      <div class="trends-stats-grid"
+        style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px;">
+        <div>
+          <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Avg Intensity Trend</p>
+          <p id="trend-intensity-val" style="font-size: 1.5rem; font-weight: 700;">+0%</p>
+        </div>
+        <div>
+          <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Cognitive Shift</p>
+          <p id="trend-cognitive-val" style="font-size: 1.5rem; font-weight: 700;">+0%</p>
+        </div>
       </div>
-    </div>
-    <div class="ai-chat-input-area">
-      <input type="text" id="ai-chat-input" placeholder="e.g. Find me a mind-bending thriller...">
-      <button id="ai-chat-send"><i class="fas fa-paper-plane"></i></button>
+
+      <div
+        style="background: hsla(0,0%,100%,0.05); padding: 20px; border-radius: 12px; border-left: 4px solid var(--accent-primary);">
+        <p id="trends-long-description" style="line-height: 1.6; color: var(--text-secondary);">Your movie habits have
+          been evolving. The graph above shows your weekly shifts across key metrics for the last 6 months.</p>
+      </div>
     </div>
   </div>
 
@@ -366,6 +499,176 @@
       <a href="#" style="color: var(--text-muted);"><i class="fab fa-instagram"></i></a>
     </div>
   </footer>
+  <style>
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.4);
+      }
+
+      70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 15px rgba(204, 0, 0, 0);
+      }
+
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(204, 0, 0, 0);
+      }
+    }
+
+    .zero-scroll-active {
+      overflow: hidden !important;
+    }
+  </style>
+
+  <!-- Zero Scroll Modal -->
+  <div id="zero-scroll-modal" class="modal"
+    style="display: none; align-items: center; justify-content: center; z-index: 20000; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);">
+    <div class="modal-content"
+      style="max-width: 1000px; width: 95%; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+      <h2 style="font-size: 2.5rem; margin-bottom: 12px; font-weight: 900; letter-spacing: -1px;">Zero Scroll Selection
+      </h2>
+      <p style="color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem;">You are locked into these 3 picks. No
+        browsing, just deciding.</p>
+
+      <div id="zero-scroll-results" class="movie-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 32px; margin-bottom: 48px;">
+        <!-- 3 results here -->
+      </div>
+
+      <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+        <button id="zero-scroll-spin-btn" class="btn-primary"
+          style="padding: 16px 32px; font-size: 1rem; border-radius: 12px; background: var(--accent-primary);">
+          <i class="fas fa-sync-alt"></i> Spin Again
+        </button>
+        <button id="zero-scroll-exit-btn" class="btn-secondary"
+          style="padding: 16px 32px; font-size: 1rem; border-radius: 12px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+          Exit Mode
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Taste Comparison Modal -->
+  <div id="taste-modal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <button id="close-taste-modal" class="close"><i class="fas fa-times"></i></button>
+      <h2 class="section-title">Taste Compatibility</h2>
+
+      <div id="taste-input-view">
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 24px;">Paste your friend's Taste Card
+          JSON below to see how your cinematic DNAs align.</p>
+        <textarea id="friend-taste-json"
+          style="height: 150px; font-family: monospace; font-size: 0.8rem; margin-bottom: 20px;"
+          placeholder='{"v":1, "name": "...", "metrics": {...}, "genres": {...}}'></textarea>
+        <button id="run-comparison-btn" class="save-btn btn-primary" style="width: 100%;">Analyze Match</button>
+      </div>
+
+      <div id="taste-result-view" style="display: none;">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div id="similarity-circle"
+            style="width: 120px; height: 120px; border-radius: 50%; border: 8px solid var(--accent-primary); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; color: #fff;">
+            0%
+          </div>
+          <p id="compatibility-label"
+            style="font-weight: 700; color: var(--accent-secondary); text-transform: uppercase; letter-spacing: 2px;">
+            SYNCING...</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="canvas-container"
+            style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2); padding: 20px;">
+            <h4 style="color: #10b981; font-size: 0.9rem; margin-bottom: 12px;"><i class="fas fa-handshake"></i> SHARED
+              PASSIONS</h4>
+            <ul id="shared-genres-list"
+              style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+            </ul>
+          </div>
+          <div class="canvas-container"
+            style="background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.2); padding: 20px;">
+            <h4 style="color: #ef4444; font-size: 0.9rem; margin-bottom: 12px;"><i class="fas fa-unite"></i> UNIQUE
+              FLAVORS</h4>
+            <ul id="divergent-genres-list"
+              style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+            </ul>
+          </div>
+        </div>
+
+        <button id="back-to-input-btn" class="save-btn" </div>
+      </div>
+    </div>
+
+    <!-- Onboarding Modal -->
+    <div id="onboarding-modal" class="modal"
+      style="display: none; align-items: center; justify-content: center; z-index: 30000; background: rgba(0,0,0,0.98); backdrop-filter: blur(20px);">
+      <div class="modal-content"
+        style="max-width: 550px; padding: 48px; border: 1px solid rgba(0, 194, 204, 0.2); box-shadow: 0 0 40px rgba(0, 194, 204, 0.1);">
+        <div id="onboarding-step-intro">
+          <div
+            style="width: 80px; height: 80px; margin: 0 auto 32px; background: rgba(0, 194, 204, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #00c2cc;">
+            <i class="fas fa-fingerprint"></i>
+          </div>
+          <h2 style="font-size: 2.2rem; margin-bottom: 12px; font-weight: 800; color: #fff;">Find Your Cinematic North.
+          </h2>
+          <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px;">Most apps tell
+            you what's popular. CinemaDNA tells you <strong>who you are</strong>. Take our 60-second Personality Test to
+            unlock your profile.</p>
+          <button id="start-onboarding-btn" class="save-btn btn-primary"
+            style="width: 100%; padding: 16px; border-radius: 12px; font-size: 1.1rem;">Start Personality Test</button>
+        </div>
+
+        <div id="onboarding-step-quiz" style="display: none; text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+            <span id="quiz-progress-text"
+              style="font-size: 0.85rem; color: var(--accent-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Question
+              1 of 5</span>
+            <div
+              style="width: 100px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+              <div id="quiz-progress-bar"
+                style="width: 20%; height: 100%; background: #00c2cc; transition: width 0.3s ease;"></div>
+            </div>
+          </div>
+          <h3 id="quiz-question" style="font-size: 1.5rem; color: #fff; margin-bottom: 32px; line-height: 1.4;">Do you
+            prefer stories grounded in gritty realism or whimsical fantasy?</h3>
+          <div id="quiz-options" style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Options injected here -->
+          </div>
+        </div>
+
+        <div id="onboarding-step-result" style="display: none;">
+          <div id="result-archetype-icon" style="font-size: 4rem; color: #00c2cc; margin-bottom: 24px;">
+            <i class="fas fa-mask"></i>
+          </div>
+          <p
+            style="color: var(--accent-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">
+            Analysis Complete</p>
+          <h2 id="result-archetype-label"
+            style="font-size: 2.5rem; color: #fff; margin-bottom: 16px; font-weight: 900;">The Intellectual Explorer
+          </h2>
+          <p id="result-archetype-desc"
+            style="color: var(--text-muted); margin-bottom: 32px; line-height: 1.6; font-size: 1.05rem;">You crave
+            complexity and hidden meanings, often digging for underground masterpieces.</p>
+
+          <div
+            style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; margin-bottom: 40px; border: 1px solid var(--border-light);">
+            <p style="font-size: 0.9rem; color: #fff; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-lightbulb"
+                style="color: var(--accent-secondary); margin-right: 8px;"></i> Guidance for tonight</p>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Choose <strong>Zero-Scroll Mode</strong> for
+              high-confidence, low-regret picks tailored to your profile.</p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <button id="seed-dna-btn" class="save-btn btn-primary"
+              style="width: 100%; padding: 14px; border-radius: 12px;">Seed my CinemaDNA (Add 5 Starters)</button>
+            <button id="finish-onboarding-btn"
+              style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem;">I'll
+              add movies manually</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
 </body>
 
 </html>

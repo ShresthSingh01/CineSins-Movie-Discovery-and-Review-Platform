@@ -229,6 +229,58 @@ nav a:hover {
 .autocomplete-wrapper {
   flex: 1;
   position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  top: calc(100% + 15px);
+  left: 0;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  backdrop-filter: var(--glass-blur);
+  padding: 8px;
+  display: none;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.autocomplete-suggestions div {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  border-bottom: 1px solid hsla(0, 0%, 100%, 0.03);
+}
+
+.autocomplete-suggestions div:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-suggestions div:hover {
+  background: hsla(0, 0%, 100%, 0.08);
+  color: #fff;
+  padding-left: 20px;
 }
 
 .hero-search input {
@@ -237,6 +289,13 @@ nav a:hover {
   font-size: 1.1rem;
   color: #fff;
   background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.hero-search input:focus {
+  border: none;
+  box-shadow: none;
 }
 
 .hero-search .search-btn {
@@ -271,6 +330,116 @@ nav a:hover {
 
 .hero-search #decision-mode-btn:hover {
   box-shadow: 0 8px 30px hsla(340, 100%, 60%, 0.4);
+}
+
+.hero-search .ai-toggle {
+  background: transparent;
+  color: #aaa;
+  border: 1.5px solid var(--border-light);
+}
+
+.hero-search .ai-toggle.active {
+  background: #cc0000 !important;
+  color: #fff !important;
+  border-color: #cc0000;
+  box-shadow: 0 0 20px hsla(0, 100%, 50%, 0.3);
+}
+
+.hero-search .ai-toggle:hover {
+  border-color: #cc0000;
+  color: #cc0000;
+}
+
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scale(1.6);
+    opacity: 1;
+  }
+}
+
+/* AI Result Cards - text-based when posters unavailable */
+.ai-result-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.ai-result-card .ai-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 20px;
+  height: 100%;
+  min-height: 380px;
+  background: linear-gradient(145deg, hsla(0, 0%, 10%, 1), hsla(0, 100%, 8%, 0.5));
+  border: 1px solid hsla(0, 100%, 50%, 0.15);
+  border-radius: var(--radius-lg);
+}
+
+.ai-result-card:hover .ai-card-content {
+  border-color: hsla(0, 100%, 50%, 0.4);
+  box-shadow: 0 0 30px hsla(0, 100%, 50%, 0.1);
+}
+
+.ai-card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: hsla(0, 100%, 50%, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #cc0000;
+}
+
+.ai-card-content h3 {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 8px;
+}
+
+.ai-card-content .movie-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.ai-card-reason {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  border-top: 1px solid hsla(0, 100%, 50%, 0.15);
+  padding-top: 16px;
+  margin-top: auto;
+}
+
+.ai-result-card::after {
+  content: 'Click to search \2192';
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ai-result-card:hover::after {
+  opacity: 1;
 }
 
 .hero-gradient-overlay {
@@ -913,4 +1082,160 @@ button,
 
 .hero-search .search-btn {
   flex-shrink: 0;
+}
+
+/* ==== Hidden Gems Section ==== */
+.gems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 28px;
+}
+
+.gem-card {
+  display: flex;
+  gap: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.gem-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-color: hsla(0, 100%, 50%, 0.3);
+}
+
+.gem-card-poster {
+  width: 110px;
+  min-height: 165px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.gem-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gem-card-info h3 {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gem-card-info .gem-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.gem-card-info .gem-reason {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  border-left: 3px solid #cc0000;
+  padding-left: 12px;
+  margin-top: 4px;
+}
+
+.gem-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent-secondary);
+  background: hsla(45, 100%, 51%, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.regret-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: auto;
+}
+
+.regret-badge i {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .search-container.hero-search {
+    flex-wrap: wrap;
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .autocomplete-wrapper {
+    width: 100%;
+    flex: none;
+  }
+
+  .hero-search .search-btn {
+    flex: 1;
+    height: 50px;
+    padding: 0 12px;
+    font-size: 0.9rem;
+  }
+
+  .hero-search .search-btn i {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-search .search-btn span {
+    display: none;
+  }
+
+  .gems-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gem-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .gem-card-info .gem-reason {
+    border-left: none;
+    padding-left: 0;
+    border-top: 2px solid #cc0000;
+    padding-top: 8px;
+  }
 }

@@ -5,7 +5,7 @@ export const store = {
         return JSON.parse(localStorage.getItem("reviews")) || [];
     },
 
-    saveReview(review) {
+    async saveReview(review) {
         const reviews = this.getReviews();
         const index = reviews.findIndex(r => r.id === review.id);
         if (index > -1) {
@@ -14,6 +14,14 @@ export const store = {
             reviews.push(review);
         }
         localStorage.setItem("reviews", JSON.stringify(reviews));
+
+        // Emit Event
+        try {
+            const { eventStore } = await import('./src/eventStore.js');
+            const allMovies = this.getAllMovies();
+            const movie = allMovies.find(m => String(m.id) === String(review.id) || String(m.imdbID) === String(review.id));
+            eventStore.logEvent('review', review.id, movie?.metrics);
+        } catch (e) { }
     },
 
     removeReview(id) {
@@ -25,7 +33,7 @@ export const store = {
         return JSON.parse(localStorage.getItem("watchlist")) || [];
     },
 
-    toggleWatchlist(movie) {
+    async toggleWatchlist(movie) {
         let wl = this.getWatchlist();
         const index = wl.findIndex(m => m.id === movie.id);
         if (index > -1) {
@@ -35,8 +43,23 @@ export const store = {
         } else {
             wl.unshift(movie);
             localStorage.setItem("watchlist", JSON.stringify(wl));
+
+            // Emit Event
+            try {
+                const { eventStore } = await import('./src/eventStore.js');
+                eventStore.logEvent('watchlist-add', movie.id, movie.metrics);
+            } catch (e) { }
+
             return true; // Added
         }
+    },
+
+    async logMovieView(movie) {
+        if (!movie) return;
+        try {
+            const { eventStore } = await import('./src/eventStore.js');
+            eventStore.logEvent('view', movie.id || movie.imdbID, movie.metrics);
+        } catch (e) { }
     },
 
     getRecentSearches() {
@@ -57,6 +80,11 @@ export const store = {
             localStorage.setItem("allMovies", JSON.stringify(validMovies));
         }
         return validMovies;
+    },
+
+    getMoviesByRegion(region) {
+        const movies = this.getAllMovies();
+        return movies.filter(m => m.regionTags && m.regionTags.includes(region));
     },
 
     saveMoviesBatch(movies) {
@@ -182,7 +210,7 @@ export const store = {
         return false;
     },
 
-    computeUserAnalytics() {
+    async computeUserAnalytics() {
         try {
             const reviews = this.getReviews();
             const allMovies = this.getAllMovies();
@@ -200,9 +228,28 @@ export const store = {
             let totalEmotional = 0;
             let validEmotionalCount = 0;
             let totalRuntime = 0;
+            let totalCognitive = 0;
+            let totalComfort = 0;
+            let validCognitiveCount = 0;
+            let validComfortCount = 0;
+            let oldMovieCount = 0;
+            let totalHiddenScore = 0;
 
             userMovies.forEach(m => {
                 if (!m) return;
+
+                // Ensure metrics exist even for legacy data
+                if (!m.metrics) {
+                    try {
+                        const { computeMetrics, normalizeMovieData } = this;
+                        // Use normalizeMovieData logic inline or directly since it's on the same object
+                        const normalizedManually = this.normalizeMovieData ? this.normalizeMovieData(m) : m;
+                        m.metrics = normalizedManually.metrics;
+                    } catch (e) {
+                        console.warn("Could not normalize movie for analytics:", m.title);
+                    }
+                }
+
                 const genres = (m.genres || '').split(',').map(g => g.trim()).filter(Boolean);
                 genres.forEach(g => {
                     genreCounts[g] = (genreCounts[g] || 0) + 1;
@@ -215,14 +262,29 @@ export const store = {
                     }
                 });
 
-                if (m.metrics && typeof m.metrics.emotionalIntensity === 'number') {
-                    totalEmotional += m.metrics.emotionalIntensity;
-                    validEmotionalCount++;
+                if (m.metrics) {
+                    if (typeof m.metrics.emotionalIntensity === 'number') {
+                        totalEmotional += m.metrics.emotionalIntensity;
+                        validEmotionalCount++;
+                    }
+                    if (typeof m.metrics.cognitiveLoad === 'number') {
+                        totalCognitive += m.metrics.cognitiveLoad;
+                        validCognitiveCount++;
+                    }
+                    if (typeof m.metrics.comfortScore === 'number') {
+                        totalComfort += m.metrics.comfortScore;
+                        validComfortCount++;
+                    }
                 }
 
                 if (m.runtimeMin) {
                     totalRuntime += Number(m.runtimeMin);
                 }
+
+                const year = parseInt(m.Year || m.year);
+                if (year && !isNaN(year) && year < 2000) oldMovieCount++;
+
+                if (m.hiddenScore) totalHiddenScore += m.hiddenScore;
             });
 
             reviews.forEach(r => {
@@ -239,7 +301,9 @@ export const store = {
             const top5Directors = sortedDirectors.slice(0, 5).map(d => d[0]);
 
             const avgRating = validRatingCount > 0 ? (totalRating / validRatingCount).toFixed(1) : "0.0";
-            const avgEmotional = validEmotionalCount > 0 ? Math.round(totalEmotional / validEmotionalCount) : 0;
+            const avgEmotional = validEmotionalCount > 0 ? Math.round(totalEmotional / validEmotionalCount) : 50;
+            const avgCognitive = validCognitiveCount > 0 ? Math.round(totalCognitive / validCognitiveCount) : 50;
+            const avgComfort = validComfortCount > 0 ? Math.round(totalComfort / validComfortCount) : 50;
 
             let moodTrend = "Neutral";
             if (avgEmotional > 70) moodTrend = "Intense/Exciting";
@@ -262,9 +326,29 @@ export const store = {
                 top5Directors,
                 moodTrend,
                 avgEmotional,
+                avgCognitive,
+                avgComfort,
                 avgRuntime,
-                totalWatchTimeString
+                totalWatchTimeString,
+                percentOlderDecades: userMovies.length > 0 ? oldMovieCount / userMovies.length : 0,
+                hiddenGemAffinity: userMovies.length > 0 ? totalHiddenScore / userMovies.length : 0,
+                rewatchRate: 0.2 // Heuristic baseline
             };
+
+            // Compute Archetype
+            try {
+                const { computeArchetype } = await import('./src/archetype.js');
+                const archetype = computeArchetype(analytics);
+                if (archetype) {
+                    analytics.archetype = archetype;
+                    // Persist to userProfile as requested
+                    const userProfile = JSON.parse(localStorage.getItem("userProfile")) || {};
+                    userProfile.archetype = archetype;
+                    localStorage.setItem("userProfile", JSON.stringify(userProfile));
+                }
+            } catch (e) {
+                console.warn("Could not compute archetype:", e);
+            }
 
             localStorage.setItem("cinemaDNA", JSON.stringify(analytics));
             return analytics;
@@ -340,87 +424,32 @@ export function normalizeMovieData(movie) {
 
     // Attach core metrics
     movie.metrics = computeMetrics(movie);
+
+    // Compute Regret Risk if profile is available
+    attachRegretRisk(movie);
+
     return movie;
 }
 
-export async function decisionEngine(options, movies) {
-    if (!movies) {
-        movies = store.getAllMovies();
-    }
-
-    const moodMap = {
-        'Comfort': ['Comedy', 'Romance', 'Animation', 'Family'],
-        'Vibing': ['Animation', 'Adventure', 'Music', 'Sci-Fi', 'Fantasy'],
-        'Good': ['Drama', 'Crime', 'Biography', 'History'],
-        'Exciting': ['Action', 'Adventure', 'Sci-Fi', 'Thriller', 'Horror'],
-        'Thoughtful': ['Drama', 'Mystery', 'Documentary', 'Biography', 'Sci-Fi']
-    };
-    const preferredGenres = moodMap[options.mood] || [];
-
-    // Filter by Runtime
-    let candidates = movies.filter(m => {
-        const runtimeMatch = (m.runtime || "").match(/\d+/);
-        if (!runtimeMatch) return true; // Keep if unknown
-        const mins = parseInt(runtimeMatch[0], 10);
-
-        let timeFits = false;
-        if (options.time <= 90) timeFits = (mins <= 95); // Slight buffer
-        else if (options.time <= 120) timeFits = (mins <= 125);
-        else timeFits = (mins > 120);
-        return timeFits;
-    });
-
-    if (candidates.length < 5) candidates = movies;
-
-    const currentYear = new Date().getFullYear();
-
-    candidates = candidates.map(m => {
-        const imdbRating = parseFloat(m.imdbRating) || 5.0;
-        const year = parseInt(m.Year || m.year) || 2000;
-        const metrics = m.metrics || { comfortScore: 50, emotionalIntensity: 50, cognitiveLoad: 50 };
-
-        let moodScore = 50;
-        if (options.mood === 'Comfort') moodScore = metrics.comfortScore;
-        else if (options.mood === 'Exciting') moodScore = metrics.emotionalIntensity;
-        else if (options.mood === 'Thoughtful') moodScore = metrics.cognitiveLoad;
-        else if (options.mood === 'Vibing') moodScore = (metrics.comfortScore + metrics.cognitiveLoad) / 2;
-        else if (options.mood === 'Good') moodScore = (metrics.emotionalIntensity + metrics.cognitiveLoad) / 2;
-
-        let score = (0.5 * (moodScore / 100)) + (0.3 * (imdbRating / 10));
-
-        // Recency Bias
-        const age = Math.max(0, currentYear - year);
-        score += (0.1 * (1 - Math.min(1, age / 50)));
-
-        // Company filter logic (The "FIX" for the user request)
-        if (options.company === 'Family') {
-            const isFamily = (m.genres || '').includes('Family') || (m.genres || '').includes('Animation');
-            if (isFamily) score += 0.2;
-            else score -= 0.1; // Penalty for non-family stuff
-        } else if (options.company === 'Couple') {
-            const isRomance = (m.genres || '').includes('Romance') || (m.genres || '').includes('Drama');
-            if (isRomance) score += 0.1;
+async function attachRegretRisk(movie) {
+    try {
+        const userProfile = JSON.parse(localStorage.getItem("userProfile"));
+        const dna = JSON.parse(localStorage.getItem("cinemaDNA"));
+        if (userProfile && userProfile.archetype) {
+            const { computeRegretScore } = await import('./src/regrisk.js');
+            movie.regRisk = computeRegretScore(movie, { archetype: userProfile.archetype, dna });
         }
-
-        // Small random factor to make it feel "live" on every click/change
-        score += (Math.random() * 0.05);
-
-        let dominant = "Comfort";
-        let maxVal = metrics.comfortScore;
-        if (metrics.emotionalIntensity > maxVal) { dominant = "Intensity"; maxVal = metrics.emotionalIntensity; }
-        if (metrics.cognitiveLoad > maxVal) { dominant = "Thought-Provoking"; }
-
-        return { movie: m, score, dominant, moodScore };
-    });
-
-    candidates.sort((a, b) => b.score - a.score);
-
-    return candidates.slice(0, 3).map(c => ({
-        ...c.movie,
-        explain: `Matches your ${options.mood.toLowerCase()} mood and ${options.company.toLowerCase()} viewing session.`,
-        dominantMetric: c.dominant
-    }));
+    } catch (e) {
+        // Silently fail if risk can't be computed
+    }
 }
+
+export async function decisionEngine(options, movies) {
+    const { decisionEngine: engine } = await import('./src/decisionEngine.js');
+    return engine(options, movies);
+}
+
+
 
 export function computeCompatibility(personAMovies, personBMovies) {
     const getGenres = (movies) => [...new Set(movies.flatMap(m => (m.genres || '').split(',').map(g => g.trim())))];
