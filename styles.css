@@ -613,7 +613,7 @@ nav a:hover {
   box-shadow: 0 10px 30px hsla(340, 100%, 60%, 0.4);
 }
 
-/* Decision Mode Horizontal Carousel */
+/* Decision Mode Horizontal Carousel & Focused Reveal */
 .decision-carousel-wrapper {
   position: relative;
   width: 100%;
@@ -622,13 +622,14 @@ nav a:hover {
 
 #decision-results {
   display: flex !important;
-  gap: 32px;
+  gap: 24px;
   overflow-x: auto;
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 20px 0;
+  padding: 30px 0 60px;
   width: 100%;
+  justify-content: center;
 }
 
 #decision-results::-webkit-scrollbar {
@@ -636,32 +637,104 @@ nav a:hover {
 }
 
 .decision-result-card {
-  flex: 0 0 calc(33.333% - 22px);
-  min-width: 320px;
-  max-width: 340px;
+  flex: 0 0 320px;
   position: relative !important;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  filter: grayscale(0.2) brightness(0.8);
+}
+
+#decision-results:hover .decision-result-card {
+  filter: grayscale(0) brightness(1);
 }
 
 .decision-result-card:hover {
-  transform: translateY(-15px) scale(1.02) !important;
-  z-index: 10;
+  transform: translateY(-20px) scale(1.05) !important;
+  z-index: 50;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8), 0 0 20px rgba(230, 185, 30, 0.3) !important;
+}
+
+.decision-result-card:hover~.decision-result-card {
+  transform: translateX(15px);
+}
+
+#decision-results:has(.decision-result-card:hover) .decision-result-card:not(:hover) {
+  opacity: 0.6;
 }
 
 .decision-result-card .card-overlay {
   opacity: 1 !important;
-  background: linear-gradient(to top, rgba(15, 23, 36, 0.95) 0%, rgba(15, 23, 36, 0.6) 50%, transparent 100%) !important;
+  background: linear-gradient(to top, rgba(15, 23, 36, 0.98) 0%, rgba(15, 23, 36, 0.7) 40%, transparent 100%) !important;
 }
 
-/* Carousel Control Buttons */
-.decision-arrow {
+/* Scene Modal Carousel Elements */
+.carousel-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  font-size: 0.8rem;
+}
+
+.carousel-nav:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-slide {
+  flex: 0 0 160px;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.carousel-slide:hover img {
+  transform: scale(1.1);
+}
+
+.carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.carousel-dot.active {
+  background: var(--accent-primary);
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* Carousel Control Buttons (Decision) */
+.decision-arrow {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
   width: 60px;
   height: 60px;
-  background: rgba(15, 17, 21, 0.9);
-  border: 1px solid var(--border-light);
+  background: rgba(15, 17, 21, 0.95);
+  border: 1.5px solid var(--border-light);
   border-radius: 50%;
   color: #fff;
   display: flex !important;
@@ -670,8 +743,9 @@ nav a:hover {
   cursor: pointer;
   z-index: 100;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .decision-arrow.prev {
@@ -689,11 +763,17 @@ nav a:hover {
 
 .decision-arrow:hover {
   background: var(--accent-primary);
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 20px var(--accent-primary);
+  border-color: #fff;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 30px var(--accent-primary);
 }
 
 @media (max-width: 1200px) {
+  #decision-results {
+    justify-content: flex-start;
+    padding-left: 30px;
+  }
+
   .decision-arrow {
     display: none !important;
   }

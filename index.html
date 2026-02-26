@@ -371,14 +371,34 @@
 
       <!-- Left Column: Poster & Media -->
       <div
-        style="width: 400px; min-width: 400px; position: relative; border-right: 1px solid var(--cin-glass); display: block;">
-        <img id="modal-poster" src="" alt="Movie Poster" style="width: 100%; height: 100%; object-fit: cover;">
-        <div
-          style="position: absolute; inset: 0; background: linear-gradient(to top, var(--cin-bg-900), transparent 70%);">
+        style="width: 400px; min-width: 400px; position: relative; border-right: 1px solid var(--cin-glass); display: flex; flex-direction: column;">
+        <div style="position: relative; flex: 1; min-height: 500px;">
+          <img id="modal-poster" src="" alt="Movie Poster" style="width: 100%; height: 100%; object-fit: cover;">
+          <div
+            style="position: absolute; inset: 0; background: linear-gradient(to top, var(--cin-bg-900), transparent 70%);">
+          </div>
+          <!-- Poster Badge -->
+          <div style="position: absolute; bottom: 30px; left: 30px;">
+            <span class="badge badge-gold" style="font-size: 0.7rem; letter-spacing: 2px;">CINEMATIC MASTERPIECE</span>
+          </div>
         </div>
-        <!-- Poster Badge -->
-        <div style="position: absolute; bottom: 30px; left: 30px;">
-          <span class="badge badge-gold" style="font-size: 0.7rem; letter-spacing: 2px;">CINEMATIC MASTERPIECE</span>
+
+        <!-- Scene Carousel (Media Section) -->
+        <div id="modal-carousel"
+          style="padding: 20px; background: rgba(0,0,0,0.3); border-top: 1px solid var(--cin-glass); display: block;">
+          <h4
+            style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cin-muted); margin-bottom: 15px;">
+            Key Scenes</h4>
+          <div style="position: relative; overflow: hidden; height: 120px; border-radius: 8px;">
+            <div id="carousel-track" style="display: flex; height: 100%; transition: transform 0.5s ease; gap: 10px;">
+              <!-- Scenes injected here -->
+            </div>
+            <button id="carousel-prev" class="carousel-nav" style="left: 5px;"><i
+                class="fas fa-chevron-left"></i></button>
+            <button id="carousel-next" class="carousel-nav" style="right: 5px;"><i
+                class="fas fa-chevron-right"></i></button>
+          </div>
+          <div id="carousel-dots" style="display: flex; justify-content: center; gap: 6px; margin-top: 12px;"></div>
         </div>
       </div>
 
