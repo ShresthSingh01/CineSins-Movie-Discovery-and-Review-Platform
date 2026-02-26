@@ -8,7 +8,7 @@ export const ui = {
     state: {
         currentMovie: null,
         selectedRating: 0,
-        renderedMoviesMap: {}, // Using singular map for core results
+        renderedMoviesMaps: {}, // Using plural maps for all sections
         renderedGemsMap: {},
         renderedWatchlistMap: {}
     },
@@ -135,7 +135,9 @@ export const ui = {
             resultArchetypeLabel: document.getElementById("result-archetype-label"),
             resultArchetypeDesc: document.getElementById("result-archetype-desc"),
             seedDnaBtn: document.getElementById("seed-dna-btn"),
-            finishOnboardingBtn: document.getElementById("finish-onboarding-btn")
+            finishOnboardingBtn: document.getElementById("finish-onboarding-btn"),
+            decisionPrev: document.getElementById("decision-prev"),
+            decisionNext: document.getElementById("decision-next")
         };
 
         this.setupNavigation();
@@ -667,6 +669,17 @@ export const ui = {
 
             this.elements.getRecommendationsBtn.addEventListener('click', updateRecs);
 
+            if (this.elements.decisionPrev) {
+                this.elements.decisionPrev.onclick = () => {
+                    this.elements.decisionResults.scrollBy({ left: -400, behavior: 'smooth' });
+                };
+            }
+            if (this.elements.decisionNext) {
+                this.elements.decisionNext.onclick = () => {
+                    this.elements.decisionResults.scrollBy({ left: 400, behavior: 'smooth' });
+                };
+            }
+
             // Add automatic update when filters change
             ["decisionMood", "decisionTime", "decisionCompany", "decisionRegion"].forEach(id => {
                 const el = this.elements[id] || document.getElementById(id);
@@ -1033,8 +1046,11 @@ export const ui = {
         }
 
         const cards = [];
-        // Consolidate into main results map
-        this.state.renderedMoviesMap = {};
+        // Consolidate into specific results map for this container to avoid clobbering
+        const containerId = target.id || 'movie-results';
+        if (!this.state.renderedMoviesMaps) this.state.renderedMoviesMaps = {};
+        this.state.renderedMoviesMaps[containerId] = {};
+
         movies.forEach(m => {
             const card = document.createElement("div");
             card.className = "movie-card";
@@ -1061,7 +1077,7 @@ export const ui = {
                 </div>`;
 
             card.dataset.id = m.imdbID || m.id;
-            this.state.renderedMoviesMap[m.imdbID || m.id] = m;
+            this.state.renderedMoviesMaps[containerId][m.imdbID || m.id] = m;
 
             target.appendChild(card);
             cards.push(card);
@@ -1074,7 +1090,7 @@ export const ui = {
 
             if (btn && btn.dataset.action === "open-modal") {
                 const movieId = btn.dataset.id;
-                const movie = this.state.renderedMoviesMap[movieId];
+                const movie = this.state.renderedMoviesMaps[containerId][movieId];
                 const posterImg = btn.closest('.movie-card').querySelector('img');
                 if (movie) this.openModal(movie, posterImg);
                 return;
@@ -1082,7 +1098,7 @@ export const ui = {
 
             if (card) {
                 const movieId = card.dataset.id;
-                const movie = this.state.renderedMoviesMap[movieId];
+                const movie = this.state.renderedMoviesMaps[containerId][movieId];
                 const posterImg = card.querySelector('img');
                 if (movie) this.openModal(movie, posterImg);
             }
@@ -1165,27 +1181,33 @@ export const ui = {
         const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
         this.state.selectedRating = saved ? saved.rating : 0;
         this.elements.reviewText.value = saved ? saved.text : "";
-        this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
+        if (this.elements.charCount && this.elements.reviewText) {
+            this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
+        }
 
-        // Update Watch Now link
-        if (movie.watchLink) {
-            this.elements.watchNowBtn.href = movie.watchLink;
-        } else {
-            const movieTitle = movie.Title || movie.title;
-            this.elements.watchNowBtn.href = `https://www.google.com/search?q=where+to+watch+${encodeURIComponent(movieTitle)}+movie+online`;
+        // Update Watch Now link safely
+        if (this.elements.watchNowBtn) {
+            if (movie.watchLink) {
+                this.elements.watchNowBtn.href = movie.watchLink;
+            } else {
+                const movieTitle = movie.Title || movie.title;
+                this.elements.watchNowBtn.href = `https://www.google.com/search?q=where+to+watch+${encodeURIComponent(movieTitle)}+movie+online`;
+            }
         }
 
         // Watchlist state
         const wl = store.getWatchlist().find(m => m.id === (movie.imdbID || movie.id));
-        if (wl) {
-            this.elements.watchlistBtn.innerHTML = '<i class="fas fa-check"></i> In Watchlist';
-            this.elements.watchlistBtn.style.background = '#27ae60';
-        } else {
-            this.elements.watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i> Watchlist';
-            this.elements.watchlistBtn.style.background = '#34495e';
+        if (this.elements.watchlistBtn) {
+            if (wl) {
+                this.elements.watchlistBtn.innerHTML = '<i class="fas fa-check"></i> In Watchlist';
+                this.elements.watchlistBtn.style.background = '#27ae60';
+            } else {
+                this.elements.watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i> Watchlist';
+                this.elements.watchlistBtn.style.background = '#34495e';
+            }
         }
 
-        this.elements.newTagInput.value = "";
+        if (this.elements.newTagInput) this.elements.newTagInput.value = "";
         this.renderTags();
         this.renderStars();
 
@@ -1202,11 +1224,16 @@ export const ui = {
     setupCarousel(movie) {
         const scenes = movie.scenes && movie.scenes.length > 0 ? movie.scenes : [];
 
+        if (!this.elements.carouselTrack || !this.elements.carouselDots) {
+            if (this.elements.modalCarousel) this.elements.modalCarousel.style.display = 'none';
+            return;
+        }
+
         this.elements.carouselTrack.innerHTML = '';
         this.elements.carouselDots.innerHTML = '';
 
         if (scenes.length === 0) {
-            this.elements.modalCarousel.style.display = 'none';
+            if (this.elements.modalCarousel) this.elements.modalCarousel.style.display = 'none';
             return;
         }
 
@@ -1258,7 +1285,7 @@ export const ui = {
     },
 
     async renderTags() {
-        if (!this.state.currentMovie) return;
+        if (!this.state.currentMovie || !this.elements.modalTags) return;
         const { store } = await import('./store.js');
         const tags = store.getTags(this.state.currentMovie.imdbID || this.state.currentMovie.id);
         this.elements.modalTags.innerHTML = tags.length ? "" : "<p style='font-size:0.8rem;color:#777;'>No tags yet.</p>";
