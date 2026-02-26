@@ -613,6 +613,97 @@ nav a:hover {
   box-shadow: 0 10px 30px hsla(340, 100%, 60%, 0.4);
 }
 
+/* Decision Mode Horizontal Carousel */
+.decision-carousel-wrapper {
+  position: relative;
+  width: 100%;
+  margin-top: 64px;
+}
+
+#decision-results {
+  display: flex !important;
+  gap: 32px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 20px 0;
+  width: 100%;
+}
+
+#decision-results::-webkit-scrollbar {
+  display: none;
+}
+
+.decision-result-card {
+  flex: 0 0 calc(33.333% - 22px);
+  min-width: 320px;
+  max-width: 340px;
+  position: relative !important;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.decision-result-card:hover {
+  transform: translateY(-15px) scale(1.02) !important;
+  z-index: 10;
+}
+
+.decision-result-card .card-overlay {
+  opacity: 1 !important;
+  background: linear-gradient(to top, rgba(15, 23, 36, 0.95) 0%, rgba(15, 23, 36, 0.6) 50%, transparent 100%) !important;
+}
+
+/* Carousel Control Buttons */
+.decision-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  background: rgba(15, 17, 21, 0.9);
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  color: #fff;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.decision-arrow.prev {
+  left: -30px;
+}
+
+.decision-arrow.next {
+  right: -30px;
+}
+
+.decision-carousel-wrapper:hover .decision-arrow {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.decision-arrow:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 20px var(--accent-primary);
+}
+
+@media (max-width: 1200px) {
+  .decision-arrow {
+    display: none !important;
+  }
+
+  .decision-result-card {
+    flex: 0 0 85%;
+    min-width: 280px;
+  }
+}
+
 /* GSAP Reveal Animations & Section States */
 .page-section {
   display: none;

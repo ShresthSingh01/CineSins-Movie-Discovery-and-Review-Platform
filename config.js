@@ -1,7 +1,8 @@
 export const config = {
     TMDB_API_KEY: "INSERT_TMDB_API_KEY_HERE",
     OMDB_API_KEY: "5dddf095",
-    GEMINI_API_KEY: "AIzaSyApdYvgBPq8Np0fWm6FhIw3ya0FOvYbMPg",
+    GEMINI_API_KEY: "AIzaSyCVhnpLpGSBPR0WbtqVNk463Ihbn9xwCQY",
+    OPENAI_API_KEY: "INSERT_OPENAI_API_KEY_HERE",
     FEATURES: {
         sceneTags: true,
         watchNow: true,

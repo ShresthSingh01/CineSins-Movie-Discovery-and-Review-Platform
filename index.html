@@ -28,6 +28,47 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <style>
+    @media (max-width: 900px) {
+      #review-modal .modal-content {
+        flex-direction: column !important;
+        height: 90vh !important;
+        width: 100% !important;
+      }
+
+      #review-modal .modal-content>div:first-child {
+        width: 100% !important;
+        min-width: 100% !important;
+        height: 300px !important;
+        min-height: 300px !important;
+      }
+
+      #review-modal .modal-content>div:last-child {
+        padding: 24px !important;
+      }
+
+      #review-modal #modal-title {
+        font-size: 2rem !important;
+      }
+    }
+
+    #watchlist-btn:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: #fff !important;
+    }
+
+    #save-review:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    #close-modal:hover {
+      transform: rotate(90deg) scale(1.1);
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: #fff !important;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+  </style>
 </head>
 
 <body>
@@ -320,76 +361,122 @@
   <!-- Movie Modal -->
   <div id="review-modal" class="modal">
     <div class="modal-content"
-      style="display: grid; grid-template-columns: 350px 1fr; border: 1px solid var(--cin-glass); background: var(--cin-bg-800); position: relative;">
-      <button id="close-modal" class="close"
-        style="z-index: 10; background: var(--cin-bg-900); color: #fff; width: 40px; height: 40px; border-radius: 50%; opacity: 0.8; top: 20px; right: 20px;"><i
-          class="fas fa-times"></i></button>
+      style="max-width: 1100px; width: 95%; padding: 0; overflow: hidden; display: flex; border: 1px solid var(--cin-glass); background: var(--cin-bg-800); position: relative; border-radius: 20px; box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8); flex-direction: row;">
+
+      <!-- Close Button (Always visible at top-right) -->
+      <button id="close-modal"
+        style="position: absolute !important; z-index: 1000 !important; top: 24px !important; right: 24px !important; left: auto !important; bottom: auto !important; background: rgba(0, 0, 0, 0.8) !important; color: #ffffff !important; width: 44px !important; height: 44px !important; border-radius: 50% !important; border: 2px solid rgba(255, 255, 255, 0.4) !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;">
+        <i class="fas fa-times" style="font-size: 1.2rem;"></i>
+      </button>
 
       <!-- Left Column: Poster & Media -->
-      <div style="position: relative; overflow: hidden; border-right: 1px solid var(--cin-glass);">
+      <div
+        style="width: 400px; min-width: 400px; position: relative; border-right: 1px solid var(--cin-glass); display: block;">
         <img id="modal-poster" src="" alt="Movie Poster" style="width: 100%; height: 100%; object-fit: cover;">
-        <div style="position: absolute; inset: 0; background: linear-gradient(to top, var(--cin-bg-900), transparent);">
+        <div
+          style="position: absolute; inset: 0; background: linear-gradient(to top, var(--cin-bg-900), transparent 70%);">
+        </div>
+        <!-- Poster Badge -->
+        <div style="position: absolute; bottom: 30px; left: 30px;">
+          <span class="badge badge-gold" style="font-size: 0.7rem; letter-spacing: 2px;">CINEMATIC MASTERPIECE</span>
         </div>
       </div>
 
       <!-- Right Column: Content -->
       <div
-        style="padding: var(--cin-spacing-4); overflow-y: auto; display: flex; flex-direction: column; gap: var(--cin-spacing-3);">
-        <div>
-          <h2 id="modal-title" style="font-size: 3rem; margin-bottom: var(--cin-spacing-1);">Movie Title</h2>
+        style="flex: 1; padding: 50px; padding-right: 80px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; max-height: 85vh; background: linear-gradient(135deg, var(--cin-bg-800) 0%, var(--cin-bg-900) 100%); position: relative;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <h2 id="modal-title"
+            style="font-size: clamp(2rem, 4vw, 3.5rem); font-family: 'Playfair Display', serif; font-weight: 900; line-height: 1.1; color: #fff; margin: 0;">
+            Movie Title</h2>
           <div id="modal-meta-row"
-            style="display: flex; gap: 16px; color: var(--cin-muted); font-size: 0.9rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">
-            <span id="modal-year">2024</span>
-            <span id="modal-runtime">120 min</span>
-            <span id="modal-rating" style="color: var(--cin-accent-2);">★ 8.5</span>
+            style="display: flex; gap: 20px; color: var(--cin-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; align-items: center;">
+            <span id="modal-year" style="display: flex; align-items: center; gap: 6px;"><i class="far fa-calendar"></i>
+              2024</span>
+            <span id="modal-runtime" style="display: flex; align-items: center; gap: 6px;"><i class="far fa-clock"></i>
+              120 min</span>
+            <span id="modal-rating"
+              style="color: var(--cin-accent-2); font-weight: 800; font-size: 1rem; background: rgba(230, 185, 30, 0.1); padding: 4px 10px; border-radius: 4px;">★
+              8.5</span>
           </div>
         </div>
 
-        <p id="modal-plot" style="font-size: 1.1rem; line-height: 1.8; color: var(--cin-text); opacity: 0.9;">
-          Plot summary goes here.
+        <p id="modal-plot"
+          style="font-size: 1.05rem; line-height: 1.8; color: var(--cin-text); opacity: 0.85; font-weight: 400; margin: 0; max-width: 600px;">
+          Plot summary goes here. Let the cinematic journey begin.
         </p>
 
         <!-- Cinematic Metrics -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: var(--cin-spacing-2) 0;">
-          <div class="stat-card" style="text-align: center;">
-            <p style="font-size: 0.7rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 4px;">
-              Emotional</p>
-            <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
-              <div id="metric-emotional" style="width: 70%; height: 100%; background: var(--cin-velvet);"></div>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <h4
+            style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--cin-muted); margin: 0;">
+            CinemaDNA Profile</h4>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+            <div class="stat-card"
+              style="text-align: left; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+              <p
+                style="font-size: 0.65rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 8px; font-weight: 700;">
+                Emotional</p>
+              <div
+                style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 10px;">
+                <div id="metric-emotional"
+                  style="width: 70%; height: 100%; background: var(--cin-velvet); box-shadow: 0 0 10px var(--cin-velvet);">
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card" style="text-align: center;">
-            <p style="font-size: 0.7rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 4px;">
-              Cognitive</p>
-            <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
-              <div id="metric-cognitive" style="width: 50%; height: 100%; background: var(--cin-accent-2);"></div>
+            <div class="stat-card"
+              style="text-align: left; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+              <p
+                style="font-size: 0.65rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 8px; font-weight: 700;">
+                Cognitive</p>
+              <div
+                style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 10px;">
+                <div id="metric-cognitive"
+                  style="width: 50%; height: 100%; background: var(--cin-accent-2); box-shadow: 0 0 10px var(--cin-accent-2);">
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card" style="text-align: center;">
-            <p style="font-size: 0.7rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 4px;">
-              Comfort</p>
-            <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
-              <div id="metric-comfort" style="width: 90%; height: 100%; background: var(--cin-accent-1);"></div>
+            <div class="stat-card"
+              style="text-align: left; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+              <p
+                style="font-size: 0.65rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 8px; font-weight: 700;">
+                Comfort</p>
+              <div
+                style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 10px;">
+                <div id="metric-comfort"
+                  style="width: 90%; height: 100%; background: var(--cin-accent-1); box-shadow: 0 0 10px var(--cin-accent-1);">
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Review Section -->
         <div
-          style="background: var(--cin-surface); padding: var(--cin-spacing-3); border-radius: var(--cin-radius); border: 1px solid var(--cin-glass);">
-          <div id="star-container" style="margin-bottom: 16px; font-size: 1.5rem; color: var(--cin-accent-2);"></div>
-          <textarea id="review-text" placeholder="Write your cinematic reflection..."
-            style="width: 100%; background: none; border: none; color: var(--cin-text); font-size: 1rem; resize: none; min-height: 100px; outline: none;"></textarea>
-          <div id="char-count" style="text-align: right; font-size: 0.75rem; color: var(--cin-muted);">0/300</div>
+          style="background: rgba(255,255,255,0.03); padding: 24px; border-radius: 12px; border: 1px solid var(--cin-glass); display: flex; flex-direction: column; gap: 16px;">
+          <div id="star-container" style="font-size: 1.25rem; color: var(--cin-accent-2); display: flex; gap: 4px;">
+          </div>
+          <textarea id="review-text" placeholder="Share your cinematic reflection..."
+            style="width: 100%; background: none; border: none; color: #fff; font-size: 1rem; resize: none; min-height: 100px; outline: none; padding: 0; line-height: 1.6;"></textarea>
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+            <span style="font-size: 0.7rem; color: var(--cin-muted); font-weight: 500;">AI-POWERED SENTIMENT ANALYSIS
+              ACTIVE</span>
+            <div id="char-count" style="font-size: 0.75rem; color: var(--cin-muted); font-family: monospace;">0/300
+            </div>
+          </div>
         </div>
 
+        <!-- Actions -->
         <div style="display: flex; gap: 16px; margin-top: auto;">
           <button id="watchlist-btn"
-            style="flex: 1; padding: 14px; border-radius: 4px; border: 1px solid var(--cin-glass); background: none; color: #fff; cursor: pointer; font-weight: 600;"><i
-              class="fas fa-bookmark"></i> Watchlist</button>
+            style="flex: 1; padding: 18px; border-radius: 8px; border: 1px solid var(--cin-glass); background: transparent; color: #fff; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s;">
+            <i class="fas fa-bookmark"></i> Watchlist
+          </button>
           <button id="save-review"
-            style="flex: 1; padding: 14px; border-radius: 4px; border: none; background: var(--cin-accent-2); color: var(--cin-bg-900); cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Save
-            Reflection</button>
+            style="flex: 2; padding: 18px; border-radius: 8px; border: none; background: var(--cin-accent-2); color: var(--cin-bg-900); cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(230, 185, 30, 0.2); transition: all 0.3s;">
+            Save Reflection
+          </button>
         </div>
       </div>
     </div>
@@ -397,7 +484,10 @@
   <!-- Decision Modal (The Spotlight) -->
   <div id="decision-modal" class="modal modal-spotlight">
     <div class="modal-content spotlight-content">
-      <button id="close-decision-modal" class="close" title="Close Spotlight"><i class="fas fa-times"></i></button>
+      <button id="close-decision-modal" class="close" title="Close Spotlight"
+        style="position: absolute !important; z-index: 1000 !important; top: 24px !important; right: 24px !important; background: rgba(0, 0, 0, 0.8) !important; color: #ffffff !important; width: 44px !important; height: 44px !important; border-radius: 50% !important; border: 2px solid rgba(255, 255, 255, 0.4) !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;">
+        <i class="fas fa-times" style="font-size: 1.2rem;"></i>
+      </button>
 
       <div class="spotlight-header">
         <span class="badge badge-gold">Intelligence Engine v2</span>
@@ -451,7 +541,13 @@
         Analyze Local DNA
       </button>
 
-      <div id="decision-results" class="movie-grid" style="margin-top: 64px; width: 100%; min-height: 400px;"></div>
+      <div class="decision-carousel-wrapper">
+        <button id="decision-prev" class="decision-arrow prev" title="Previous Recommendation"><i
+            class="fas fa-chevron-left"></i></button>
+        <div id="decision-results" class="movie-grid" style="margin-top: 64px; width: 100%; min-height: 400px;"></div>
+        <button id="decision-next" class="decision-arrow next" title="Next Recommendation"><i
+            class="fas fa-chevron-right"></i></button>
+      </div>
     </div>
   </div>
 
