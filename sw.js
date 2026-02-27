@@ -1,6 +1,6 @@
-const CACHE_NAME = 'cinesins-cache-v6';
-const IMAGE_CACHE_NAME = 'cinesins-images-v2';
-const MAX_IMAGE_CACHE_SIZE_MB = 20;
+const CACHE_NAME = 'cinesins-cache-v7';
+const IMAGE_CACHE_NAME = 'cinesins-images-v3';
+const MAX_IMAGE_CACHE_SIZE_MB = 30;
 
 const APP_SHELL = [
     './',
@@ -10,13 +10,23 @@ const APP_SHELL = [
     './api.js',
     './store.js',
     './ui.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+    './config.js',
+    './src/regionData.js',
+    './src/eventStore.js',
+    './src/archetype.js',
+    './ui/animations.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js'
 ];
 
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(APP_SHELL))
+            .then(cache => {
+                console.log('[SW] Pre-caching App Shell');
+                return cache.addAll(APP_SHELL);
+            })
             .then(() => self.skipWaiting())
     );
 });
@@ -27,6 +37,7 @@ self.addEventListener('activate', event => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME && cacheName !== IMAGE_CACHE_NAME) {
+                        console.log('[SW] Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -86,17 +97,19 @@ self.addEventListener('fetch', event => {
         const isAppShell = APP_SHELL.some(path => url.pathname.endsWith(path.replace('./', '')));
 
         if (isAppShell) {
-            try {
-                const networkResponse = await fetch(event.request);
-                if (networkResponse && networkResponse.status === 200) {
-                    const cache = await caches.open(CACHE_NAME);
-                    cache.put(event.request, networkResponse.clone());
+            // Stale-While-Revalidate for App Shell
+            return caches.match(event.request).then(cachedResponse => {
+                const fetchPromise = fetch(event.request).then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(event.request, networkResponse.clone());
+                        });
+                    }
                     return networkResponse;
-                }
-            } catch (err) { }
-            const cachedResponse = await caches.match(event.request);
-            if (cachedResponse) return cachedResponse;
-            return new Response("Offline Mode", { status: 503, statusText: "Offline" });
+                }).catch(() => null);
+
+                return cachedResponse || fetchPromise;
+            });
         }
 
         if (url.hostname.includes('omdbapi.com')) {

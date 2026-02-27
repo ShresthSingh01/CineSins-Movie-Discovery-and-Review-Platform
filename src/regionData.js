@@ -5,21 +5,21 @@
 export const REGIONS = {
     'indian': {
         label: 'Indian Cinema',
-        languages: ['hi', 'te', 'ta', 'ml', 'kn', 'bn'],
+        languages: ['hi', 'te', 'ta', 'ml', 'kn', 'bn', 'hindi', 'telugu', 'tamil', 'malayalam', 'kannada', 'bengali'],
         primaryMoods: ['Emotional', 'Exciting', 'Comfort'],
         blurb: 'From the grand spectacles of Bollywood to the grounded masterpieces of Malayalam cinema, Indian films offer unparalleled emotional depth and vibrant storytelling.',
         subRegions: ['Hindi', 'Telugu', 'Tamil', 'Malayalam']
     },
     'east_asia': {
         label: 'East Asian',
-        languages: ['ko', 'ja', 'zh'],
+        languages: ['ko', 'ja', 'zh', 'korean', 'japanese', 'chinese', 'mandarin', 'cantonese'],
         primaryMoods: ['Thoughtful', 'Exciting', 'Vibing'],
         blurb: 'Experience the precision of Japanese animation, the visceral thrill of South Korean cinema, and the visual poetry of Chinese wuxia.',
         subRegions: ['South Korean', 'Japanese', 'Chinese']
     },
     'european': {
         label: 'European Arthouse',
-        languages: ['fr', 'de', 'it', 'es', 'sv', 'da'],
+        languages: ['fr', 'de', 'it', 'es', 'sv', 'da', 'french', 'german', 'italian', 'spanish', 'swedish', 'danish'],
         primaryMoods: ['Thoughtful', 'Good', 'Vibing'],
         blurb: 'Deeply philosophical and stylistically innovative, European cinema remains the heart of global arthouse and experimental storytelling.',
         subRegions: ['French', 'German', 'Italian', 'Spanish', 'Nordic']

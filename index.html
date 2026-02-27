@@ -4,13 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CinemaDNA - Understand Your Cinematic Personality</title>
+  <title>CineSins - Guilty Pleasures Unmasked</title>
 
-  <!-- Fonts: Playfair Display for Headings, Inter for Body -->
+  <!-- Fonts: Playfair Display for Headings, Inter for Body, Outfit for Branding -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Outfit:wght@100..900&display=swap"
     rel="stylesheet">
 
   <!-- Core Theme & Design System -->
@@ -91,8 +91,9 @@
             </linearGradient>
           </defs>
         </svg>
-        <div style="margin-top: 15px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;">
-          <span style="color:#fff">Cinema</span><span style="color:#00c2cc">DNA</span>
+        <div style="margin-top: 15px; font-weight: 900; letter-spacing: 5px; text-transform: uppercase;">
+          <span style="color:#fff; font-family: 'Outfit', sans-serif;">CINE</span><span
+            style="color:#ff0000; font-family: 'Outfit', sans-serif;">SINS</span>
         </div>
       </div>
       <div class="loader-bar-container">
@@ -108,39 +109,40 @@
   <header id="header">
     <div class="container header-content">
       <a href="#" class="logo-container" data-section="home"
-        style="text-decoration: none; display: flex; align-items: center; gap: 15px;">
-        <svg class="brand-logo" width="45" height="45" viewBox="0 0 100 100" fill="none"
-          xmlns="http://www.w3.org/2000/svg">
-          <path d="M75 25C75 10 30 15 30 35C30 55 70 45 70 70C70 90 25 85 25 75" stroke="url(#logo_grad_s)"
-            stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M75 25C75 10 30 15 30 35C30 55 70 45 70 70C70 90 25 85 25 75" stroke="#111" stroke-width="7"
-            stroke-dasharray="2 7" stroke-linecap="butt" />
-          <defs>
-            <linearGradient id="logo_grad_s" x1="25" y1="15" x2="75" y2="85" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#cc0000" />
-              <stop offset="1" stop-color="#770000" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <div style="display: flex; flex-direction: column; line-height: 1;">
+        style="text-decoration: none; display: flex; align-items: center; gap: 12px;">
+        <div class="brand-vibe" style="position: relative; display: flex; align-items: center;">
+          <svg class="brand-logo" width="40" height="40" viewBox="0 0 100 100" fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path d="M75 25C75 10 30 15 30 35C30 55 70 45 70 70C70 90 25 85 25 75" stroke="url(#logo_grad_s)"
+              stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+            <defs>
+              <linearGradient id="logo_grad_s" x1="25" y1="15" x2="75" y2="85" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#ff0000" />
+                <stop offset="1" stop-color="#440000" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div style="display: flex; flex-direction: column; line-height: 0.9;">
           <div
-            style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.8rem; letter-spacing: -0.5px;">
-            <span style="color: var(--cin-text);">Cinema</span><span style="color: var(--cin-accent-2);">DNA</span>
+            style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.6rem; letter-spacing: -1px; color: #fff;">
+            CINE<span style="color: #ff0000;">SINS</span>
           </div>
           <div
-            style="font-size: 0.6rem; color: var(--cin-muted); letter-spacing: 2px; text-transform: uppercase; font-weight: 500; margin-top: 4px;">
-            The Art of Self-Discovery</div>
+            style="font-size: 0.55rem; color: #888; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; margin-top: 2px;">
+            GUILTY PLEASURES. UNMASKED.</div>
         </div>
       </a>
+
       <button id="mobile-menu-btn" class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
       <nav id="main-nav">
         <ul>
           <li><a href="#" data-section="home" class="active">Home</a></li>
           <li><a href="#" data-section="hidden-gems">Hidden Gems</a></li>
-          <li><a href="#" data-section="cinemadna">CinemaDNA</a></li>
+          <li><a href="#" data-section="cinesins-dna">CineSins DNA</a></li>
           <li><a href="#" data-section="regions">Regions</a></li>
           <li><a href="#" data-section="decision-mode" id="nav-decision-mode">Decision Mode</a></li>
-          <li><a href="#" data-section="reviews">My Reviews</a></li>
+          <li><a href="#" data-section="reviews">Reviews</a></li>
           <li><a href="#" data-section="watchlist">Watchlist</a></li>
         </ul>
       </nav>
@@ -160,44 +162,46 @@
   <section id="home" class="page-section active" style="padding-top: 0;">
     <div class="hero-section">
       <div class="hero-content container">
-        <h1 class="hero-title">Discover Your <span style="color: var(--cin-accent-2);">CinemaDNA</span></h1>
-        <p class="hero-subtitle">Stop scrolling. Start discovering. Understand your unique cinematic fingerprints and
-          reclaim your time.</p>
+        <h1 class="hero-title">
+          UNMASK YOUR <br><span>CINEMATIC SINS</span>
+        </h1>
 
-        <div class="search-container hero-search" role="search"
-          style="border: 1px solid var(--cin-glass); background: var(--cin-surface); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <p class="hero-subtitle">
+          Transcend the algorithm. Discover the masterpieces you were meant to love, hidden beneath the mainstream
+          noise. Your journey starts with a single sin.
+        </p>
+
+        <div class="search-container hero-search" role="search">
           <div class="autocomplete-wrapper">
-            <input type="text" id="search-input" placeholder="What are you in the mood for?" autocomplete="off"
-              style="color: var(--cin-text); font-size: 1.1rem;">
+            <input type="text" id="search-input" placeholder="What is your current cinematic craving?"
+              autocomplete="off">
           </div>
-          <button id="ai-toggle-btn" class="search-btn ai-toggle" title="Toggle AI Discovery"
-            style="background: none; border-right: 1px solid var(--cin-glass); color: var(--cin-muted);">
+          <button id="ai-toggle-btn" class="search-btn ai-toggle" title="Toggle AI Discovery">
             <i class="fas fa-brain"></i>
           </button>
-          <button id="search-btn" class="search-btn"
-            style="background: var(--cin-accent-2); color: var(--cin-bg-900); font-weight: 800;">Search</button>
+          <button id="search-btn" class="search-btn">SEARCH</button>
+        </div>
+
+        <div class="premium-cta-group">
+          <button id="zero-scroll-cta" class="premium-btn">
+            <i class="fas fa-magic" style="color: #ff0000;"></i> Find Tonight's Three
+          </button>
         </div>
 
         <div id="ai-search-hint"
-          style="display: none; margin-top: 24px; padding: 16px 24px; background: var(--cin-surface); border: 1px solid var(--cin-accent-2); border-radius: 12px; font-size: 0.9rem; color: var(--cin-text); animation: fadeIn 0.4s var(--cin-ease);">
-          <i class="fas fa-brain" style="color: var(--cin-accent-2); margin-right: 12px;"></i>
-          <strong>AI Engine Engaged</strong> — Describe a vibe, a scene, or a feeling.
-        </div>
-
-        <div style="margin-top: 64px; display: flex; justify-content: flex-start;">
-          <button id="zero-scroll-cta"
-            style="background: var(--cin-velvet); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 16px 32px; border-radius: 4px; font-family: 'Playfair Display', serif; font-size: 1.1rem; letter-spacing: 1px; cursor: pointer; transition: all var(--cin-duration-mid) var(--cin-ease); box-shadow: var(--cin-shadow-1);">
-            <i class="fas fa-film" style="margin-right: 10px;"></i> <span>Find Tonight's Three</span>
-          </button>
+          style="display: none; margin-top: 40px; padding: 20px 35px; background: rgba(255,0,0,0.12); border: 1px solid rgba(255,0,0,0.3); border-radius: 18px; font-size: 1.05rem; color: #fff; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+          <i class="fas fa-brain" style="color: #ff0000; margin-right: 20px; font-size: 1.4rem;"></i>
+          <strong>Discovery Engine Active</strong> — Describe a mood, a deep scene detail, or a dream.
         </div>
       </div>
     </div>
 
-    <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
+    <div class="container" style="padding-bottom: 100px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px;">
         <div>
-          <h2 class="section-title" style="text-align: left; margin: 0;">Popular Now</h2>
-          <p style="color: var(--text-muted); margin-top: 8px;">Trending movies from around the globe.</p>
+          <h2 class="section-title" style="text-align: left; margin: 0; font-size: 2rem;">Trending <span
+              style="color: #ff0000;">Sins</span></h2>
+          <p style="color: #666; margin-top: 5px;">The most searched masterpieces in the last 24 hours.</p>
         </div>
         <div class="recent-searches-pill" style="display: flex; gap: 8px; flex-wrap: wrap;" id="recent-list"></div>
       </div>
@@ -221,7 +225,7 @@
   </section>
 
   <!-- Regions Section -->
-  <section id="regions" class="page-section" style="display: none;">
+  <section id="regions" class="page-section">
     <div class="container">
       <h2 class="section-title">Explore by Region</h2>
       <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px;">Discover the rich diversity of
@@ -234,7 +238,7 @@
   </section>
 
   <!-- Reviews Section -->
-  <section id="reviews" class="page-section" style="display: none;">
+  <section id="reviews" class="page-section">
     <div class="container">
       <h2 class="section-title">My Reviews</h2>
       <p style="text-align: center; color: var(--text-muted); margin-bottom: 48px;">Your personal journey through
@@ -253,98 +257,96 @@
     </div>
   </section>
 
-  <!-- CinemaDNA Section (Bento Grid) -->
-  <section id="cinemadna" class="page-section">
+  <!-- CineSins DNA Section (Bento Grid) -->
+  <section id="cinesins-dna" class="page-section">
     <div class="container">
-      <h2 class="section-title">CinemaDNA Dashboard</h2>
+      <h2 class="section-title">CineSins DNA Dashboard</h2>
       <p style="text-align: center; color: var(--text-muted); margin-bottom: 48px;">Visualizing your cinematic
         fingerprints.</p>
 
-      <div class="dashboard-grid"
-        style="display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--cin-spacing-3); margin-top: 40px;">
+      <!-- Redesigned Bento Grid -->
+      <div class="dna-bento-grid">
 
-        <!-- Archetype Card -->
-        <div class="stat-card" id="archetype-container"
-          style="grid-column: span 8; grid-row: span 2; display: none; padding: var(--cin-spacing-4); border: 1px solid var(--cin-glass); background: radial-gradient(circle at top right, var(--cin-velvet) -50%, var(--cin-bg-800) 100%);">
-          <div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap;">
-            <div id="archetype-icon-wrapper"
-              style="width: 100px; height: 100px; border: 2px solid var(--cin-accent-2); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--cin-accent-2); box-shadow: 0 0 20px rgba(230, 185, 30, 0.2);">
+        <!-- Primary Archetype (The Hero Piece) -->
+        <div class="dna-tile dna-hero" id="archetype-container">
+          <div class="dna-hero-inner">
+            <div id="archetype-icon-wrapper" class="dna-icon-box">
               <i class="fas fa-crown"></i>
             </div>
-            <div style="flex: 1; min-width: 250px;">
-              <span class="badge badge-velvet" style="margin-bottom: 12px; display: inline-block;">Primary
-                Archetype</span>
-              <h3 id="archetype-label" style="font-size: 3rem; line-height: 1; margin-bottom: 16px;">The Explorer</h3>
-              <p id="archetype-description" style="font-size: 1rem; color: var(--cin-muted); line-height: 1.6;">
-                Your cinematic soul is defined by deep emotional resonance.
-              </p>
-              <div id="archetype-traits" style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;"></div>
+            <div class="dna-hero-content">
+              <div class="dna-badge-row">
+                <span class="dna-badge dna-badge-glow">Primary Archetype</span>
+              </div>
+              <h3 id="archetype-label" class="dna-title-xl">Discovering...</h3>
+              <p id="archetype-description" class="dna-desc">Analyzing your cinematic soul to uncover your unique
+                profile.</p>
+              <div id="archetype-traits" class="dna-traits-row"></div>
             </div>
           </div>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="stat-card" style="grid-column: span 4; background: var(--cin-surface);">
-          <p style="font-size: 0.75rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 8px;">
-            Favorite Genre</p>
-          <p id="dna-genre" style="font-size: 2rem; font-weight: 800; color: var(--cin-accent-2);">-</p>
+        <!-- Quick Stats: Favorite Genre -->
+        <div class="dna-tile dna-stat">
+          <div class="dna-stat-label">Main Genre</div>
+          <div id="dna-genre" class="dna-stat-value">-</div>
+          <div class="dna-stat-icon"><i class="fas fa-masks-theater"></i></div>
         </div>
 
-        <div class="stat-card" style="grid-column: span 4; background: var(--cin-surface);">
-          <p style="font-size: 0.75rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 8px;">Avg
-            Rating</p>
-          <p id="dna-avg-rating" style="font-size: 2rem; font-weight: 800; color: var(--cin-accent-1);">-</p>
+        <!-- Quick Stats: Avg Rating -->
+        <div class="dna-tile dna-stat">
+          <div class="dna-stat-label">Avg Rating</div>
+          <div id="dna-avg-rating" class="dna-stat-value">-</div>
+          <div class="dna-stat-icon"><i class="fas fa-star"></i></div>
         </div>
 
-        <!-- Trend Sparkline -->
-        <div class="stat-card" id="trends-container"
-          style="grid-column: span 4; display: flex; flex-direction: column; justify-content: space-between;">
-          <div>
-            <p style="font-size: 0.75rem; text-transform: uppercase; color: var(--cin-muted); margin-bottom: 4px;">
-              Behavior Hub</p>
-            <h4 id="trends-insight"
-              style="font-family: inherit; font-size: 1rem; font-weight: 500; color: var(--cin-text);">Analyzing
-              patterns...</h4>
+        <!-- Intelligent Insights: Behavior Hub -->
+        <div class="dna-tile dna-insights" id="trends-container">
+          <div class="dna-tile-header">
+            <span class="dna-tile-tag">Intelligent Insights</span>
+            <h4 class="dna-tile-title">Behavior Hub</h4>
           </div>
-          <div style="height: 50px; margin-top: 12px;">
-            <canvas id="trends-canvas"></canvas>
-          </div>
-        </div>
-
-        <!-- Directors & Distribution -->
-        <div class="stat-card" style="grid-column: span 6; padding: var(--cin-spacing-3);">
-          <h4
-            style="margin-bottom: 24px; color: var(--cin-text); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">
-            Top Directors</h4>
-          <ul id="dna-directors" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px;"></ul>
-        </div>
-
-        <div class="stat-card" style="grid-column: span 6; padding: var(--cin-spacing-3);">
-          <h4
-            style="margin-bottom: 24px; color: var(--cin-text); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">
-            Emotional Map</h4>
-          <canvas id="dna-chart" style="width: 100%; height: 180px;"></canvas>
-        </div>
-      </div>
-
-      <!-- Taste Graph Card -->
-      <div class="stat-card"
-        style="grid-column: span 4; background: linear-gradient(135deg, rgba(255, 15, 123, 0.1) 0%, rgba(45, 249, 254, 0.1) 100%);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-          <div>
-            <h3 style="color: #fff; margin-bottom: 8px;"><i class="fas fa-fingerprint"
-                style="margin-right: 10px; color: var(--accent-primary);"></i>Taste Graph Comparison</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Share your cinemographic DNA anonymously and
-              compare with friends.</p>
-          </div>
-          <div style="display: flex; gap: 12px;">
-            <button id="export-taste-btn" class="save-btn"
-              style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-light);"><i
-                class="fas fa-file-export"></i> Export My Card</button>
-            <button id="compare-taste-btn" class="save-btn btn-primary"><i class="fas fa-users-rays"></i> Compare with
-              Friend</button>
+          <div class="dna-insight-content">
+            <p id="trends-insight" class="dna-insight-text">Analyzing your viewing patterns...</p>
+            <div class="dna-sparkline">
+              <canvas id="trends-canvas"></canvas>
+            </div>
           </div>
         </div>
+
+        <!-- Top Directors -->
+        <div class="dna-tile dna-list-tile">
+          <div class="dna-tile-header">
+            <h4 class="dna-tile-title">Master Directors</h4>
+          </div>
+          <ul id="dna-directors" class="dna-pill-list"></ul>
+        </div>
+
+        <!-- Emotional Distribution -->
+        <div class="dna-tile dna-chart-tile">
+          <div class="dna-tile-header">
+            <h4 class="dna-tile-title">Emotional Spectrum</h4>
+          </div>
+          <div class="dna-chart-container">
+            <canvas id="dna-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Comparison / Sharing Block -->
+        <div class="dna-tile dna-cta-tile">
+          <div class="dna-cta-content">
+            <div class="dna-cta-text">
+              <h3><i class="fas fa-fingerprint"></i> Taste DNA Sharing</h3>
+              <p>Sync your cinematic fingerprints with friends to find perfect co-viewing matches.</p>
+            </div>
+            <div class="dna-cta-actions">
+              <button id="export-taste-btn" class="dna-btn secondary"><i class="fas fa-share-nodes"></i> Export
+                DNA</button>
+              <button id="compare-taste-btn" class="dna-btn primary"><i class="fas fa-handshake"></i> Compare
+                DNA</button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -430,7 +432,7 @@
         <div style="display: flex; flex-direction: column; gap: 20px;">
           <h4
             style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--cin-muted); margin: 0;">
-            CinemaDNA Profile</h4>
+            CineSins DNA Profile</h4>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
             <div class="stat-card"
               style="text-align: left; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
@@ -494,8 +496,8 @@
             <i class="fas fa-bookmark"></i> Watchlist
           </button>
           <button id="save-review"
-            style="flex: 2; padding: 18px; border-radius: 8px; border: none; background: var(--cin-accent-2); color: var(--cin-bg-900); cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(230, 185, 30, 0.2); transition: all 0.3s;">
-            Save Reflection
+            style="flex: 2; padding: 18px; border-radius: 8px; border: none; background: #ff0000; color: #fff; cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(255, 0, 0, 0.2); transition: all 0.3s;">
+            Confess Sin
           </button>
         </div>
       </div>
@@ -557,8 +559,8 @@
         </div>
       </div>
 
-      <button id="get-recommendations-btn" class="spotlight-action">
-        Analyze Local DNA
+      <button id="get-recommendations-btn" class="spotlight-action" style="background: #ff0000; border-radius: 8px;">
+        Analyze Sinful DNA
       </button>
 
       <div class="decision-carousel-wrapper">
@@ -776,7 +778,7 @@
 
           <div style="display: flex; flex-direction: column; gap: 16px;">
             <button id="seed-dna-btn" class="save-btn btn-primary"
-              style="width: 100%; padding: 14px; border-radius: 12px;">Seed my CinemaDNA (Add 5 Starters)</button>
+              style="width: 100%; padding: 14px; border-radius: 12px;">Seed my CineSins DNA (Add 5 Starters)</button>
             <button id="finish-onboarding-btn"
               style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem;">I'll
               add movies manually</button>

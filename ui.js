@@ -77,6 +77,7 @@ export const ui = {
             watchlistList: document.getElementById("watchlist-list"),
             hiddenGemsResults: document.getElementById("hidden-gems-results"),
             cinemadnaList: document.getElementById("dna-directors"),
+            headerSearchInput: document.getElementById("header-search-input"),
             dnaGenre: document.getElementById("dna-genre"),
             dnaRating: document.getElementById("dna-avg-rating"),
             dnaLogged: document.getElementById("dna-logged"),
@@ -144,16 +145,37 @@ export const ui = {
         this.setupEventListeners();
         this.initHeaderScroll();
         this.initCursorGlow();
-        this.initScrollAnimations();
+
+        // Initialize animations only after fonts are ready for accurate layout
+        if (document.fonts) {
+            document.fonts.ready.then(() => {
+                this.initScrollAnimations();
+                animations.init();
+                ScrollTrigger.refresh();
+            });
+        } else {
+            this.initScrollAnimations();
+            animations.init();
+        }
+
         this.loadRecent();
         this.initAISearch();
         this.initOnboarding();
-        animations.init();
 
         // Failsafe: Force complete loader after 6 seconds if it gets stuck
         setTimeout(() => this.completeLoader(), 6000);
 
         this.loadInitialMovies();
+    },
+
+    // A universal refresh to ensure GSAP/ScrollTrigger see new content
+    refreshUI() {
+        if (typeof ScrollTrigger !== 'undefined') {
+            setTimeout(() => {
+                ScrollTrigger.refresh();
+                console.log("[UI] DOM synchronized with ScrollTrigger 🚀");
+            }, 100);
+        }
     },
 
     initLoader() {
@@ -194,6 +216,7 @@ export const ui = {
                         onComplete: () => {
                             this.elements.loaderWrapper.style.display = "none";
                             this.animateHeroEntrance();
+                            this.refreshUI();
                         }
                     });
                 }
@@ -238,17 +261,21 @@ export const ui = {
 
         // Sections parallax/reveal
         document.querySelectorAll('.page-section').forEach(section => {
-            gsap.from(section.querySelectorAll('.section-title, .dashboard-grid, .movie-grid'), {
+            const targets = section.querySelectorAll('.section-title, .container > p, .movie-grid, .gems-grid, .dna-bento-grid, #regions-container, .dashboard-grid');
+            if (targets.length === 0) return;
+
+            gsap.from(targets, {
                 scrollTrigger: {
                     trigger: section,
-                    start: "top 80%",
+                    start: "top 85%",
                     toggleActions: "play none none none"
                 },
-                y: 50,
-                opacity: 1, // Changed from 0 to 1 to ensure visibility even if animation is skipped
-                duration: 1,
-                stagger: 0.2,
-                ease: "power3.out"
+                y: 30,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.1,
+                ease: "power2.out",
+                clearProps: "transform,opacity"
             });
         });
 
@@ -354,7 +381,7 @@ export const ui = {
                 if (section === "watchlist") this.loadWatchlist();
                 if (section === 'cinemadna') this.loadCinemaDNA();
                 if (section === 'regions') this.loadRegions();
-                if (section === 'reviews') this.loadUserReviews();
+                if (section === 'hidden-gems') this.loadHiddenGems();
 
                 // Refresh ScrollTrigger to account for newly visible sections
                 if (typeof ScrollTrigger !== 'undefined') {
@@ -373,6 +400,14 @@ export const ui = {
         if (this.elements.searchInput) {
             this.elements.searchInput.addEventListener("keypress", e => {
                 if (e.key === "Enter") this.searchMovies();
+            });
+        }
+        if (this.elements.headerSearchInput) {
+            this.elements.headerSearchInput.addEventListener("keypress", e => {
+                if (e.key === "Enter") {
+                    this.elements.searchInput.value = this.elements.headerSearchInput.value;
+                    this.searchMovies();
+                }
             });
         }
         if (this.elements.reviewText) {
@@ -1126,6 +1161,7 @@ export const ui = {
                 start: "top 95%",
             });
         }
+        this.refreshUI();
     },
 
     async openModal(movie, sourceImgElement = null) {
@@ -1424,6 +1460,9 @@ export const ui = {
         const spoilerTokens = ['ending', 'twist is', 'spoiler', 'dies', 'the killer is'];
 
         reviews.forEach(r => {
+            // Data Validation: Skip invalid or legacy records
+            if (!r || typeof r !== 'object' || !r.id) return;
+
             const div = document.createElement("div");
             div.className = "review-card premium-card";
 
@@ -1468,31 +1507,24 @@ export const ui = {
 
             // Dynamic Avatar Mapping based on rating
             let expression = "";
-            switch (r.rating) {
-                case 1:
-                    expression = "&mouthType=Sad&eyesType=Cry&eyebrowsType=SadConcerned";
-                    break;
-                case 2:
-                    expression = "&mouthType=Grimace&eyesType=Side&eyebrowsType=SadConcerned";
-                    break;
-                case 3:
-                    expression = "&mouthType=Serious&eyesType=Default&eyebrowsType=Default";
-                    break;
-                case 4:
-                    expression = "&mouthType=Smile&eyesType=Default&eyebrowsType=RaisedExcited";
-                    break;
-                case 5:
-                    expression = "&mouthType=Twinkle&eyesType=Hearts&eyebrowsType=RaisedExcited";
-                    break;
-                default:
-                    expression = "&mouthType=Smile";
+            if (r.rating >= 4) {
+                // Happy mood
+                expression = "&mouth=smile&eyes=default&eyebrows=raisedExcited";
+            } else if (r.rating >= 2) {
+                // Neutral mood
+                expression = "&mouth=serious&eyes=default&eyebrows=default";
+            } else {
+                // Sad mood
+                expression = "&mouth=sad&eyes=cry&eyebrows=sadConcerned";
             }
+
+            const avatarUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${r.id}${expression}`;
 
             const aiMoodHtml = r.aiMood ? `<span class="ai-tag-inline" title="AI Insight"><i class="fas fa-brain"></i> ${r.aiMood}</span>` : "";
 
             div.innerHTML = `
             <div class="review-header">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${r.id}${expression}" alt="Avatar" class="user-avatar">
+                <img src="${avatarUrl}" alt="Avatar" class="user-avatar">
                 <div class="user-info">
                     <h3 style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                         ${r.title}
@@ -1539,6 +1571,7 @@ export const ui = {
                 }
             });
         }
+        this.refreshUI();
     },
 
     async loadRecent() {
@@ -1556,91 +1589,7 @@ export const ui = {
         });
     },
 
-    async loadHiddenGems() {
-        const container = this.elements.hiddenGemsList;
-        container.innerHTML = `
-            <div style="grid-column: 1 / -1; width: 100%; text-align: center; padding: 60px 20px;">
-                <i class="fas fa-gem fa-spin" style="font-size: 3rem; color: var(--accent-secondary); margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(0,229,255,0.5));"></i>
-                <h3 style="color: #fff; margin-bottom: 10px;">Mining Hidden Gems...</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Please wait while we analyze movie data to find high-rated gems with low popularity.</p>
-            </div>
-        `;
-        const { store } = await import('./store.js');
-        const gems = await store.getHiddenGems();
 
-        container.innerHTML = gems.length ? "" : "<p style='grid-column: 1 / -1; width: 100%; text-align: center;'>No hidden gems found yet. Try searching for more movies to populate the local cache.</p>";
-
-        // Remove .movie-grid from index.html manually next, we create it dynamically here or we just apply it to the container instead
-        container.classList.add("movie-grid"); // Just to be safe if it was missing
-        gems.forEach(m => {
-            const card = document.createElement("div");
-            card.className = "movie-card";
-            const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-            const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
-
-            card.innerHTML = `
-              <img src="${cover}" class="movie-card-img" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
-              <div class="movie-card-overlay">
-                <div class="movie-card-info">
-                  <span class="badge badge-gold" style="margin-bottom: 8px;">GEM SCORE: ${parseFloat(m.hiddenScore).toFixed(1)}</span>
-                  <h3 class="movie-card-title">${m.title || m.Title}</h3>
-                  <div class="movie-card-meta">
-                    <span>${m.year || m.Year}</span>
-                    <span style="color: var(--cin-accent-2);">★ ${m.imdbRating || "N/A"}</span>
-                  </div>
-                  <button class="review-btn" data-action="open-modal" data-id="${m.imdbID || m.id}" 
-                          style="margin-top: 12px; font-size: 0.7rem; padding: 6px 12px;">
-                    <i class="fas fa-plus"></i> Watchlist / Review
-                  </button>
-                </div>
-              </div>`;
-
-            card.dataset.id = m.imdbID || m.id;
-            if (!this.state.renderedGemsMap) this.state.renderedGemsMap = {};
-            this.state.renderedGemsMap[m.imdbID || m.id] = m;
-
-            this.elements.hiddenGemsList.appendChild(card);
-        });
-
-        this.elements.hiddenGemsList.onclick = (e) => {
-            const btn = e.target.closest('.review-btn');
-            const card = e.target.closest('.movie-card');
-
-            if (btn && btn.dataset.action === "open-modal") {
-                const movieId = btn.dataset.id;
-                const movie = this.state.renderedGemsMap[movieId];
-                const posterImg = btn.closest('.movie-card').querySelector('img');
-                if (movie) this.openModal(movie, posterImg);
-                return;
-            }
-
-            if (card) {
-                const movieId = card.dataset.id;
-                const movie = this.state.renderedGemsMap[movieId];
-                const posterImg = card.querySelector('img');
-                if (movie) this.openModal(movie, posterImg);
-            }
-        };
-
-        // GSAP Stagger Animation for Hidden Gems
-        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && gems.length > 0) {
-            const cards = this.elements.hiddenGemsList.querySelectorAll('.movie-card');
-            gsap.fromTo(cards,
-                { opacity: 0, y: 30 },
-                {
-                    opacity: 1,
-                    y: 0,
-                    duration: 0.6,
-                    stagger: 0.1,
-                    ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: "#hidden-gems",
-                        start: "top 80%"
-                    }
-                }
-            );
-        }
-    },
 
     async loadCinemaDNA() {
         try {
@@ -1674,12 +1623,12 @@ export const ui = {
                 if (analytics.top5Directors && analytics.top5Directors.length > 0) {
                     analytics.top5Directors.forEach(d => {
                         const li = document.createElement("li");
-                        li.style.cssText = "background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1);";
+                        li.className = "dna-pill";
                         li.textContent = d;
                         cinemadnaList.appendChild(li);
                     });
                 } else {
-                    cinemadnaList.innerHTML = "<li style='opacity:0.6; font-style:italic;'>Log more movies to see directors</li>";
+                    cinemadnaList.innerHTML = "<li class='dna-pill' style='opacity:0.6; font-style:italic;'>Log more movies to see directors</li>";
                 }
             }
 
@@ -1930,7 +1879,14 @@ export const ui = {
             store.saveMoviesBatch(movies);
             // Also log them as reviews to trigger DNA
             movies.forEach(m => {
-                store.saveReview(m.id, 9.0, "Great starter movie.");
+                store.saveReview({
+                    id: m.id || m.imdbID,
+                    title: m.title || m.Title,
+                    poster: m.poster || m.Poster,
+                    rating: 5,
+                    text: "A cinematic masterpiece that define my taste.",
+                    date: new Date().toLocaleDateString()
+                });
             });
 
             this.completeOnboarding();
@@ -1971,7 +1927,7 @@ export const ui = {
             traitsEl.innerHTML = "";
             archetype.dominantTraits.forEach(trait => {
                 const span = document.createElement("span");
-                span.style.cssText = "background: hsla(0,0%,100%,0.05); border: 1px solid var(--border-light); padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary);";
+                span.className = "dna-pill";
                 span.innerHTML = `<i class="fas fa-check" style="color: var(--accent-tertiary); margin-right: 6px; font-size: 0.7rem;"></i> ${trait}`;
                 traitsEl.appendChild(span);
             });
@@ -1979,7 +1935,19 @@ export const ui = {
 
         // Icon
         if (iconWrapper) {
-            iconWrapper.innerHTML = `<i class="fas ${archetype.icon}"></i>`;
+            if (archetype.icon) {
+                iconWrapper.innerHTML = `<i class="fas ${archetype.icon}"></i>`;
+            } else {
+                const icons = {
+                    'Explorer': 'fa-rocket',
+                    'Analyst': 'fa-brain',
+                    'Purist': 'fa-gem',
+                    'Comfort Seeker': 'fa-couch',
+                    'Adrenaline Junkie': 'fa-bolt'
+                };
+                const iconClass = icons[archetype.label] || 'fa-crown';
+                iconWrapper.innerHTML = `<i class="fas ${iconClass}"></i>`;
+            }
         }
 
         // More Text (reasons)
@@ -2655,6 +2623,7 @@ export const ui = {
                 if (movie) this.openModal(movie, posterImg);
             };
 
+            this.refreshUI();
         } catch (e) {
             console.error("Failed to load hidden gems:", e);
             this.elements.hiddenGemsResults.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Could not load hidden gems.</p>`;
@@ -2662,80 +2631,136 @@ export const ui = {
     },
 
     async loadRegions() {
-        if (!this.elements.regionsContainer) return;
-        this.elements.regionsContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Exploring global cinematic hubs...</p>';
+        const container = this.elements.regionsContainer || document.getElementById("regions-container");
+        if (!container) return;
+
+        container.innerHTML = '<div style="text-align: center; padding: 80px;"><i class="fas fa-globe-americas fa-spin" style="font-size: 2.5rem; color: var(--accent-secondary);"></i><p style="margin-top: 20px; color: var(--text-muted); font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;">Discovering Global Cinematic Hubs...</p></div>';
 
         try {
-            const { REGIONS } = await import('./src/regionData.js');
-            const { store } = await import('./store.js');
-            const allMovies = store.getAllMovies();
+            const { REGIONS, REGION_SAMPLES } = await import('./src/regionData.js');
 
-            this.elements.regionsContainer.innerHTML = '';
+            // 1. SEEDING STRATEGY: Ensure library has regional data
+            let allMovies = store.getAllMovies();
+            const hasRegionalData = allMovies.some(m => m.regionTags && m.regionTags.length > 0);
+
+            if (allMovies.length < 5 || !hasRegionalData) {
+                const detailedSamples = await Promise.all(
+                    REGION_SAMPLES.map(async s => {
+                        try {
+                            const m = await api.fetchMovieById(s.id);
+                            if (m) {
+                                m.regionTags = [s.region];
+                                return m;
+                            }
+                        } catch (e) { }
+
+                        // ABSOLUTE FALLBACK: Static entry if API fails completely
+                        return {
+                            id: s.id,
+                            imdbID: s.id,
+                            Title: s.title,
+                            Poster: `https://placehold.co/300x450/111/555?text=${s.title.replace(' ', '+')}`,
+                            regionTags: [s.region],
+                            primaryLanguage: s.language,
+                            imdbRating: "8.5",
+                            Year: "2023"
+                        };
+                    })
+                );
+                store.saveMoviesBatch(detailedSamples.filter(Boolean));
+                allMovies = store.getAllMovies();
+            }
+
+            container.innerHTML = '';
 
             for (const [key, region] of Object.entries(REGIONS)) {
-                const regionalMovies = allMovies.filter(m => m.regionTags && m.regionTags.includes(key));
-                const count = regionalMovies.length;
+                // Improved filtering: case-insensitive language matching
+                const regionalMovies = allMovies.filter(m =>
+                    (m.regionTags && m.regionTags.includes(key)) ||
+                    (m.primaryLanguage && region.languages.includes(m.primaryLanguage.toLowerCase()))
+                );
 
+                const count = regionalMovies.length || "Featured";
                 const item = document.createElement('div');
-                item.className = 'stat-card region-card';
-                item.style.padding = '0';
-                item.style.overflow = 'hidden';
-                item.style.marginBottom = '20px';
-                item.style.border = '1px solid var(--border-light)';
+                item.className = 'dna-tile';
+                item.style.cssText = 'margin-bottom: 24px; padding: 0; display: block; overflow: hidden;';
 
                 item.innerHTML = `
-                    <div class="region-header" style="padding: 24px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                        <div>
-                            <h3 style="font-size: 1.5rem; color: #fff; margin-bottom: 4px;">${region.label}</h3>
-                            <p style="color: var(--text-muted); font-size: 0.9rem;">${count} movies in library</p>
+                    <div class="region-header" style="padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="font-size: 1.5rem; color: var(--accent-secondary);"><i class="fas fa-landmark"></i></div>
+                            <div>
+                                <h3 style="font-size: 1.8rem; color: #fff; line-height: 1; font-weight: 800;">${region.label}</h3>
+                                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;">${count} movies identified in your collection</p>
+                            </div>
                         </div>
-                        <i class="fas fa-chevron-right" style="color: var(--text-muted); transition: transform 0.3s ease;"></i>
+                        <i class="fas fa-chevron-down" style="color: var(--accent-secondary); transition: transform 0.4s ease;"></i>
                     </div>
-                    <div class="region-detail" style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease; background: rgba(0,0,0,0.2);">
-                        <div style="padding: 32px; border-top: 1px solid var(--border-light);">
-                            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; font-size: 1.05rem;">${region.blurb}</p>
-                            <div class="movie-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px;">
-                                ${regionalMovies.slice(0, 6).map(m => `
-                                    <div class="movie-card" style="height: 240px;" data-id="${m.id}">
-                                        <img src="${m.Poster}" alt="${m.Title}" style="height: 100%; object-fit: cover;">
-                                        <div class="card-overlay" style="opacity: 1; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
-                                            <p style="font-size: 0.75rem; font-weight: 700; position: absolute; bottom: 10px; left: 10px;">${m.Title}</p>
+                    <div class="region-detail" style="max-height: 0; overflow: hidden; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
+                        <div style="padding: 32px; border-top: 1px solid var(--border-light); background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);">
+                            <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px; font-size: 1.1rem; max-width: 800px; font-style: italic; opacity: 0.8;">"${region.blurb}"</p>
+                            
+                            <div class="movie-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 24px;">
+                                ${regionalMovies.length > 0 ? regionalMovies.slice(0, 12).map(m => `
+                                    <div class="movie-card" style="height: 280px;" data-id="${m.id || m.imdbID}">
+                                        <img src="${m.Poster || m.poster || 'https://placehold.co/300x450/111/555?text=No+Poster'}" alt="${m.Title}" style="height: 100%; object-fit: cover; border-radius: 8px;">
+                                        <div class="card-overlay" style="opacity: 1; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent 70%); display: flex; align-items: flex-end; padding: 15px;">
+                                            <div>
+                                                <p style="font-size: 0.6rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 900; margin-bottom: 2px;">★ ${m.imdbRating || "8.1"}</p>
+                                                <p style="font-size: 0.85rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.2;">${m.Title}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                `).join('') || '<p style="color: var(--text-muted);">No movies imported for this region yet.</p>'}
+                                `).join('') : `
+                                    <div style="grid-column: 1/-1; padding: 40px; text-align: center; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed var(--border-light);">
+                                        <p style="color: var(--text-muted);">No movies discovered for this region yet.</p>
+                                        <button class="dna-btn secondary" style="margin: 15px auto 0; padding: 8px 20px; font-size: 0.8rem;">Explore Popular ${region.label} Films</button>
+                                    </div>
+                                `}
                             </div>
-                            <button class="btn-primary" style="margin-top: 24px; padding: 10px 20px;">Browse Global Selection</button>
                         </div>
                     </div>
                 `;
 
-                item.querySelector('.region-header').onclick = () => {
+                const header = item.querySelector('.region-header');
+                header.onclick = () => {
                     const detail = item.querySelector('.region-detail');
-                    const chevron = item.querySelector('.fa-chevron-right');
+                    const chevron = item.querySelector('.fa-chevron-down');
                     const isOpen = detail.style.maxHeight !== '0px' && detail.style.maxHeight !== '';
 
+                    // Close others
+                    container.querySelectorAll('.region-detail').forEach(d => {
+                        if (d !== detail) {
+                            d.style.maxHeight = '0';
+                            d.parentElement.querySelector('.fa-chevron-down').style.transform = 'rotate(0deg)';
+                        }
+                    });
+
                     if (!isOpen) {
-                        detail.style.maxHeight = '1000px';
-                        chevron.style.transform = 'rotate(90deg)';
+                        detail.style.maxHeight = '2000px';
+                        chevron.style.transform = 'rotate(180deg)';
                     } else {
                         detail.style.maxHeight = '0';
                         chevron.style.transform = 'rotate(0deg)';
                     }
                 };
 
-                // Add click handlers for regional movie cards
+                // Regional movie card clicks
                 item.querySelectorAll('.movie-card').forEach(card => {
                     card.onclick = (e) => {
                         e.stopPropagation();
-                        const movie = regionalMovies.find(m => m.id === card.dataset.id);
+                        const movieId = card.dataset.id;
+                        const movie = regionalMovies.find(m => (m.id || m.imdbID) === movieId);
                         if (movie) this.openModal(movie, card.querySelector('img'));
                     };
                 });
 
-                this.elements.regionsContainer.appendChild(item);
+                container.appendChild(item);
             }
+            this.refreshUI();
         } catch (e) {
             console.error("Failed to load regions:", e);
+            container.innerHTML = `<div style="text-align: center; padding: 60px;"><p style="color: var(--accent-primary);">Failed to load cinematic regions. Please check your connection.</p></div>`;
         }
     },
 
