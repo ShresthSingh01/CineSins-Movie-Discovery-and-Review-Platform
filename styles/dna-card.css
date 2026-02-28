@@ -1,0 +1,242 @@
+/* CineSins Premium DNA Export Card Styles */
+
+.dna-card-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 11000;
+    backdrop-filter: blur(20px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.dna-card-modal.active {
+    display: flex;
+}
+
+.dna-card-container {
+    width: 600px;
+    height: 850px;
+    background: #050508;
+    border-radius: 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Background Effects */
+.dna-card-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.dna-card-bg .mesh {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background:
+        radial-gradient(circle at 70% 20%, rgba(255, 0, 0, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 20% 80%, rgba(230, 185, 30, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 1) 0%, transparent 60%);
+    filter: blur(80px);
+    animation: moveMesh 20s infinite alternate;
+}
+
+@keyframes moveMesh {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(5%, 5%) rotate(5deg);
+    }
+}
+
+.dna-card-content {
+    position: relative;
+    z-index: 1;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Header Section */
+.dna-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 60px;
+}
+
+.dna-card-logo {
+    display: flex;
+    flex-direction: column;
+}
+
+.dna-card-logo img {
+    height: 32px;
+    margin-bottom: 8px;
+}
+
+.dna-card-logo span {
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    color: #e6b91e;
+    font-weight: 800;
+}
+
+.dna-card-date {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: monospace;
+}
+
+/* Archetype Section */
+.dna-card-archetype {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.dna-card-icon-wrapper {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #6d28d9 0%, #3b0764 100%);
+    border-radius: 40px;
+    margin: 0 auto 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    color: #fff;
+    box-shadow: 0 20px 40px rgba(109, 40, 217, 0.3);
+    border: 4px solid rgba(255, 255, 255, 0.1);
+}
+
+.dna-card-label {
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 0.75rem;
+    color: #a855f7;
+    font-weight: 900;
+    margin-bottom: 12px;
+}
+
+.dna-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 15px;
+    line-height: 1;
+}
+
+.dna-card-desc {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+    max-width: 350px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* DNA Metrics Grid */
+.dna-card-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: auto;
+    margin-bottom: 60px;
+}
+
+.dna-metric-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 24px;
+    border-radius: 20px;
+}
+
+.dna-metric-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.dna-metric-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+}
+
+/* Footer Section */
+.dna-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dna-card-qr {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.dna-qr-box {
+    width: 50px;
+    height: 50px;
+    background: #fff;
+    padding: 5px;
+    border-radius: 8px;
+}
+
+.dna-qr-text {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.3);
+    line-height: 1.4;
+}
+
+.dna-card-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    z-index: 11001;
+}
+
+.export-action-btn {
+    padding: 14px 30px;
+    border-radius: 100px;
+    border: none;
+    background: #fff;
+    color: #000;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    transition: transform 0.2s;
+}
+
+.export-action-btn:hover {
+    transform: scale(1.05);
+}
+
+.export-action-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
