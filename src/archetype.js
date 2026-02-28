@@ -73,19 +73,17 @@ export function computeArchetype(stats) {
     const actionThrillerFreq = ((genreCounts['Action'] || 0) + (genreCounts['Thriller'] || 0)) / totalMovies;
     const romanceClassicFreq = ((genreCounts['Romance'] || 0) + (genreCounts['Classic'] || 0) + (genreCounts['History'] || 0)) / totalMovies;
 
-    const shortRuntimeBias = stats.avgRuntime < 100 ? 1 : (stats.avgRuntime < 120 ? 0.5 : 0);
-    const avgRuntimeShortness = Math.max(0, 1 - (stats.avgRuntime / 180));
     const imdbRatingBias = Math.max(0, (parseFloat(stats.avgRating || 0) - 5) / 5);
     const percentOlderDecades = stats.percentOlderDecades || 0;
 
     // Scores (0-1)
     const scores = {};
 
-    scores.emotional_purist = 0.6 * emotional + 0.2 * rewatchRate + 0.2 * Math.min(1, dramaRomanceFreq * 2);
-    scores.comfort_watcher = 0.6 * comfort + 0.3 * rewatchRate + 0.1 * shortRuntimeBias;
-    scores.intellectual_explorer = 0.5 * cognitive + 0.3 * hiddenGemAffinity + 0.2 * Math.min(1, sciFiMysteryFreq * 2);
-    scores.adrenaline_seeker = 0.7 * Math.min(1, actionThrillerFreq * 2) + 0.2 * avgRuntimeShortness + 0.1 * imdbRatingBias;
-    scores.nostalgia_lover = 0.6 * percentOlderDecades + 0.3 * rewatchRate + 0.1 * Math.min(1, romanceClassicFreq * 2);
+    scores.emotional_purist = 0.7 * emotional + 0.3 * Math.min(1, dramaRomanceFreq * 2);
+    scores.comfort_watcher = 0.7 * comfort + 0.3 * rewatchRate;
+    scores.intellectual_explorer = 0.6 * cognitive + 0.4 * hiddenGemAffinity;
+    scores.adrenaline_seeker = 0.8 * Math.min(1, actionThrillerFreq * 2) + 0.2 * imdbRatingBias;
+    scores.nostalgia_lover = 0.7 * percentOlderDecades + 0.3 * Math.min(1, romanceClassicFreq * 2);
 
     // Eclectic Dabbler: low variance across core metrics
     const coreMetrics = [emotional, cognitive, comfort, actionThrillerFreq, dramaRomanceFreq];
