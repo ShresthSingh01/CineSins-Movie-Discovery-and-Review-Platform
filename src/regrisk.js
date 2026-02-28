@@ -40,22 +40,8 @@ export function computeRegretScore(movie, userProfile) {
 
     const baseMismatch = (diffEmotional * wE) + (diffCognitive * wC) + (diffComfort * wF);
 
-    // 2. Time Cost Factor (0-1)
-    const userAvgRuntime = dna.avgRuntime || 100;
-    const runtimeDiff = (movie.runtimeMin || 90) - userAvgRuntime;
-    const timeCostFactor = 1 / (1 + Math.exp(-runtimeDiff / 30));
-
-    // 3. Commitment Penalty (0-1)
-    let commitmentPenalty = 0;
-    const rewatchRate = dna.rewatchRate || 0.2;
-    if (rewatchRate < 0.2 && (movie.runtimeMin || 90) > 130) {
-        commitmentPenalty = Math.min(1, ((movie.runtimeMin || 90) - 130) / 100);
-    }
-
-    // regScoreRaw = baseMismatch * 0.7 + TimeCostFactor * 0.2 + CommitmentPenalty * 0.1
-    // Let's make it more sensitive to high mismatch
-    const rawScore = (baseMismatch * 0.75) + (timeCostFactor * 0.15) + (commitmentPenalty * 0.1);
-    const score = Math.max(0, Math.min(1, rawScore));
+    // Score is primarily baseMismatch (0-1)
+    const score = Math.max(0, Math.min(1, baseMismatch));
 
     let label = 'Low';
     let color = '#10b981'; // Green
@@ -70,8 +56,6 @@ export function computeRegretScore(movie, userProfile) {
     // Generate Reason
     const reasonParts = [];
     if (baseMismatch > 0.4) reasonParts.push("Metric mismatch");
-    if (timeCostFactor > 0.7) reasonParts.push(`Long runtime (${movie.runtimeMin}m)`);
-    if (commitmentPenalty > 0.5) reasonParts.push("High commitment");
 
     const reason = reasonParts.length > 0 ? reasonParts.join(", ") : "Good match for your profile";
 
