@@ -50,9 +50,7 @@ async function enforceImageLRU() {
     const cache = await caches.open(IMAGE_CACHE_NAME);
     const keys = await cache.keys();
 
-    // We can't actually get the exact byte size of a Cache via current web APIs synchronously, 
-    // but we can estimate based on number of items (assume avg poster is ~100kb), 
-    // so limit to 200 items for ~20MB
+    // Limit to 200 items for cache sanity
     const MAX_ITEMS = 200;
 
     if (keys.length > MAX_ITEMS) {
@@ -67,15 +65,14 @@ async function enforceImageLRU() {
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
-    // If it's an image request (OMDb poster or placeholder)
-    if (url.pathname.match(/\\.(jpg|png|gif|webp)$/i) || url.hostname.includes('media-amazon') || url.hostname.includes('placeholder')) {
+    // If it's an image request
+    if (url.pathname.match(/\.(jpg|png|gif|webp)$/i) || url.hostname.includes('media-amazon') || url.hostname.includes('placeholder')) {
         event.respondWith(
             caches.match(event.request).then(response => {
                 if (response) return response;
 
                 return fetch(event.request).then(networkResponse => {
-                    // Only cache valid responses
-                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' && networkResponse.type !== 'cors') {
+                    if (!networkResponse || networkResponse.status !== 200 || (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
                         return networkResponse;
                     }
 
@@ -92,17 +89,17 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Handle other requests (App Shell + API + External)
+    // Handle other requests
     event.respondWith((async () => {
         const isAppShell = APP_SHELL.some(path => url.pathname.endsWith(path.replace('./', '')));
 
         if (isAppShell) {
-            // Stale-While-Revalidate for App Shell
             return caches.match(event.request).then(cachedResponse => {
                 const fetchPromise = fetch(event.request).then(networkResponse => {
                     if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
                         caches.open(CACHE_NAME).then(cache => {
-                            cache.put(event.request, networkResponse.clone());
+                            cache.put(event.request, responseToCache);
                         });
                     }
                     return networkResponse;
@@ -127,7 +124,6 @@ self.addEventListener('fetch', event => {
             }
         }
 
-        // Everything else (CDN resources like GSAP, FontAwesome) Network First
         try {
             return await fetch(event.request);
         } catch (err) {
