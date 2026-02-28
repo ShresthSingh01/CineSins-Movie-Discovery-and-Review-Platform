@@ -89,11 +89,33 @@ export const store = {
 
     saveMoviesBatch(movies) {
         let existing = this.getAllMovies();
-        const existingIds = new Set(existing.map(m => m.id));
-        const newMovies = movies.filter(m => !existingIds.has(m.id)).map(normalizeMovieData);
-        if (newMovies.length > 0) {
-            existing = existing.concat(newMovies);
-            localStorage.setItem("allMovies", JSON.stringify(existing));
+        const existingMap = new Map(existing.map(m => [String(m.id), m]));
+        let updated = false;
+
+        movies.forEach(m => {
+            if (!m) return;
+            const normalized = normalizeMovieData(m);
+            const id = String(normalized.id);
+
+            if (existingMap.has(id)) {
+                // Update existing if new data is more detailed
+                const current = existingMap.get(id);
+                // Simple heuristic: if new data has more genres or a real director, update it
+                const currentGenres = (current.genres || "").split(",").length;
+                const newGenres = (normalized.genres || "").split(",").length;
+
+                if (newGenres > currentGenres || (current.director === "N/A" && normalized.director !== "N/A")) {
+                    existingMap.set(id, { ...current, ...normalized });
+                    updated = true;
+                }
+            } else {
+                existingMap.set(id, normalized);
+                updated = true;
+            }
+        });
+
+        if (updated) {
+            localStorage.setItem("allMovies", JSON.stringify(Array.from(existingMap.values())));
         }
     },
 
@@ -214,12 +236,25 @@ export const store = {
         try {
             const reviews = this.getReviews();
             const allMovies = this.getAllMovies();
-            const reviewedIds = new Set(reviews.map(r => String(r.id)));
+            const movieMap = new Map(allMovies.map(m => [String(m.imdbID || m.id), m]));
 
-            // Robust matching: Check both .id and .imdbID, and ensure string comparison
-            const userMovies = allMovies.filter(m =>
-                m && (reviewedIds.has(String(m.id)) || reviewedIds.has(String(m.imdbID)))
-            );
+            // If a movie in reviews is NOT in allMovies, we should still count it 
+            // by creating a placeholder from the review data as a fallback.
+            const userMovies = reviews.map(r => {
+                const id = String(r.id);
+                if (movieMap.has(id)) {
+                    return movieMap.get(id);
+                } else {
+                    // Fallback using review data
+                    return {
+                        id: r.id,
+                        title: r.title,
+                        poster: r.poster,
+                        genres: r.genre || "Drama", // Heuristic fallback
+                        metrics: { emotionalIntensity: 50, cognitiveLoad: 50, comfortScore: 50 }
+                    };
+                }
+            });
 
             const genreCounts = {};
             const directorCounts = {};
@@ -227,7 +262,6 @@ export const store = {
             let validRatingCount = 0;
             let totalEmotional = 0;
             let validEmotionalCount = 0;
-            let totalRuntime = 0;
             let totalCognitive = 0;
             let totalComfort = 0;
             let validCognitiveCount = 0;
@@ -277,10 +311,6 @@ export const store = {
                     }
                 }
 
-                if (m.runtimeMin) {
-                    totalRuntime += Number(m.runtimeMin);
-                }
-
                 const year = parseInt(m.Year || m.year);
                 if (year && !isNaN(year) && year < 2000) oldMovieCount++;
 
@@ -311,12 +341,6 @@ export const store = {
             else if (avgEmotional > 0) moodTrend = "Calm/Relaxed";
             else moodTrend = "N/A";
 
-            const avgRuntime = userMovies.length > 0 ? Math.round(totalRuntime / userMovies.length) : 0;
-
-            const hours = Math.floor(totalRuntime / 60);
-            const mins = totalRuntime % 60;
-            const totalWatchTimeString = `${hours}h ${mins}m`;
-
             const analytics = {
                 totalMoviesSaved: userMovies.length,
                 favoriteGenre,
@@ -328,8 +352,6 @@ export const store = {
                 avgEmotional,
                 avgCognitive,
                 avgComfort,
-                avgRuntime,
-                totalWatchTimeString,
                 percentOlderDecades: userMovies.length > 0 ? oldMovieCount / userMovies.length : 0,
                 hiddenGemAffinity: userMovies.length > 0 ? totalHiddenScore / userMovies.length : 0,
                 rewatchRate: 0.2 // Heuristic baseline
