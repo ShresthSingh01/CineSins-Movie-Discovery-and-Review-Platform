@@ -88,3 +88,14 @@
 }
 
 /* GSAP staggers will handle the class toggling or direct manipulation */
+
+/* Spinner for AI loading states */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
