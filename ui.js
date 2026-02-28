@@ -138,7 +138,12 @@ export const ui = {
             seedDnaBtn: document.getElementById("seed-dna-btn"),
             finishOnboardingBtn: document.getElementById("finish-onboarding-btn"),
             decisionPrev: document.getElementById("decision-prev"),
-            decisionNext: document.getElementById("decision-next")
+            decisionNext: document.getElementById("decision-next"),
+            dnaCardModal: document.getElementById("dna-card-modal"),
+            dnaCardCloseBtn: document.getElementById("close-export-btn"),
+            dnaCardDownloadBtn: document.getElementById("download-card-btn"),
+            dnaCardExportTrigger: document.getElementById("export-taste-btn"),
+            dnaRefreshBtn: document.getElementById("refresh-dna-btn")
         };
 
         this.setupNavigation();
@@ -166,6 +171,7 @@ export const ui = {
         setTimeout(() => this.completeLoader(), 6000);
 
         this.loadInitialMovies();
+        this.loadCinemaDNA();
     },
 
     // A universal refresh to ensure GSAP/ScrollTrigger see new content
@@ -250,9 +256,11 @@ export const ui = {
             .from(".hero-search", {
                 y: 30,
                 opacity: 0,
+                scale: 0.95,
                 duration: 0.8,
                 ease: "power3.out"
-            }, "-=0.6");
+            }, "-=0.6")
+            .set([".hero-title", ".hero-subtitle", ".hero-search"], { clearProps: "all", opacity: 1, visibility: "visible" });
     },
 
     initScrollAnimations() {
@@ -261,10 +269,14 @@ export const ui = {
 
         // Sections parallax/reveal
         document.querySelectorAll('.page-section').forEach(section => {
-            const targets = section.querySelectorAll('.section-title, .container > p, .movie-grid, .gems-grid, .dna-bento-grid, #regions-container, .dashboard-grid');
-            if (targets.length === 0) return;
+            // Aggressively exclude hero contents from general reveal to prevent GSAP collisions
+            // We focus only on non-hero elements like section titles, general body text, and grids.
+            const targets = section.querySelectorAll('.section-title, .container > p:not(.hero-subtitle), .movie-grid, .gems-grid, .dna-bento-grid, #regions-container, .dashboard-grid');
+            const filteredTargets = Array.from(targets).filter(t => !t.closest('.hero-section'));
 
-            gsap.from(targets, {
+            if (filteredTargets.length === 0) return;
+
+            gsap.from(filteredTargets, {
                 scrollTrigger: {
                     trigger: section,
                     start: "top 85%",
@@ -291,15 +303,17 @@ export const ui = {
             opacity: 0
         });
 
-        gsap.to(".hero-gradient-overlay", {
-            scrollTrigger: {
-                trigger: ".hero-section",
-                start: "top top",
-                end: "bottom top",
-                scrub: true
-            },
-            opacity: 1
-        });
+        if (document.querySelector(".hero-gradient-overlay")) {
+            gsap.to(".hero-gradient-overlay", {
+                scrollTrigger: {
+                    trigger: ".hero-section",
+                    start: "top top",
+                    end: "bottom top",
+                    scrub: true
+                },
+                opacity: 1
+            });
+        }
     },
 
     initHeaderScroll() {
@@ -377,9 +391,9 @@ export const ui = {
                 const targetSec = document.getElementById(section);
                 if (targetSec) targetSec.classList.add("active");
 
-                if (section === "reviews") this.loadUserReviews();
-                if (section === "watchlist") this.loadWatchlist();
-                if (section === 'cinemadna') this.loadCinemaDNA();
+                if (section === 'reviews') this.loadUserReviews();
+                if (section === 'watchlist') this.loadWatchlist();
+                if (section === 'cinesins-dna') this.loadCinemaDNA();
                 if (section === 'regions') this.loadRegions();
                 if (section === 'hidden-gems') this.loadHiddenGems();
 
@@ -541,7 +555,8 @@ export const ui = {
                         const card = document.createElement("div");
                         card.className = "movie-card";
                         const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-                        const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                        const rawCover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                        const cover = this.getHighResPoster(rawCover);
 
                         const riskBadge = this.getRegRiskBadgeHTML(m);
 
@@ -585,13 +600,78 @@ export const ui = {
             };
         }
 
+        if (this.elements.dnaRefreshBtn) {
+            this.elements.dnaRefreshBtn.onclick = () => {
+                this.elements.dnaRefreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
+                this.loadCinemaDNA();
+                setTimeout(() => {
+                    this.elements.dnaRefreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh DNA';
+                }, 1000);
+            };
+        }
+
         if (this.elements.generateShareBtn) {
-            this.elements.generateShareBtn.onclick = () => {
-                if (!this.state.latestDNA) {
-                    alert("Please load CinemaDNA and write some reviews first.");
-                    return;
+            this.elements.generateShareBtn.onclick = () => this.openExportModal();
+        }
+
+        if (this.elements.dnaCardExportTrigger) {
+            this.elements.dnaCardExportTrigger.onclick = () => this.openExportModal();
+        }
+
+        if (this.elements.dnaCardCloseBtn) {
+            this.elements.dnaCardCloseBtn.onclick = () => {
+                this.elements.dnaCardModal.classList.remove("active");
+                setTimeout(() => this.elements.dnaCardModal.style.display = "none", 400);
+            };
+        }
+
+        if (this.elements.dnaCardDownloadBtn) {
+            this.elements.dnaCardDownloadBtn.onclick = async () => {
+                const target = document.getElementById("dna-card-container");
+                if (!target) return;
+
+                const btn = this.elements.dnaCardDownloadBtn;
+                const originalText = btn.innerHTML;
+
+                try {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Image...';
+
+                    // Ensure fonts are loaded
+                    await document.fonts.ready;
+
+                    const canvas = await html2canvas(target, {
+                        backgroundColor: '#0a0a0c',
+                        scale: 2, // Higher quality
+                        useCORS: true,
+                        logging: false,
+                        onclone: (clonedDoc) => {
+                            // Ensure the clones keep the correct layout
+                            const clonedTarget = clonedDoc.querySelector("#dna-card-container");
+                            if (clonedTarget) {
+                                clonedTarget.style.transform = "none";
+                                clonedTarget.style.opacity = "1";
+                            }
+                        }
+                    });
+
+                    const link = document.createElement('a');
+                    link.download = `CineSins_DNA_${new Date().getTime()}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+
+                    btn.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 2000);
+
+                } catch (err) {
+                    console.error("Download failed:", err);
+                    alert("Could not generate image. Your browser might be blocking canvas operations.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 }
-                this.generateShareCard(this.state.latestDNA);
             };
         }
 
@@ -612,6 +692,44 @@ export const ui = {
                     this.elements.decisionModal.style.display = "none";
                 }, 400);
             });
+        }
+
+        // Spotlight Mode Toggle: Quick Filters vs Ask AI
+        const filterTab = document.getElementById('spotlight-filter-tab');
+        const aiTab = document.getElementById('spotlight-ai-tab');
+        const filterSection = document.getElementById('spotlight-filter-section');
+        const aiSection = document.getElementById('spotlight-ai-section');
+        const filterBtn = document.getElementById('get-recommendations-btn');
+        const aiBtn = document.getElementById('ai-spotlight-btn');
+
+        if (filterTab && aiTab) {
+            filterTab.onclick = () => {
+                filterTab.style.background = '#6d28d9';
+                filterTab.style.color = '#fff';
+                aiTab.style.background = 'transparent';
+                aiTab.style.color = 'rgba(255,255,255,0.5)';
+                if (filterSection) filterSection.style.display = '';
+                if (aiSection) aiSection.style.display = 'none';
+                if (filterBtn) filterBtn.style.display = '';
+                if (aiBtn) aiBtn.style.display = 'none';
+            };
+            aiTab.onclick = () => {
+                aiTab.style.background = 'linear-gradient(135deg, #6d28d9, #db2777)';
+                aiTab.style.color = '#fff';
+                filterTab.style.background = 'transparent';
+                filterTab.style.color = 'rgba(255,255,255,0.5)';
+                if (filterSection) filterSection.style.display = 'none';
+                if (aiSection) aiSection.style.display = '';
+                if (filterBtn) filterBtn.style.display = 'none';
+                if (aiBtn) aiBtn.style.display = '';
+            };
+        }
+
+        // AI Spotlight Button Handler
+        if (aiBtn) {
+            aiBtn.onclick = async () => {
+                await this.handleAISpotlight();
+            };
         }
         if (this.elements.getRecommendationsBtn) {
             const updateRecs = async (e) => {
@@ -643,7 +761,8 @@ export const ui = {
 
                     recommendations.forEach(m => {
                         const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-                        const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                        const rawPoster = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                        const posterUrl = this.getHighResPoster(rawPoster);
 
                         const badgeColor = m.dominantMetric === 'Intensity' ? 'var(--accent-secondary)' :
                             m.dominantMetric === 'Thought-Provoking' ? 'var(--accent-primary)' : 'var(--accent-tertiary)';
@@ -780,6 +899,125 @@ export const ui = {
         };
     },
 
+    async handleAISpotlight() {
+        const input = document.getElementById('spotlight-ai-input');
+        const query = input ? input.value.trim() : '';
+        if (!query) {
+            alert('Please describe what kind of movie you\'re in the mood for!');
+            return;
+        }
+
+        const resultsContainer = this.elements.decisionResults;
+        if (!resultsContainer) return;
+
+        // Show loading state
+        resultsContainer.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(139,92,246,0.2); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                <p style="color: #c4b5fd; margin-top: 20px; font-weight: 600; font-size: 1.1rem;">CineMind is analyzing your vibe...</p>
+                <p style="color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-top: 8px; font-style: italic;">"${query}"</p>
+            </div>`;
+
+        try {
+            const { aiService } = await import('./ai_service.js');
+            const aiPicks = await aiService.getSpotlightRecommendations(query);
+
+            if (!aiPicks || aiPicks.length === 0) {
+                resultsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">CineMind couldn't find matches for that vibe. Try rephrasing!</p>`;
+                return;
+            }
+
+            // Fetch full movie details from TMDB/OMDB for each AI pick
+            const movieFetches = aiPicks.map(async (rec) => {
+                try {
+                    const fetched = await api.fetchMovieByTitle(rec.title || rec.Title);
+                    if (fetched) {
+                        fetched._aiReason = rec.reason || '';
+                        return fetched;
+                    }
+                } catch (e) { /* ignore */ }
+                return null;
+            });
+
+            const fetchedMovies = (await Promise.all(movieFetches)).filter(Boolean);
+
+            if (fetchedMovies.length === 0) {
+                resultsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">Could not fetch movie details. Please try again.</p>`;
+                return;
+            }
+
+            const { store } = await import('./store.js');
+            store.saveMoviesBatch(fetchedMovies);
+
+            resultsContainer.innerHTML = '';
+
+            // AI response banner
+            const banner = document.createElement('div');
+            banner.style.cssText = 'grid-column: 1/-1; margin-bottom: 16px; padding: 16px 24px; background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(219,39,119,0.08)); border: 1px solid rgba(139,92,246,0.2); border-radius: 14px; display: flex; align-items: center; gap: 12px;';
+            banner.innerHTML = `<i class="fas fa-brain" style="color: #8b5cf6; font-size: 1.3rem;"></i><div><strong style="color: #fff;">CineMind Picks</strong><span style="color: var(--text-muted); margin-left: 8px; font-size: 0.9rem;">for: &quot;${query}&quot;</span></div>`;
+            resultsContainer.appendChild(banner);
+
+            // Clear previous map for this container
+            if (!this.state.renderedMoviesMaps) this.state.renderedMoviesMaps = {};
+            this.state.renderedMoviesMaps[resultsContainer.id] = {};
+
+            fetchedMovies.forEach((m, i) => {
+                const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+                const rawPoster = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                const posterUrl = this.getHighResPoster(rawPoster);
+                const reason = m._aiReason || aiPicks[i]?.reason || 'AI-curated for your vibe.';
+
+                const riskBadge = this.getRegRiskBadgeHTML(m);
+
+                const card = document.createElement("div");
+                card.className = "movie-card decision-result-card";
+                card.innerHTML = `
+                    ${riskBadge}
+                    <img src="${posterUrl}" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
+                    <div class="card-overlay active">
+                        <div class="movie-info decision-info">
+                            <span style="display: inline-block; padding: 4px 10px; background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(219,39,119,0.2)); border-radius: 6px; font-size: 0.7rem; font-weight: 800; color: #c4b5fd; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+                                <i class="fas fa-brain" style="margin-right: 4px;"></i> AI Pick #${i + 1}
+                            </span>
+                            <h3>${m.Title || m.title}</h3>
+                            <p class="movie-meta">
+                                ${m.Year || m.year} • IMDb: ${m.imdbRating || "N/A"} • ${m.Runtime || m.runtime || ""}
+                            </p>
+                            <p class="plot-text decision-plot" style="color: #c4b5fd; font-style: italic;">
+                                "${reason}"
+                            </p>
+                            <button class="review-btn btn-primary" data-action="open-modal" data-id="${m.imdbID || m.id}">
+                                <i class="fas fa-search"></i> View Details
+                            </button>
+                        </div>
+                    </div>`;
+
+                card.dataset.id = m.imdbID || m.id;
+                this.state.renderedMoviesMaps[resultsContainer.id][m.imdbID || m.id] = m;
+
+                card.onclick = async (e) => {
+                    if (e.target.closest('.review-btn')) return;
+                    await this.openModal(m, card.querySelector('img'));
+                };
+
+                const detailBtn = card.querySelector('.review-btn');
+                if (detailBtn) {
+                    detailBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        await this.openModal(m, card.querySelector('img'));
+                    };
+                }
+
+                resultsContainer.appendChild(card);
+            });
+
+            this.refreshUI();
+        } catch (err) {
+            console.error("AI Spotlight Error:", err);
+            resultsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--accent-primary);">Something went wrong. Please try again.</p>`;
+        }
+    },
+
     initAISearch() {
         const aiToggle = document.getElementById('ai-toggle-btn');
         const aiHint = document.getElementById('ai-search-hint');
@@ -868,7 +1106,8 @@ export const ui = {
                     const card = document.createElement('div');
                     card.className = 'movie-card';
                     const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-                    const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                    const rawPoster = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                    const posterUrl = this.getHighResPoster(rawPoster);
 
                     const riskBadge = this.getRegRiskBadgeHTML(m);
 
@@ -1065,6 +1304,18 @@ export const ui = {
         }
     },
 
+    // Helper to ensure high quality posters even for cached data
+    getHighResPoster(url) {
+        if (!url || url === "N/A" || url.includes("placehold.co")) return url;
+        // TMDB: w500/w780 -> w1280
+        if (url.includes("tmdb.org")) {
+            return url.replace(/\/w\d+\//, "/w1280/");
+        }
+        // OMDB: SX300 -> SX1000
+        if (url.includes("omdbapi.com")) return url.replace(/SX\d+/, 'SX1000');
+        return url;
+    },
+
     renderMovies(movies, container = null) {
         const target = container || this.elements.movieResults;
         if (!target) return;
@@ -1090,7 +1341,8 @@ export const ui = {
             const card = document.createElement("div");
             card.className = "movie-card";
             const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-            const cover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+            const rawCover = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+            const cover = this.getHighResPoster(rawCover);
 
             const riskBadge = this.getRegRiskBadgeHTML(m);
 
@@ -1180,7 +1432,8 @@ export const ui = {
         this.state.currentMovie = detailedMovie;
         this.elements.modalTitle.textContent = detailedMovie.Title || detailedMovie.title;
         const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-        const posterUrl = (detailedMovie.Poster && detailedMovie.Poster !== "N/A") ? detailedMovie.Poster : (detailedMovie.poster && detailedMovie.poster !== "N/A") ? detailedMovie.poster : fallback;
+        const rawPoster = (detailedMovie.Poster && detailedMovie.Poster !== "N/A") ? detailedMovie.Poster : (detailedMovie.poster && detailedMovie.poster !== "N/A") ? detailedMovie.poster : fallback;
+        const posterUrl = this.getHighResPoster(rawPoster);
         this.elements.modalPoster.src = posterUrl;
         this.elements.modalPoster.onerror = function () { this.src = fallback; };
 
@@ -1414,9 +1667,11 @@ export const ui = {
             if (document.getElementById("reviews").classList.contains("active")) {
                 this.loadUserReviews();
             }
-            if (document.getElementById("cinemadna").classList.contains("active")) {
+            if (document.getElementById("cinesins-dna").classList.contains("active")) {
                 this.loadCinemaDNA();
             }
+            // Always refresh stats in state regardless of active view
+            this.loadCinemaDNA();
         } finally {
             this.state.isSaving = false;
         }
@@ -1577,6 +1832,7 @@ export const ui = {
     async loadRecent() {
         const { store } = await import('./store.js');
         const list = store.getRecentSearches();
+        if (!this.elements.recentList) return;
         this.elements.recentList.innerHTML = "";
         list.forEach(q => {
             const li = document.createElement("li");
@@ -1592,43 +1848,52 @@ export const ui = {
 
 
     async loadCinemaDNA() {
+        console.log("[DNA] Loading Cinematic Soul...");
         try {
-            const { store } = await import('./store.js');
             const analytics = await store.computeUserAnalytics();
-
             this.state.latestDNA = analytics;
 
-            // Direct DOM access as fallback for ultra-robustness
-            const dnaGenre = this.elements.dnaGenre || document.getElementById("dna-genre");
-            const dnaRating = this.elements.dnaRating || document.getElementById("dna-avg-rating");
-            const dnaLogged = this.elements.dnaLogged || document.getElementById("dna-logged");
-            const cinemadnaList = this.elements.cinemadnaList || document.getElementById("dna-directors");
+            // Brutal direct DOM selection for maximum reliability
+            const el = {
+                genre: document.getElementById("dna-genre"),
+                rating: document.getElementById("dna-avg-rating"),
+                logged: document.getElementById("dna-logged"),
+                directors: document.getElementById("dna-directors"),
+                archetypeTitle: document.getElementById("archetype-label"),
+                archetypeDesc: document.getElementById("archetype-description"),
+                archetypeIcon: document.getElementById("archetype-icon-wrapper"),
+                archetypeCont: document.getElementById("archetype-container")
+            };
 
             if (!analytics || analytics.totalReviews === 0) {
-                if (dnaGenre) dnaGenre.textContent = "-";
-                if (dnaRating) dnaRating.textContent = "0.0";
-                if (dnaLogged) dnaLogged.textContent = "0";
-                if (cinemadnaList) cinemadnaList.innerHTML = "<li style='opacity:0.6; font-style:italic;'>No reviews logged yet.</li>";
+                console.warn("[DNA] No analytics found or 0 reviews. Dashboard staying in idle state.");
+                if (el.genre) el.genre.textContent = "-";
+                if (el.rating) el.rating.textContent = "0.0";
+                if (el.logged) el.logged.textContent = "0";
+                if (el.directors) el.directors.innerHTML = "<li style='opacity:0.6; font-style:italic;'>No reviews logged yet.</li>";
+                if (el.archetypeCont) el.archetypeCont.style.opacity = "0.3";
                 this.drawDNAChart({});
-                document.getElementById("archetype-container").style.display = "none";
                 return;
             }
 
-            if (dnaGenre) dnaGenre.textContent = analytics.favoriteGenre || "N/A";
-            if (dnaRating) dnaRating.textContent = analytics.avgRating || "0.0";
-            if (dnaLogged) dnaLogged.textContent = analytics.totalReviews || "0";
+            console.log("[DNA] Data found:", analytics);
 
-            if (cinemadnaList) {
-                cinemadnaList.innerHTML = "";
+            if (el.archetypeCont) el.archetypeCont.style.opacity = "1";
+            if (el.genre) el.genre.textContent = analytics.favoriteGenre || "N/A";
+            if (el.rating) el.rating.textContent = analytics.avgRating || "0.0";
+            if (el.logged) el.logged.textContent = analytics.totalReviews || "0";
+
+            if (el.directors) {
+                el.directors.innerHTML = "";
                 if (analytics.top5Directors && analytics.top5Directors.length > 0) {
                     analytics.top5Directors.forEach(d => {
                         const li = document.createElement("li");
                         li.className = "dna-pill";
                         li.textContent = d;
-                        cinemadnaList.appendChild(li);
+                        el.directors.appendChild(li);
                     });
                 } else {
-                    cinemadnaList.innerHTML = "<li class='dna-pill' style='opacity:0.6; font-style:italic;'>Log more movies to see directors</li>";
+                    el.directors.innerHTML = "<li class='dna-pill' style='opacity:0.6; font-style:italic;'>Log more to see directors</li>";
                 }
             }
 
@@ -1637,20 +1902,19 @@ export const ui = {
             if (analytics.archetype) {
                 this.renderArchetypeCard(analytics.archetype);
             } else {
-                const archCont = document.getElementById("archetype-container");
-                if (archCont) archCont.style.display = "none";
+                if (el.archetypeTitle) el.archetypeTitle.textContent = "Developing Persona...";
+                if (el.archetypeDesc) el.archetypeDesc.textContent = "Keep logging reviews to unlock your unique cinematic archetype.";
             }
 
             // Load Trends
             this.loadTrends();
 
         } catch (err) {
-            console.error("Failed to load CinemaDNA:", err);
-            // Fallback: update UI with 0s so it doesn't stay as "-"
+            console.error("[DNA] CRITICAL FAILURE:", err);
             const dnaRating = document.getElementById("dna-avg-rating");
             const dnaLogged = document.getElementById("dna-logged");
-            if (dnaRating) dnaRating.textContent = "0.0";
-            if (dnaLogged) dnaLogged.textContent = "0";
+            if (dnaRating) dnaRating.textContent = "ERROR";
+            if (dnaLogged) dnaLogged.textContent = "!";
         }
     },
 
@@ -1906,67 +2170,54 @@ export const ui = {
     },
 
     renderArchetypeCard(archetype) {
-        const container = document.getElementById("archetype-container");
-        const labelEl = document.getElementById("archetype-label");
-        const confidenceEl = document.getElementById("archetype-confidence");
+        const titleEl = document.getElementById("archetype-label");
         const descEl = document.getElementById("archetype-description");
         const traitsEl = document.getElementById("archetype-traits");
         const iconWrapper = document.getElementById("archetype-icon-wrapper");
-        const moreTextEl = document.getElementById("archetype-more-text");
-        const moreBtn = document.getElementById("archetype-more-btn");
 
-        if (!container || !archetype) return;
+        if (archetype) {
+            if (titleEl) titleEl.textContent = archetype.label;
+            if (descEl) descEl.textContent = archetype.description;
 
-        container.style.display = "block";
-        if (labelEl) labelEl.textContent = archetype.label;
-        if (confidenceEl) confidenceEl.textContent = `Confidence: ${archetype.confidence}%`;
-        if (descEl) descEl.textContent = archetype.description;
+            if (traitsEl) {
+                traitsEl.innerHTML = archetype.dominantTraits.map(t => `<span class="dna-pill">${t}</span>`).join("");
+            }
 
-        // Traits
-        if (traitsEl) {
-            traitsEl.innerHTML = "";
-            archetype.dominantTraits.forEach(trait => {
-                const span = document.createElement("span");
-                span.className = "dna-pill";
-                span.innerHTML = `<i class="fas fa-check" style="color: var(--accent-tertiary); margin-right: 6px; font-size: 0.7rem;"></i> ${trait}`;
-                traitsEl.appendChild(span);
-            });
-        }
-
-        // Icon
-        if (iconWrapper) {
-            if (archetype.icon) {
+            if (iconWrapper && archetype.icon) {
                 iconWrapper.innerHTML = `<i class="fas ${archetype.icon}"></i>`;
-            } else {
-                const icons = {
-                    'Explorer': 'fa-rocket',
-                    'Analyst': 'fa-brain',
-                    'Purist': 'fa-gem',
-                    'Comfort Seeker': 'fa-couch',
-                    'Adrenaline Junkie': 'fa-bolt'
-                };
-                const iconClass = icons[archetype.label] || 'fa-crown';
-                iconWrapper.innerHTML = `<i class="fas ${iconClass}"></i>`;
+            }
+        }
+    },
+
+    async openExportModal() {
+        if (!this.state.latestDNA || this.state.latestDNA.totalReviews === 0) {
+            const { store } = await import('./store.js');
+            const fresh = await store.computeUserAnalytics();
+            this.state.latestDNA = fresh;
+            if (fresh.totalReviews === 0) {
+                alert("You need to write at least one review to generate your premium DNA card!");
+                return;
             }
         }
 
-        // More Text (reasons)
-        if (moreTextEl) {
-            moreTextEl.innerHTML = archetype.reasons.map(r => `<p style="margin-bottom: 8px;"><i class="fas fa-info-circle" style="margin-right: 8px; opacity: 0.6;"></i> ${r}</p>`).join("");
+        const dna = this.state.latestDNA;
+        const modal = this.elements.dnaCardModal;
+
+        // Populate Data
+        document.getElementById("export-date").textContent = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase();
+        document.getElementById("export-archetype").textContent = dna.archetype?.label || "The Cinematic Soul";
+        document.getElementById("export-desc").textContent = dna.archetype?.description || "A unique blend of cinematic preferences and storytelling appreciation.";
+        document.getElementById("export-genre").textContent = dna.favoriteGenre || "Various";
+        document.getElementById("export-rating").textContent = dna.avgRating || "0.0";
+        document.getElementById("export-reviews").textContent = dna.totalReviews || "0";
+
+        const iconEl = document.getElementById("export-icon");
+        if (iconEl && dna.archetype?.icon) {
+            iconEl.innerHTML = `<i class="fas ${dna.archetype.icon}"></i>`;
         }
 
-        // Toggle logic
-        if (moreBtn && !moreBtn.dataset.init) {
-            moreBtn.dataset.init = "true";
-            moreBtn.onclick = () => {
-                const isHidden = moreTextEl.style.display === "none" || !moreTextEl.style.display;
-                moreTextEl.style.display = isHidden ? "block" : "none";
-                const icon = moreBtn.querySelector("i");
-                if (icon) icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
-                const span = moreBtn.querySelector("span");
-                if (span) span.textContent = isHidden ? "Show less" : "Tell me more";
-            };
-        }
+        modal.style.display = "flex";
+        setTimeout(() => modal.classList.add("active"), 10);
     },
 
     async loadTrends() {
@@ -2334,19 +2585,17 @@ export const ui = {
 
         // Key Stats
         drawRow("Top Genre", analytics.favoriteGenre, rowStart, "#2ecc71");
-        drawRow("Avg Runtime", analytics.avgRuntime + " min", rowStart + rowGap, "#3498db");
-        drawRow("Total Watched", analytics.totalWatchTimeString, rowStart + (rowGap * 2), "#9b59b6");
-        drawRow("Mood Trend", analytics.moodTrend, rowStart + (rowGap * 3), "#ecf0f1");
+        drawRow("Mood Trend", analytics.moodTrend, rowStart + rowGap, "#ecf0f1");
 
         // Top Directors Section
         ctx.fillStyle = '#9ca3af';
         ctx.font = '28px Inter, sans-serif';
-        ctx.fillText("Top Directors:", 120, rowStart + (rowGap * 4.5));
+        ctx.fillText("Top Directors:", 120, rowStart + (rowGap * 2.5));
 
         ctx.fillStyle = '#f3f4f6';
         ctx.font = 'bold 30px Poppins, sans-serif';
         const dirs = (analytics.top5Directors || []).length ? analytics.top5Directors.join(', ') : "None";
-        ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 120, rowStart + (rowGap * 5.1));
+        ctx.fillText(dirs.length > 35 ? dirs.substring(0, 32) + "..." : dirs, 120, rowStart + (rowGap * 3.1));
 
         // Footer
         ctx.fillStyle = 'rgba(255,255,255,0.2)';
@@ -2443,7 +2692,8 @@ export const ui = {
             card.className = "movie-card";
 
             const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-            const posterUrl = m.poster || m.Poster || fallback;
+            const rawPoster = m.poster || m.Poster || fallback;
+            const posterUrl = this.getHighResPoster(rawPoster);
 
             card.innerHTML = `
               <img src="${posterUrl}" class="movie-card-img" alt="${m.title || m.Title}" onerror="this.src='${fallback}'">
@@ -2589,7 +2839,8 @@ export const ui = {
 
             gems.forEach((m, i) => {
                 const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-                const posterUrl = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                const rawPoster = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
+                const posterUrl = this.getHighResPoster(rawPoster);
                 const title = m.Title || m.title || "Unknown";
                 const year = m.Year || m.year || "";
                 const rating = m.imdbRating || "N/A";
@@ -2703,7 +2954,7 @@ export const ui = {
                             <div class="movie-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 24px;">
                                 ${regionalMovies.length > 0 ? regionalMovies.slice(0, 12).map(m => `
                                     <div class="movie-card" style="height: 280px;" data-id="${m.id || m.imdbID}">
-                                        <img src="${m.Poster || m.poster || 'https://placehold.co/300x450/111/555?text=No+Poster'}" alt="${m.Title}" style="height: 100%; object-fit: cover; border-radius: 8px;">
+                                        <img src="${this.getHighResPoster(m.Poster || m.poster || 'https://placehold.co/300x450/111/555?text=No+Poster')}" alt="${m.Title}" style="height: 100%; object-fit: cover; border-radius: 8px;">
                                         <div class="card-overlay" style="opacity: 1; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent 70%); display: flex; align-items: flex-end; padding: 15px;">
                                             <div>
                                                 <p style="font-size: 0.6rem; color: var(--accent-secondary); text-transform: uppercase; font-weight: 900; margin-bottom: 2px;">★ ${m.imdbRating || "8.1"}</p>
