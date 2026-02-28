@@ -94,6 +94,39 @@ export const aiService = {
         return this.getFallbackRecommendations(userQuery);
     },
 
+    /**
+     * AI-powered Spotlight: Interprets a natural language vibe description
+     * and returns exactly 3 curated movie picks with reasons.
+     */
+    async getSpotlightRecommendations(vibeQuery) {
+        const systemPrompt = `You are CineMind, an elite film curator AI. The user will describe their current mood, vibe, or what kind of movie experience they want tonight.
+Your job: Return EXACTLY 3 perfect movie recommendations.
+Respond ONLY with a valid JSON array. No markdown, no explanation, no wrapping.
+Each object must have: title (string), year (string), reason (string - 1 compelling sentence explaining WHY this movie fits their vibe).
+Focus on quality over popularity. Mix well-known films with hidden gems when appropriate.
+Example: [{"title":"Mulholland Drive","year":"2001","reason":"A hypnotic neo-noir that unravels reality in the most unsettling way."}]`;
+
+        const responseText = await this.generateResponse(vibeQuery, systemPrompt);
+
+        try {
+            const jsonMatch = responseText.match(/\[[\s\S]*?\]/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].title) {
+                    return parsed.slice(0, 3);
+                }
+            }
+            const directParse = JSON.parse(responseText);
+            if (Array.isArray(directParse)) return directParse.slice(0, 3);
+        } catch (e) {
+            console.warn("Spotlight AI parse failed, using fallback:", responseText);
+        }
+
+        // Fallback: use the general recommendation engine
+        const fallback = this.getFallbackRecommendations(vibeQuery);
+        return fallback.slice(0, 3);
+    },
+
     getFallbackRecommendations(query) {
         const q = query.toLowerCase();
 
