@@ -92,11 +92,31 @@ header.scrolled {
   border-bottom: 1px solid var(--border-light);
 }
 
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1002;
+  padding: 10px;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: block;
+  }
+}
+
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  max-width: var(--cin-max-width);
+  margin: 0 auto;
+  padding: 0 var(--cin-spacing-3);
 }
 
 .logo-container {
@@ -139,6 +159,41 @@ header.scrolled {
 nav ul {
   display: flex;
   gap: 8px;
+  list-style: none;
+}
+
+@media (max-width: 768px) {
+  nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid var(--border-light);
+    transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    padding: 100px 30px;
+  }
+
+  nav.active {
+    transform: translateX(-100%);
+  }
+
+  nav ul {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  nav a {
+    font-size: 1.2rem;
+    display: block;
+    width: 100%;
+  }
 }
 
 .header-search-wrapper input:focus {
@@ -178,8 +233,9 @@ nav a:hover {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  padding-top: 100px !important;
   background: radial-gradient(circle at center, rgba(255, 0, 0, 0.15) 0%, transparent 80%) !important;
-  padding: 0 5% !important;
+  padding: 100px 5% 60px !important;
   overflow: hidden;
   z-index: 10;
 }
@@ -209,8 +265,8 @@ nav a:hover {
 }
 
 .hero-title span {
-  color: #ff0000 !important;
-  filter: drop-shadow(0 0 40px rgba(255, 0, 0, 0.7)) !important;
+  color: var(--accent-primary) !important;
+  filter: drop-shadow(0 0 40px hsla(270, 100%, 65%, 0.6)) !important;
 }
 
 .hero-subtitle {
@@ -226,23 +282,43 @@ nav a:hover {
 .hero-search {
   position: relative !important;
   z-index: 100 !important;
-  width: 100% !important;
+  width: 90% !important;
   max-width: 850px !important;
   background: rgba(15, 15, 18, 0.85) !important;
   backdrop-filter: blur(50px) !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-radius: 20px !important;
-  padding: 10px 20px !important;
+  padding: 8px 12px !important;
   display: flex !important;
   align-items: center !important;
-  margin-bottom: 70px !important;
-  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.7), 0 0 70px rgba(255, 0, 0, 0.1) !important;
+  margin-bottom: 50px !important;
+  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.7), 0 0 70px hsla(270, 100%, 65%, 0.1) !important;
   opacity: 1 !important;
 }
 
+@media (max-width: 640px) {
+  .hero-search {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 20px !important;
+    background: rgba(15, 15, 18, 0.95) !important;
+  }
+
+  .hero-search input {
+    width: 100% !important;
+    padding: 12px 0 !important;
+    text-align: center !important;
+  }
+
+  #search-btn {
+    width: 100% !important;
+    padding: 15px !important;
+  }
+}
+
 .hero-search:focus-within {
-  border-color: rgba(255, 0, 0, 0.6) !important;
-  box-shadow: 0 60px 120px rgba(0, 0, 0, 0.9), 0 0 90px rgba(255, 0, 0, 0.2) !important;
+  border-color: hsla(270, 100%, 65%, 0.6) !important;
+  box-shadow: 0 60px 120px rgba(0, 0, 0, 0.9), 0 0 90px hsla(270, 100%, 65%, 0.2) !important;
   transform: translateY(-5px) scale(1.015);
 }
 
@@ -258,7 +334,7 @@ nav a:hover {
 }
 
 #search-btn {
-  background: #ff0000 !important;
+  background: var(--accent-primary) !important;
   color: #fff !important;
   border: none !important;
   border-radius: 12px !important;
@@ -270,7 +346,7 @@ nav a:hover {
 }
 
 #search-btn:hover {
-  background: #cc0000 !important;
+  background: var(--accent-secondary) !important;
   transform: scale(1.05);
 }
 
@@ -299,7 +375,7 @@ nav a:hover {
 
 #zero-scroll-cta:hover {
   background: rgba(255, 255, 255, 0.08) !important;
-  border-color: #ff0000 !important;
+  border-color: var(--accent-primary) !important;
   transform: translateY(-5px);
 }
 
@@ -660,9 +736,15 @@ nav a:hover {
 /* Decision Mode Specifics */
 .decision-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
   margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .decision-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 #get-recommendations-btn {
@@ -945,10 +1027,11 @@ nav a:hover {
 .dna-stat {
   grid-column: span 4;
   justify-content: center;
+  min-height: 180px;
 }
 
 .dna-insights {
-  grid-column: span 6;
+  grid-column: span 8;
   grid-row: span 1;
 }
 
@@ -964,6 +1047,83 @@ nav a:hover {
   grid-column: span 12;
   background: linear-gradient(90deg, #1a1b1e 0%, #2a2c31 100%);
   border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 1200px) {
+  .dna-bento-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+
+  .dna-hero {
+    grid-column: span 8;
+  }
+
+  .dna-stat {
+    grid-column: span 4;
+  }
+
+  .dna-insights,
+  .dna-list-tile,
+  .dna-chart-tile,
+  .dna-cta-tile {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 992px) {
+  .dna-tile {
+    padding: 24px;
+  }
+
+  .dna-hero {
+    grid-row: auto;
+  }
+
+  .dna-hero-inner {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .dna-icon-box {
+    width: 100px;
+    height: 100px;
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dna-bento-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .dna-hero,
+  .dna-stat,
+  .dna-insights,
+  .dna-list-tile,
+  .dna-chart-tile,
+  .dna-cta-tile {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 480px) {
+  .dna-bento-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dna-hero,
+  .dna-stat,
+  .dna-insights,
+  .dna-list-tile,
+  .dna-chart-tile,
+  .dna-cta-tile {
+    grid-column: span 1;
+  }
+
+  .dna-title-xl {
+    font-size: 2.2rem;
+  }
 }
 
 /* Component Styling */
