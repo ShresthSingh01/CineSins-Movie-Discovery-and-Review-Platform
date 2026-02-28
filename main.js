@@ -33,18 +33,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const heroSearch = document.querySelector('.hero-search');
 
     if (heroArea && typeof gsap !== 'undefined') {
-        // 1. Entrance Reveal Animation
-        const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+        // 1. Entrance Reveal Animation is now handled in ui.js to sync with preloader completion
 
-        tl.fromTo(heroTitle,
-            { y: 50, opacity: 0 },
-            { y: 0, opacity: 1, duration: 1 })
-            .fromTo(heroSubtitle,
-                { y: 30, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.8 }, "-=0.6")
-            .fromTo(heroSearch,
-                { y: 30, opacity: 0, scale: 0.95 },
-                { y: 0, opacity: 1, scale: 1, duration: 0.8 }, "-=0.5");
 
         // 2. Advanced Parallax Tracking
         if (posters.length > 0) {
