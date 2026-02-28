@@ -2,8 +2,8 @@ import { config } from './config.js';
 
 const TMDB_API_KEY = config.TMDB_API_KEY || "INSERT_TMDB_API_KEY_HERE";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
-const TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w1280";
+const TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/original";
 
 const OMDB_API_KEY = config.OMDB_API_KEY || "5dddf095";
 const OMDB_BASE_URL = "https://www.omdbapi.com";
@@ -22,6 +22,12 @@ async function fetchWithTimeout(resource, options = {}) {
     return response;
 }
 
+// Helper to enhance poster quality for OMDB (replaces SX300 with SX1000)
+function getHighResPoster(url) {
+    if (!url || url === "N/A" || !url.includes("omdbapi.com")) return url;
+    return url.replace(/SX\d+/, 'SX1000');
+}
+
 // Helper to convert OMDB movie object to our app's normalized format (Fallback)
 async function normalizeOMDBMovie(raw) {
     const movie = {
@@ -35,8 +41,8 @@ async function normalizeOMDBMovie(raw) {
         runtime: raw.Runtime,
         director: raw.Director,
         actors: raw.Actors,
-        poster: raw.Poster,
-        Poster: raw.Poster,
+        poster: getHighResPoster(raw.Poster),
+        Poster: getHighResPoster(raw.Poster),
         imdbRating: raw.imdbRating,
         imdbVotes: raw.imdbVotes,
         plot: raw.Plot,
@@ -348,7 +354,11 @@ export const api = {
             }
             return [];
         } catch (e) {
-            console.error("fetchPopularMoviesBatch TMDB error, falling back to OMDB manually:", e);
+            if (e.message === "TMDB Key Missing") {
+                console.info("TMDB key not found, using OMDb fallback engine.");
+            } else {
+                console.warn("fetchPopularMoviesBatch TMDB error:", e);
+            }
             const popularMovies = [
                 "Deadpool & Wolverine", "Inside Out 2", "Dune: Part Two",
                 "Oppenheimer", "Poor Things", "The Fall Guy", "Furiosa: A Mad Max Saga",
