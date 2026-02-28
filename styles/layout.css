@@ -8,8 +8,15 @@
 
 /* Page Section */
 .page-section {
-    padding: var(--cin-spacing-4) 0;
-    min-height: 100vh;
+    padding: clamp(40px, 8vw, 80px) 0;
+    min-height: auto;
+    /* Avoid forced full height on short content mobile pages */
+}
+
+@media (min-width: 768px) {
+    .page-section {
+        min-height: 100vh;
+    }
 }
 
 /* Hero Spotlight Section */
@@ -58,10 +65,12 @@
 }
 
 /* Grid System */
+/* Fluid Responsive Grid */
 .movie-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: var(--cin-spacing-3);
+    /* 1 column on mobile, transitioning to multiple columns automatically */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+    gap: clamp(16px, 3vw, 32px);
     padding: var(--cin-spacing-3) 0;
 }
 
