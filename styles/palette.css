@@ -1,17 +1,17 @@
 :root {
-    --palette-charcoal: #050508;
-    --palette-midnight: #0f1724;
-    --palette-copper: #b86b3e;
-    --palette-gold: #E6B91E;
-    --palette-velvet: #7a0f1c;
-    --palette-text: #f6f7f9;
-    --palette-muted: #9aa3ad;
+    --palette-charcoal: #030305;
+    --palette-midnight: #0a0a14;
+    --palette-purple: #6d28d9;
+    --palette-fuchsia: #db2777;
+    --palette-velvet: #3b0764;
+    --palette-text: #f9fafb;
+    --palette-muted: #94a3b8;
 
     /* Semantic palette */
     --color-bg-primary: var(--palette-charcoal);
     --color-bg-secondary: var(--palette-midnight);
-    --color-accent-primary: var(--palette-gold);
-    --color-accent-secondary: var(--palette-copper);
+    --color-accent-primary: var(--palette-purple);
+    --color-accent-secondary: var(--palette-fuchsia);
     --color-accent-velvet: var(--palette-velvet);
     --color-text-primary: var(--palette-text);
     --color-text-secondary: var(--palette-muted);
