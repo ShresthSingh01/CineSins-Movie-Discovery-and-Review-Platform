@@ -1,8 +1,13 @@
+import { auth } from './src/auth.js';
 import { ui } from './ui.js';
 import { api } from './api.js';
 import { decisionEngine } from './store.js';
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    // Wait for user to select a profile before booting the app
+    const isAuthReady = await auth.init();
+    if (!isAuthReady) return;
+
     ui.init();
 
     // Expose api to the console for testing
