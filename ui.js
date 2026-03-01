@@ -722,6 +722,8 @@ export const ui = {
                 if (aiSection) aiSection.style.display = '';
                 if (filterBtn) filterBtn.style.display = 'none';
                 if (aiBtn) aiBtn.style.display = '';
+                // Auto-load quiz questions when Confessional tab is opened
+                this.loadConfessionalQuiz();
             };
         }
 
@@ -731,6 +733,7 @@ export const ui = {
                 await this.handleAISpotlight();
             };
         }
+
         if (this.elements.getRecommendationsBtn) {
             const updateRecs = async (e) => {
                 if (e) e.preventDefault();
@@ -899,23 +902,156 @@ export const ui = {
         };
     },
 
+    // Load and render the dynamic Confessional quiz
+    async loadConfessionalQuiz() {
+        const loading = document.getElementById('confessional-loading');
+        const quizContainer = document.getElementById('confessional-quiz');
+        const tracker = document.getElementById('confessional-tracker');
+        if (!quizContainer) return;
+
+        // Show loading, hide quiz
+        if (loading) loading.style.display = '';
+        quizContainer.style.display = 'none';
+        if (tracker) tracker.style.display = 'none';
+
+        try {
+            const { aiService } = await import('./ai_service.js');
+            const questions = await aiService.generateConfessionalQuiz();
+            this.state.confessionalQuestions = questions;
+            this.state.confessionalAnswers = {};
+
+            // Render quiz questions
+            quizContainer.innerHTML = '';
+            questions.forEach((q, i) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'confessional-question';
+
+                // Only show the first question initially
+                const isFirst = i === 0;
+                questionDiv.style.cssText = `margin-bottom: 28px; transition: opacity 0.4s ease, transform 0.4s ease; ${isFirst ? 'opacity: 1; transform: translateY(0); display: block;' : 'opacity: 0; transform: translateY(20px); display: none;'}`;
+                questionDiv.dataset.index = i;
+
+                questionDiv.innerHTML = `
+                    <p style="text-align: center; color: rgba(255,255,255,0.5); font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 10px;">Confession ${this._toRoman(i + 1)}</p>
+                    <h3 style="text-align: center; color: #fff; font-size: 1.3rem; font-weight: 700; margin-bottom: 24px; font-family: 'Outfit', 'Inter', sans-serif; letter-spacing: -0.5px;">
+                        <span style="margin-right: 12px; font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${q.emoji || '🕯️'}</span>${q.question}
+                    </h3>
+                    <div class="confessional-options" data-question="${i}" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        ${q.options.map((opt, j) => `
+                            <button class="confessional-opt" data-question="${i}" data-value="${opt.value}" data-index="${j}"
+                                style="display: flex; align-items: center; gap: 12px; padding: 16px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; backdrop-filter: blur(10px); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); color: #e2e8f0; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 500; text-align: left; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"
+                                onmouseover="if(!this.classList.contains('selected')){ this.style.background='rgba(255,255,255,0.1)'; this.style.transform='translateY(-2px)'; this.style.borderColor='rgba(255,255,255,0.2)'; }"
+                                onmouseout="if(!this.classList.contains('selected')){ this.style.background='rgba(255,255,255,0.05)'; this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,255,255,0.08)'; }">
+                                <span style="font-size: 1.6rem; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">${opt.emoji}</span>
+                                <span style="line-height: 1.4;">${opt.label}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+                quizContainer.appendChild(questionDiv);
+            });
+
+            // Bind option click handlers
+            quizContainer.querySelectorAll('.confessional-opt').forEach(btn => {
+                btn.onclick = () => {
+                    const qIdx = parseInt(btn.dataset.question, 10);
+                    // Deselect siblings
+                    quizContainer.querySelectorAll(`.confessional-opt[data-question="${qIdx}"]`).forEach(b => {
+                        b.style.borderColor = 'rgba(255,255,255,0.08)';
+                        b.style.background = 'rgba(255,255,255,0.05)';
+                        b.style.color = '#e2e8f0';
+                        b.style.transform = 'translateY(0)';
+                        b.classList.remove('selected');
+                    });
+                    // Select this one
+                    btn.classList.add('selected');
+                    btn.style.borderColor = 'rgba(219,39,119,0.5)';
+                    btn.style.background = 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(219,39,119,0.25))';
+                    btn.style.color = '#fff';
+                    this.state.confessionalAnswers[qIdx] = btn.dataset.value;
+
+                    // Update progress
+                    const answered = Object.keys(this.state.confessionalAnswers).length;
+                    const total = this.state.confessionalQuestions.length;
+                    const progress = document.getElementById('confessional-progress');
+                    if (progress) progress.textContent = `${answered} of ${total} confessions made`;
+
+                    // Animate to next question
+                    setTimeout(() => {
+                        const currentQ = quizContainer.children[qIdx];
+                        const nextQ = quizContainer.children[qIdx + 1];
+
+                        if (currentQ) {
+                            currentQ.style.opacity = '0';
+                            currentQ.style.transform = 'translateY(-20px)';
+
+                            setTimeout(() => {
+                                currentQ.style.display = 'none';
+
+                                if (nextQ) {
+                                    nextQ.style.display = 'block';
+                                    // Trigger reflow
+                                    void nextQ.offsetWidth;
+                                    nextQ.style.opacity = '1';
+                                    nextQ.style.transform = 'translateY(0)';
+                                } else {
+                                    // Quiz complete, highlight the submit button
+                                    const ctaBtn = document.getElementById('ai-spotlight-btn');
+                                    if (ctaBtn) {
+                                        ctaBtn.style.animation = 'pulse 1.5s ease-in-out infinite';
+                                        ctaBtn.style.boxShadow = '0 0 20px rgba(219, 39, 119, 0.4)';
+                                    }
+                                }
+                            }, 400); // Wait for fade out
+                        }
+                    }, 400); // Delay before transitioning
+                };
+            });
+
+            // Show quiz, hide loading
+            if (loading) loading.style.display = 'none';
+            quizContainer.style.display = '';
+            if (tracker) tracker.style.display = '';
+            const progress = document.getElementById('confessional-progress');
+            if (progress) progress.textContent = `0 of ${questions.length} confessions made`;
+
+        } catch (err) {
+            console.error('Failed to load confessional quiz:', err);
+            if (loading) loading.innerHTML = '<p style="color: #f87171;">Failed to load questions. Please try again.</p>';
+        }
+    },
+
+    _toRoman(num) {
+        const numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+        return numerals[num - 1] || num;
+    },
+
     async handleAISpotlight() {
-        const input = document.getElementById('spotlight-ai-input');
-        const query = input ? input.value.trim() : '';
-        if (!query) {
-            alert('Please describe what kind of movie you\'re in the mood for!');
+        // Read Confessional quiz answers
+        const answers = this.state.confessionalAnswers || {};
+        const questions = this.state.confessionalQuestions || [];
+        const answeredCount = Object.keys(answers).length;
+
+        if (answeredCount === 0) {
+            alert('Answer at least one question before confessing!');
             return;
         }
+
+        // Build a natural language query from quiz answers
+        const moods = Object.values(answers);
+        const moodSummary = [...new Set(moods)].join(', ');
+        const query = `I want movies that feel ${moodSummary}. Based on my personality quiz answers, I crave ${moods.join(' and ')} vibes. Recommend exactly 3 perfect movies.`;
 
         const resultsContainer = this.elements.decisionResults;
         if (!resultsContainer) return;
 
-        // Show loading state
+        // Show themed loading state
         resultsContainer.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                <div style="font-size: 3rem; margin-bottom: 16px; animation: pulse 1.5s ease-in-out infinite;">🕯️</div>
                 <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(139,92,246,0.2); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                <p style="color: #c4b5fd; margin-top: 20px; font-weight: 600; font-size: 1.1rem;">CineMind is analyzing your vibe...</p>
-                <p style="color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-top: 8px; font-style: italic;">"${query}"</p>
+                <p style="color: #c4b5fd; margin-top: 20px; font-weight: 600; font-size: 1.1rem;">The Confessional is processing your confession...</p>
+                <p style="color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-top: 8px; font-style: italic;">Your vibes: ${moodSummary}</p>
             </div>`;
 
         try {
@@ -923,11 +1059,11 @@ export const ui = {
             const aiPicks = await aiService.getSpotlightRecommendations(query);
 
             if (!aiPicks || aiPicks.length === 0) {
-                resultsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">CineMind couldn't find matches for that vibe. Try rephrasing!</p>`;
+                resultsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">The Confessional found no absolution for your sins. Try a different confession!</p>`;
                 return;
             }
 
-            // Fetch full movie details from TMDB/OMDB for each AI pick
+            // Fetch full movie details
             const movieFetches = aiPicks.map(async (rec) => {
                 try {
                     const fetched = await api.fetchMovieByTitle(rec.title || rec.Title);
@@ -951,13 +1087,12 @@ export const ui = {
 
             resultsContainer.innerHTML = '';
 
-            // AI response banner
+            // Confessional verdict banner
             const banner = document.createElement('div');
             banner.style.cssText = 'grid-column: 1/-1; margin-bottom: 16px; padding: 16px 24px; background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(219,39,119,0.08)); border: 1px solid rgba(139,92,246,0.2); border-radius: 14px; display: flex; align-items: center; gap: 12px;';
-            banner.innerHTML = `<i class="fas fa-brain" style="color: #8b5cf6; font-size: 1.3rem;"></i><div><strong style="color: #fff;">CineMind Picks</strong><span style="color: var(--text-muted); margin-left: 8px; font-size: 0.9rem;">for: &quot;${query}&quot;</span></div>`;
+            banner.innerHTML = `<span style="font-size: 1.5rem;">🕯️</span><div><strong style="color: #fff;">Your Penance</strong><span style="color: var(--text-muted); margin-left: 8px; font-size: 0.9rem;">Vibes: ${moodSummary}</span></div>`;
             resultsContainer.appendChild(banner);
 
-            // Clear previous map for this container
             if (!this.state.renderedMoviesMaps) this.state.renderedMoviesMaps = {};
             this.state.renderedMoviesMaps[resultsContainer.id] = {};
 
@@ -965,7 +1100,7 @@ export const ui = {
                 const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
                 const rawPoster = (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fallback;
                 const posterUrl = this.getHighResPoster(rawPoster);
-                const reason = m._aiReason || aiPicks[i]?.reason || 'AI-curated for your vibe.';
+                const reason = m._aiReason || aiPicks[i]?.reason || 'Absolution for your sins.';
 
                 const riskBadge = this.getRegRiskBadgeHTML(m);
 
@@ -977,7 +1112,7 @@ export const ui = {
                     <div class="card-overlay active">
                         <div class="movie-info decision-info">
                             <span style="display: inline-block; padding: 4px 10px; background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(219,39,119,0.2)); border-radius: 6px; font-size: 0.7rem; font-weight: 800; color: #c4b5fd; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
-                                <i class="fas fa-brain" style="margin-right: 4px;"></i> AI Pick #${i + 1}
+                                🕯️ Penance #${i + 1}
                             </span>
                             <h3>${m.Title || m.title}</h3>
                             <p class="movie-meta">
@@ -1013,8 +1148,8 @@ export const ui = {
 
             this.refreshUI();
         } catch (err) {
-            console.error("AI Spotlight Error:", err);
-            resultsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--accent-primary);">Something went wrong. Please try again.</p>`;
+            console.error("Confessional Error:", err);
+            resultsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--accent-primary);">The Confessional encountered an error. Please try again.</p>`;
         }
     },
 
@@ -1500,6 +1635,116 @@ export const ui = {
         this.renderTags();
         this.renderStars();
 
+        // Render Anonymous Community Reviews
+        const { auth } = await import('./src/auth.js');
+        const commToggleBtn = document.getElementById('toggle-community-panel-btn');
+        const commList = document.getElementById('community-reviews-list');
+        const commToggleCount = document.getElementById('community-reviews-toggle-count');
+        const commSidePanel = document.getElementById('community-side-panel');
+        const reviewModalContent = document.getElementById('review-modal-content');
+        const closeCommPanelBtn = document.getElementById('close-community-panel-btn');
+
+        // Reset panel state on load
+        if (commSidePanel && reviewModalContent) {
+            commSidePanel.style.width = '0px';
+            commSidePanel.style.minWidth = '0px';
+            commSidePanel.style.opacity = '0';
+            reviewModalContent.style.maxWidth = '1100px';
+        }
+
+        if (commToggleBtn && commList && commToggleCount) {
+            const globalReviews = auth.getGlobalReviews(movie.imdbID || movie.id);
+            if (globalReviews && globalReviews.length > 0) {
+                commToggleCount.textContent = globalReviews.length;
+                commToggleBtn.style.display = 'flex';
+
+                // Clear the list first
+                commList.innerHTML = '';
+
+                // Load TTS service asynchronously
+                import('./src/tts_service.js').then(({ ttsService }) => {
+                    globalReviews.forEach(r => {
+                        const div = document.createElement('div');
+                        div.style.cssText = "background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; display: flex; gap: 12px; transition: background 0.2s; cursor: crosshair;";
+
+                        const stars = Array(Math.max(1, Math.min(5, r.rating || 0))).fill('<i class="fas fa-star"></i>').join('');
+
+                        div.innerHTML = `
+                            <div class="echo-icon-wrapper" style="width: 32px; height: 32px; border-radius: 50%; background: ${r.profileColor || '#8b5cf6'}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
+                                <i class="fas fa-mask" style="color: rgba(255,255,255,0.8); font-size: 0.8rem; transition: all 0.2s;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                    <span style="color: var(--cin-muted); font-size: 0.75rem; font-weight: 700;">Anonymous Sinner</span>
+                                    <span style="color: var(--cin-accent-2); font-size: 0.7rem;">${stars}</span>
+                                </div>
+                                <p style="color: rgba(255,255,255,0.9); font-size: 0.85rem; line-height: 1.5; font-style: italic;">"${r.text}"</p>
+                            </div>
+                        `;
+
+                        // Hover styling & TTS Binding
+                        const iconEl = div.querySelector('.fa-mask');
+
+                        div.addEventListener('mouseenter', () => {
+                            div.style.background = "rgba(255,255,255,0.06)";
+                            ttsService.playReview(r.text, r.rating, iconEl);
+                        });
+
+                        div.addEventListener('mouseleave', () => {
+                            div.style.background = "rgba(255,255,255,0.03)";
+                            ttsService.stopSpeaking();
+                        });
+
+                        // Stop TTS if user clicks toggle to close panel manually
+                        const closeBtn = document.getElementById('close-community-panel-btn');
+                        if (closeBtn) {
+                            closeBtn.addEventListener('click', () => ttsService.stopSpeaking(), { once: true });
+                        }
+
+                        commList.appendChild(div);
+                    });
+                });
+            } else {
+                commToggleCount.textContent = '0';
+                commToggleBtn.style.display = 'flex'; // Always show to make feature discoverable
+                commList.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: var(--cin-muted); font-style: italic; font-size: 0.85rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center;">
+                         <i class="fas fa-ghost" style="font-size: 2rem; display: block; margin-bottom: 12px; color: rgba(255,255,255,0.1);"></i>
+                         <span>No community echoes found in the abyss.</span><br><span style="margin-top: 8px; display: block; color: var(--cin-muted);">Be the first to leave an anonymous review!</span>
+                    </div>
+                `;
+            }
+
+            // Bind toggle logic cleanly using onclick to avoid duplicates
+            commToggleBtn.onclick = () => {
+                if (commSidePanel.style.width === '0px' || !commSidePanel.style.width) {
+                    reviewModalContent.style.maxWidth = '1450px';
+                    commSidePanel.style.width = '350px';
+                    commSidePanel.style.minWidth = '350px';
+                    // Delay opacity slightly for a smoother slide-then-fade-in effect
+                    setTimeout(() => commSidePanel.style.opacity = '1', 150);
+                } else {
+                    commSidePanel.style.opacity = '0';
+                    setTimeout(() => {
+                        reviewModalContent.style.maxWidth = '1100px';
+                        commSidePanel.style.width = '0px';
+                        commSidePanel.style.minWidth = '0px';
+                    }, 150);
+                }
+            };
+
+            if (closeCommPanelBtn) {
+                closeCommPanelBtn.onclick = () => {
+                    commSidePanel.style.opacity = '0';
+                    setTimeout(() => {
+                        reviewModalContent.style.maxWidth = '1100px';
+                        commSidePanel.style.width = '0px';
+                        commSidePanel.style.minWidth = '0px';
+                    }, 150);
+                };
+            }
+        }
+
         // Log the view event for Trends
         store.logMovieView(detailedMovie);
 
@@ -1656,7 +1901,7 @@ export const ui = {
                 poster: this.state.currentMovie.Poster || this.state.currentMovie.poster,
                 rating: this.state.selectedRating,
                 text: this.elements.reviewText.value,
-                aiMood: aiSentiment,
+                aiMood: (aiSentiment && !aiSentiment.startsWith('[') && !aiSentiment.startsWith('{') && aiSentiment.length < 50) ? aiSentiment : null,
                 date: new Date().toLocaleDateString()
             };
             const { store } = await import('./store.js');
@@ -1775,7 +2020,8 @@ export const ui = {
 
             const avatarUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${r.id}${expression}`;
 
-            const aiMoodHtml = r.aiMood ? `<span class="ai-tag-inline" title="AI Insight"><i class="fas fa-brain"></i> ${r.aiMood}</span>` : "";
+            const cleanAiMood = (r.aiMood && !r.aiMood.startsWith('[') && !r.aiMood.startsWith('{') && r.aiMood.length < 50) ? r.aiMood : null;
+            const aiMoodHtml = cleanAiMood ? `<span class="ai-tag-inline" title="AI Insight"><i class="fas fa-brain"></i> ${cleanAiMood}</span>` : "";
 
             div.innerHTML = `
             <div class="review-header">
@@ -1783,7 +2029,6 @@ export const ui = {
                 <div class="user-info">
                     <h3 style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                         ${r.title}
-                        ${aiMoodHtml}
                     </h3>
                     <span class="review-meta">${r.date} • <span class="review-stars">${starsHtml}</span></span>
                 </div>
