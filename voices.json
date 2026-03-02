@@ -1,0 +1,426 @@
+[
+  {
+    "id": "en-US-alina",
+    "name": "Alina (F)",
+    "styles": [
+      "Conversational"
+    ]
+  },
+  {
+    "id": "en-US-cooper",
+    "name": "Cooper (M)",
+    "styles": [
+      "Angry",
+      "Conversational",
+      "Inspirational",
+      "Newscast",
+      "Promo",
+      "Sad"
+    ]
+  },
+  {
+    "id": "en-US-imani",
+    "name": "Imani (F)",
+    "styles": [
+      "Conversational"
+    ]
+  },
+  {
+    "id": "en-US-wayne",
+    "name": "Wayne (M)",
+    "styles": [
+      "Angry",
+      "Calm",
+      "Conversational",
+      "Inspirational",
+      "Narration",
+      "NewsCast",
+      "Promo",
+      "Sad"
+    ]
+  },
+  {
+    "id": "en-US-daniel",
+    "name": "Daniel (M)",
+    "styles": [
+      "Conversational",
+      "Inspirational",
+      "Sad",
+      "Storytelling"
+    ]
+  },
+  {
+    "id": "en-US-zion",
+    "name": "Zion (M)",
+    "styles": [
+      "Conversational",
+      "Narration",
+      "Promo"
+    ]
+  },
+  {
+    "id": "en-US-riley",
+    "name": "Riley (F)",
+    "styles": [
+      "Narration",
+      "Promo"
+    ]
+  },
+  {
+    "id": "en-US-carter",
+    "name": "Carter (M)",
+    "styles": [
+      "Calm",
+      "Conversational",
+      "Documentary",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-samantha",
+    "name": "Samantha (F)",
+    "styles": [
+      "Angry",
+      "Conversational",
+      "Luxury",
+      "Newscast",
+      "Promo",
+      "Sad"
+    ]
+  },
+  {
+    "id": "en-US-terrell",
+    "name": "Terrell (M)",
+    "styles": [
+      "Calm",
+      "Conversational",
+      "Inspirational",
+      "Narration",
+      "Promo"
+    ]
+  },
+  {
+    "id": "en-US-denzel",
+    "name": "Denzel (M)",
+    "styles": [
+      "Conversational",
+      "Promo"
+    ]
+  },
+  {
+    "id": "en-US-miles",
+    "name": "Miles (M)",
+    "styles": [
+      "Angry",
+      "Calm",
+      "Conversational",
+      "Customer Support Agent",
+      "Inspirational",
+      "Narration",
+      "Newscast",
+      "Pirate",
+      "Promo",
+      "Sad",
+      "Sports Commentary",
+      "Terrified"
+    ]
+  },
+  {
+    "id": "en-US-abigail",
+    "name": "Abigail (F)",
+    "styles": [
+      "Conversational",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-claire",
+    "name": "Claire (F)",
+    "styles": [
+      "Luxury",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-ronnie",
+    "name": "Ronnie (M)",
+    "styles": [
+      "Conversational",
+      "NewsCast",
+      "Promo",
+      "Sad"
+    ]
+  },
+  {
+    "id": "en-US-ryan",
+    "name": "Ryan (M)",
+    "styles": [
+      "Angry",
+      "Conversational",
+      "Narration",
+      "Promo",
+      "Sad"
+    ]
+  },
+  {
+    "id": "en-US-charlotte",
+    "name": "Charlotte (F)",
+    "styles": [
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-natalie",
+    "name": "Natalie (F)",
+    "styles": [
+      "Angry",
+      "Conversational",
+      "Furious",
+      "Inspirational",
+      "Meditative",
+      "Narration",
+      "Newscast Casual",
+      "Newscast Formal",
+      "Promo",
+      "Sad",
+      "Sorrowful",
+      "Terrified"
+    ]
+  },
+  {
+    "id": "en-US-michelle",
+    "name": "Michelle (F)",
+    "styles": [
+      "Conversational"
+    ]
+  },
+  {
+    "id": "en-US-phoebe",
+    "name": "Phoebe (F)",
+    "styles": [
+      "Conversational"
+    ]
+  },
+  {
+    "id": "en-US-caleb",
+    "name": "Caleb (M)",
+    "styles": [
+      "Conversational",
+      "Promo"
+    ]
+  },
+  {
+    "id": "en-US-iris",
+    "name": "Iris (F)",
+    "styles": [
+      "Conversational",
+      "Friendly",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-marcus",
+    "name": "Marcus (M)",
+    "styles": [
+      "Conversational",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-josie",
+    "name": "Josie (F)",
+    "styles": [
+      "Conversational",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-ariana",
+    "name": "Ariana (F)",
+    "styles": [
+      "Conversational",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-daisy",
+    "name": "Daisy (F)",
+    "styles": [
+      "Conversational",
+      "Narration",
+      "NewsCast",
+      "Promo",
+      "Sad"
+    ]
+  },
+  {
+    "id": "en-US-charles",
+    "name": "Charles (M)",
+    "styles": [
+      "Angry",
+      "Calm",
+      "Conversational",
+      "Inspirational",
+      "NewsCast",
+      "Promo",
+      "Sad"
+    ]
+  },
+  {
+    "id": "en-US-julia",
+    "name": "Julia (F)",
+    "styles": [
+      "Angry",
+      "Calm",
+      "Conversational",
+      "Narration",
+      "Newscast",
+      "Promo",
+      "Sad",
+      "Storytelling",
+      "Witch"
+    ]
+  },
+  {
+    "id": "en-US-dylan",
+    "name": "Dylan (M)",
+    "styles": [
+      "Conversational",
+      "Documentary",
+      "Inspirational",
+      "Newscast"
+    ]
+  },
+  {
+    "id": "en-US-evander",
+    "name": "Evander (M)",
+    "styles": [
+      "Conversational",
+      "Friendly",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-delilah",
+    "name": "Delilah (F)",
+    "styles": [
+      "Conversational",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-paul",
+    "name": "Paul (M)",
+    "styles": [
+      "Audiobook",
+      "Conversational",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-lucas",
+    "name": "Lucas (M)",
+    "styles": [
+      "Promo"
+    ]
+  },
+  {
+    "id": "en-US-angela",
+    "name": "Angela (F)",
+    "styles": [
+      "Promo"
+    ]
+  },
+  {
+    "id": "en-US-naomi",
+    "name": "Naomi (F)",
+    "styles": [
+      "Conversational",
+      "Inspirational"
+    ]
+  },
+  {
+    "id": "en-US-alicia",
+    "name": "Alicia (F)",
+    "styles": [
+      "Angry",
+      "Calm",
+      "Conversational"
+    ]
+  },
+  {
+    "id": "en-US-june",
+    "name": "June (F)",
+    "styles": [
+      "Promo"
+    ]
+  },
+  {
+    "id": "en-US-jayden",
+    "name": "Jayden (M)",
+    "styles": [
+      "Conversational",
+      "Friendly",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-ken",
+    "name": "Ken (M)",
+    "styles": [
+      "Angry",
+      "Audiobook",
+      "Calm",
+      "Clown",
+      "Conversational",
+      "Furious",
+      "Newscast",
+      "Promo",
+      "Sad",
+      "Sobbing",
+      "Storytelling",
+      "Wizard"
+    ]
+  },
+  {
+    "id": "en-US-river",
+    "name": "River (NB)",
+    "styles": [
+      "Conversational"
+    ]
+  },
+  {
+    "id": "en-US-maverick",
+    "name": "Maverick (M)",
+    "styles": [
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-amara",
+    "name": "Amara (F)",
+    "styles": [
+      "Conversational",
+      "Narration"
+    ]
+  },
+  {
+    "id": "en-US-edmund",
+    "name": "Edmund (M)",
+    "styles": [
+      "Conversational",
+      "Inspirational",
+      "NewsCast",
+      "Promo",
+      "Sad",
+      "Sports Commentary"
+    ]
+  },
+  {
+    "id": "en-US-molly",
+    "name": "Molly (F)",
+    "styles": [
+      "Conversational"
+    ]
+  }
+]
