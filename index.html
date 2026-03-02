@@ -22,10 +22,10 @@
   <link rel="stylesheet" href="styles/animations.css">
 
   <link rel="stylesheet" href="styles/dna-card.css">
-  <link rel="stylesheet" href="styles.css?v=19">
-  <link rel="manifest" href="manifest.json?v=19">
+  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="manifest" href="manifest.json?v=24">
 
-  <script type="module" src="main.js?v=19"></script>
+  <script type="module" src="main.js?v=24"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -69,6 +69,30 @@
       background: rgba(255, 255, 255, 0.1) !important;
       border-color: #fff !important;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Neon Landing Specific Hotfixes */
+    .sidebar-search .search-btn {
+      position: relative !important;
+      transform: none !important;
+      z-index: 10;
+    }
+
+    .neon-hero {
+      margin-top: 100px !important;
+      /* Push past header */
+    }
+
+    .layout-sidebar {
+      max-width: 250px;
+    }
+
+    .hero-featured-title {
+      border: none !important;
+    }
+
+    .hero-featured-title span {
+      text-shadow: 0 5px 15px rgba(255, 85, 0, 0.4);
     }
   </style>
 </head>
@@ -174,12 +198,12 @@
 
       <button id="mobile-menu-btn" class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
       <nav id="main-nav">
-        <ul>
+        <ul style="display: flex; gap: 15px; font-family: 'Inter', sans-serif;">
           <li><a href="#" data-section="home" class="active">Home</a></li>
-          <li><a href="#" data-section="hidden-gems">Hidden Gems</a></li>
-          <li><a href="#" data-section="cinesins-dna">CineSins DNA</a></li>
-          <li><a href="#" data-section="regions">Regions</a></li>
-          <li><a href="#" data-section="decision-mode" id="nav-decision-mode">Decision Mode</a></li>
+          <li><a href="#" data-section="cinesins-dna">DNA</a></li>
+          <li class="hide-mobile"><a href="#" data-section="decision-mode" id="nav-decision-mode">Decision</a></li>
+          <li class="hide-mobile"><a href="#" data-section="hidden-gems">Gems</a></li>
+          <li class="hide-mobile"><a href="#" data-section="regions">Regions</a></li>
           <li><a href="#" data-section="reviews">Reviews</a></li>
           <li><a href="#" data-section="watchlist">Watchlist</a></li>
         </ul>
@@ -191,61 +215,207 @@
           Offline</div>
         <button id="install-btn"
           style="display:none; background:var(--accent-tertiary); color:#000; padding:6px 16px; border:none; border-radius:var(--radius-round); font-weight:700; cursor:pointer; font-size:0.8rem;">Install</button>
+
+        <!-- New Neon Header Actions -->
+        <button class="header-action-btn search-icon-btn" title="Search"
+          onclick="document.getElementById('search-input').focus();"
+          style="background: transparent; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: 0.3s;"
+          onmouseover="this.style.color='#a855f7'" onmouseout="this.style.color='#fff'"><i
+            class="fas fa-search"></i></button>
+        <button class="header-action-btn login-btn"
+          onclick="document.getElementById('auth-gate').style.display = 'flex';"
+          style="background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: 500; font-family: 'Inter', sans-serif; transition: 0.3s;"
+          onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+          onmouseout="this.style.background='rgba(255,255,255,0.1)'">Login</button>
+        <button class="header-action-btn register-btn"
+          onclick="document.getElementById('auth-gate').style.display = 'flex';"
+          style="background: linear-gradient(135deg, #a855f7, #6d28d9); border: none; color: #fff; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: 500; font-family: 'Inter', sans-serif; transition: 0.3s;"
+          onmouseover="this.style.filter='brightness(1.2)'"
+          onmouseout="this.style.filter='brightness(1)'">Registration</button>
       </div>
       <input type="file" id="import-file" style="display:none;" accept=".json">
     </div>
   </header>
 
   <!-- Home Section -->
-  <section id="home" class="page-section active">
-    <div class="hero-section" id="hero-area">
-      <div class="hero-gradient-overlay"></div>
-      <div class="hero-content container">
-        <h1 class="hero-title">
-          UNMASK YOUR <br><span>CINEMATIC SINS</span>
-        </h1>
+  <section id="home" class="page-section active" style="padding-top: 80px;">
 
-        <p class="hero-subtitle">
-          Transcend the algorithm. Discover the masterpieces you were meant to love, hidden beneath the mainstream
-          noise. Your journey starts with a single sin.
-        </p>
+    <!-- New Neon Hero Component -->
+    <div class="hero-section neon-hero" id="hero-area"
+      style="background-image: url('https://image.tmdb.org/t/p/original/qhb1qOilapbapxWQn9jtRCMwXJF.jpg'); background-size: cover; background-position: center; border-radius: 24px; overflow: hidden; position: relative; max-width: calc(100% - 40px); margin: 20px auto; min-height: 60vh; display: flex; align-items: center; padding: 60px 5%; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+      <div class="hero-gradient-overlay"
+        style="background: linear-gradient(90deg, #0a0a0c 10%, rgba(10,10,12,0.6) 50%, transparent 100%); width: 100%; height: 100%; position: absolute; left: 0; top: 0; z-index: 1;">
+      </div>
 
-        <div class="search-container hero-search" role="search">
-          <div class="autocomplete-wrapper">
-            <input type="text" id="search-input" placeholder="What is your current cinematic craving?"
-              autocomplete="off">
+      <div class="hero-content"
+        style="z-index: 2; display: flex; justify-content: space-between; width: 100%; align-items: center; flex-wrap: wrap; gap: 40px;">
+
+        <div class="hero-left-content" style="max-width: 500px; text-align: left;">
+          <h1 class="hero-featured-title"
+            style="font-family: 'Playfair Display', serif; font-size: clamp(3rem, 6vw, 4.5rem); color: #fff; line-height: 1; margin-bottom: 20px; text-transform: uppercase;">
+            <span style="color: #ff5500;">THE</span> <br> <span
+              style="font-size: clamp(4rem, 8vw, 6.5rem); color: transparent; -webkit-text-stroke: 2px #ff5500;">BIG
+              4</span>
+          </h1>
+          <div class="hero-meta"
+            style="display: flex; gap: 12px; color: #ccc; margin-bottom: 20px; align-items: center; font-size: 0.9rem; font-family: 'Inter', sans-serif;">
+            <span style="border: 1px solid #777; padding: 2px 8px; border-radius: 4px; font-weight: 600;">18+</span>
+            <span>Comedy & Action</span>
+            <span>â€¢</span>
+            <span>2022</span>
           </div>
-          <button id="ai-toggle-btn" class="search-btn ai-toggle" title="Toggle AI Discovery">
-            <i class="fas fa-brain"></i>
-          </button>
-          <button id="search-btn" class="search-btn">SEARCH</button>
+          <p class="hero-description"
+            style="color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 20px; font-family: 'Inter', sans-serif;">
+            The Big 4 is a 2022 Indonesian action comedy film directed by Timo Tjahjanto. Four retired assassins spring
+            back into action when they cross paths with a straight-arrow cop.
+          </p>
+          <p style="color: #a855f7; font-weight: 700; margin-bottom: 10px; font-family: 'Inter', sans-serif;">CINESINS
+            Original Series <span style="color: #fff; font-weight: 400; margin-left: 5px;">Eps 1</span></p>
+          <p style="color: #aaa; margin-bottom: 30px; font-size: 0.9rem;">Movie Series On Going</p>
+
+          <div class="hero-actions" style="display: flex; gap: 15px;">
+            <button class="btn-preview"
+              style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 14px 28px; border-radius: 30px; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s; backdrop-filter: blur(5px);"
+              onmouseover="this.style.background='rgba(255,255,255,0.25)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.15)'"><i class="fas fa-play"></i> Preview</button>
+            <button class="btn-subscribe"
+              style="background: linear-gradient(135deg, #a855f7, #6d28d9); border: none; color: #fff; padding: 14px 34px; border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);"
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'">Subscribe</button>
+          </div>
         </div>
 
-        <div class="premium-cta-group">
-          <button id="zero-scroll-cta" class="premium-btn">
-            <i class="fas fa-magic" style="color: #a855f7;"></i> Find Tonight's Three
-          </button>
-        </div>
-
-        <div id="ai-search-hint"
-          style="display: none; margin-top: 40px; padding: 20px 35px; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 18px; font-size: 1.05rem; color: #fff; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-          <i class="fas fa-brain" style="color: #a855f7; margin-right: 20px; font-size: 1.4rem;"></i>
-          <strong>Discovery Engine Active</strong> â€” Describe a mood, a deep scene detail, or a dream.
+        <div class="hero-right-content drop-shadow-lg"
+          style="display: flex; flex-direction: column; align-items: flex-end; gap: 20px;">
+          <div class="hero-cast-info" style="text-align: right;">
+            <p style="color: #ccc; margin: 0; font-size: 0.9rem; font-family: 'Inter', sans-serif;">Putri Marino sebagai
+            </p>
+            <h2
+              style="color: rgba(255,255,255,0.6); margin: 0; font-family: 'Playfair Display', serif; font-size: 3.5rem; letter-spacing: 5px;">
+              DINA</h2>
+          </div>
+          <div class="hero-thumbnails" style="display: flex; gap: 15px; margin-top: 20px;">
+            <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80"
+              style="width: 140px; height: 90px; border-radius: 12px; object-fit: cover; opacity: 0.6; cursor: pointer; border: 2px solid transparent; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"
+              onmouseover="this.style.opacity=1; this.style.borderColor='#a855f7'; this.style.transform='translateY(-5px)'"
+              onmouseout="this.style.opacity=0.6; this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+            <img src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=300&q=80"
+              style="width: 140px; height: 90px; border-radius: 12px; object-fit: cover; opacity: 0.6; cursor: pointer; border: 2px solid transparent; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"
+              onmouseover="this.style.opacity=1; this.style.borderColor='#a855f7'; this.style.transform='translateY(-5px)'"
+              onmouseout="this.style.opacity=0.6; this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+            <img src="https://images.unsplash.com/photo-1585647347384-2593bc35786b?w=300&q=80"
+              style="width: 140px; height: 90px; border-radius: 12px; object-fit: cover; opacity: 0.6; cursor: pointer; border: 2px solid transparent; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"
+              onmouseover="this.style.opacity=1; this.style.borderColor='#a855f7'; this.style.transform='translateY(-5px)'"
+              onmouseout="this.style.opacity=0.6; this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="container" style="padding-bottom: 100px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px;">
-        <div>
-          <h2 class="section-title" style="text-align: left; margin: 0; font-size: 2rem;">Trending <span
-              style="color: #a855f7;">Sins</span></h2>
-          <p style="color: #666; margin-top: 5px;">The most searched masterpieces in the last 24 hours.</p>
+    <!-- Below Hero: Sidebar & Movie Layout -->
+    <div class="container new-layout-container"
+      style="display: flex; gap: 40px; margin-top: 40px; flex-wrap: wrap; padding-bottom: 100px;">
+
+      <!-- Left Sidebar (Discovery & Updates) -->
+      <div class="layout-sidebar" style="width: 250px; flex-shrink: 0;">
+
+        <h4 style="color: #fff; margin-bottom: 15px; font-size: 1rem; font-family: 'Inter', sans-serif;">Short By</h4>
+        <div class="sort-toggle"
+          style="display: flex; background: #131317; border-radius: 20px; padding: 6px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
+          <button
+            style="flex: 1; border: none; background: transparent; color: #aaa; padding: 12px; border-radius: 15px; cursor: pointer; font-weight: 500; transition: 0.3s;"
+            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#aaa'">Latest</button>
+          <button
+            style="flex: 1; border: none; background: linear-gradient(135deg, #a855f7, #6d28d9); color: #fff; padding: 12px; border-radius: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 5px 15px rgba(168, 85, 247, 0.3);">Newest</button>
         </div>
 
+        <!-- Integrated CineSins AI Search -->
+        <div class="search-container sidebar-search" role="search"
+          style="margin-bottom: 40px; background: transparent; padding: 0; box-shadow: none; display: flex; flex-direction: column; align-items: stretch; border: none;">
+          <h4 style="color: #fff; margin-bottom: 15px; font-size: 1rem; font-family: 'Inter', sans-serif;">Discover
+            Matches</h4>
+          <div class="search-input-box"
+            style="display: flex; background: #131317; border-radius: 16px; padding: 4px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); transition: 0.3s;"
+            onfocusin="this.style.borderColor='#a855f7'; this.style.boxShadow='0 0 15px rgba(168, 85, 247, 0.2)'"
+            onfocusout="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.boxShadow='none'">
+            <div class="autocomplete-wrapper" style="flex: 1;">
+              <input type="text" id="search-input" placeholder="Cinematic craving..." autocomplete="off"
+                style="font-size: 0.95rem !important; padding: 14px 16px !important; width: 100%; border: none; background: transparent; color: #fff; outline: none;">
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button id="ai-toggle-btn" class="search-btn ai-toggle" title="Toggle AI Discovery"
+              style="flex: 1; padding: 14px; border-radius: 14px; height: auto; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s;">
+              <i class="fas fa-brain"></i>
+            </button>
+            <button id="search-btn" class="search-btn"
+              style="flex: 3; padding: 14px; border-radius: 14px; height: auto; background: linear-gradient(135deg, #a855f7, #6d28d9); color: #fff; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; line-height: 1;">SEARCH</button>
+          </div>
+          <button id="zero-scroll-cta"
+            style="margin-top: 15px; width: 100%; justify-content: center; padding: 14px; border-radius: 14px; background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: 0.3s;"
+            onmouseover="this.style.background='rgba(168, 85, 247, 0.2)'"
+            onmouseout="this.style.background='rgba(168, 85, 247, 0.1)'"><i class="fas fa-magic"></i> Tonight's
+            Three</button>
+        </div>
+
+        <h3 style="color: #fff; margin-bottom: 20px; font-size: 1.2rem; font-family: 'Inter', sans-serif;">Update Series
+          Today</h3>
+        <div class="update-list" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="update-item"
+            style="display: flex; align-items: center; gap: 15px; padding: 18px 20px; background: #131317; border-radius: 16px; cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.03);"
+            onmouseover="this.style.background='#1a1a20'; this.style.borderColor='rgba(255,255,255,0.1)'"
+            onmouseout="this.style.background='#131317'; this.style.borderColor='rgba(255,255,255,0.03)'">
+            <i class="fas fa-tv" style="color: #a855f7; font-size: 1.3rem;"></i>
+            <span style="color: #e2e8f0; font-weight: 500; font-size: 0.95rem;">Anime New Series</span>
+          </div>
+          <div class="update-item"
+            style="display: flex; align-items: center; gap: 15px; padding: 18px 20px; background: #131317; border-radius: 16px; cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.03);"
+            onmouseover="this.style.background='#1a1a20'; this.style.borderColor='rgba(255,255,255,0.1)'"
+            onmouseout="this.style.background='#131317'; this.style.borderColor='rgba(255,255,255,0.03)'">
+            <i class="fas fa-fire" style="color: #ff5500; font-size: 1.3rem;"></i>
+            <span style="color: #e2e8f0; font-weight: 500; font-size: 0.95rem;">Trending Now</span>
+          </div>
+        </div>
       </div>
 
-      <div id="movie-results" class="movie-grid" aria-live="polite"></div>
+      <!-- Right Main Content (Grid) -->
+      <div class="layout-main" style="flex: 1; min-width: 0;">
+
+        <!-- Category Tabs -->
+        <div class="category-tabs"
+          style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 30px;">
+          <div class="tabs"
+            style="display: flex; gap: 30px; overflow-x: auto; scrollbar-width: none; font-family: 'Inter', sans-serif;">
+            <span style="color: #fff; font-weight: 600; cursor: pointer; position: relative;">All Movie<div
+                style="position: absolute; bottom: -17px; left: 0; width: 100%; height: 3px; background: #a855f7; border-radius: 2px;">
+              </div></span>
+            <span style="color: #888; font-weight: 500; cursor: pointer; transition: 0.3s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Action</span>
+            <span style="color: #888; font-weight: 500; cursor: pointer; transition: 0.3s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Comedy</span>
+            <span style="color: #888; font-weight: 500; cursor: pointer; transition: 0.3s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Romance</span>
+            <span style="color: #888; font-weight: 500; cursor: pointer; transition: 0.3s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Isekai</span>
+            <span style="color: #888; font-weight: 500; cursor: pointer; transition: 0.3s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Film Movie</span>
+            <span style="color: #888; font-weight: 500; cursor: pointer; transition: 0.3s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Horror</span>
+          </div>
+          <a href="#"
+            style="color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: 600; flex-shrink: 0; margin-left: 20px; font-family: 'Inter', sans-serif;">See
+            More <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #a855f7; margin-left: 5px;"></i></a>
+        </div>
+
+        <div id="ai-search-hint"
+          style="display: none; margin-bottom: 30px; padding: 20px; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 16px; font-size: 1rem; color: #fff;">
+          <i class="fas fa-brain" style="color: #a855f7; margin-right: 15px; font-size: 1.2rem;"></i>
+          <strong>Discovery Engine Active</strong> — Describe a mood, a deep scene detail, or a dream.
+        </div>
+
+        <!-- The Movie Results populate here -->
+        <div id="movie-results" class="neon-grid" aria-live="polite"></div>
+      </div>
     </div>
   </section>
 
