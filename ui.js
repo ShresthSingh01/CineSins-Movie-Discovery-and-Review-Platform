@@ -441,81 +441,6 @@ export const ui = {
             this.elements.watchlistBtn.onclick = () => this.toggleWatchlist();
         }
 
-        // Neon Landing Bindings
-        const btnPreview = document.querySelector('.btn-preview');
-        const btnSubscribe = document.querySelector('.btn-subscribe');
-
-        if (btnPreview) {
-            btnPreview.onclick = () => {
-                alert("Playing CineSins Original Preview: The Big 4!");
-            };
-        }
-        if (btnSubscribe) {
-            btnSubscribe.onclick = () => {
-                document.getElementById('auth-gate').style.display = 'flex';
-            };
-        }
-
-        const zeroScrollBtn = document.getElementById('zero-scroll-cta');
-        if (zeroScrollBtn) {
-            zeroScrollBtn.onclick = (e) => {
-                e.preventDefault();
-                const aTarget = document.querySelector(`nav a[data-section="decision-mode"]`);
-                if (aTarget) aTarget.click();
-            };
-        }
-
-        const categoryTabs = document.querySelectorAll('.category-tabs .tabs span');
-        if (categoryTabs.length > 0) {
-            categoryTabs.forEach(tab => {
-                tab.onclick = () => {
-                    categoryTabs.forEach(t => {
-                        t.style.color = '#888';
-                        const ind = t.querySelector('div');
-                        if (ind) ind.remove();
-                    });
-                    tab.style.color = '#fff';
-                    tab.innerHTML += `<div style="position: absolute; bottom: -17px; left: 0; width: 100%; height: 3px; background: #a855f7; border-radius: 2px;"></div>`;
-
-                    const genre = tab.textContent.trim().toLowerCase();
-                    const allMovies = store.getAllMovies();
-                    let filtered = allMovies;
-                    if (genre !== "all movie") {
-                        if (genre === "film movie") {
-                            filtered = allMovies; // Arbitrary "all" fallback
-                        } else {
-                            filtered = allMovies.filter(m => (m.genres || '').toLowerCase().includes(genre));
-                        }
-                    }
-                    this.renderMovies(filtered, this.elements.movieResults);
-                };
-            });
-        }
-
-        const sortButtons = document.querySelectorAll('.sort-toggle button');
-        if (sortButtons.length === 2) {
-            sortButtons[0].onclick = () => {
-                sortButtons[0].style.background = 'rgba(168, 85, 247, 0.2)';
-                sortButtons[0].style.color = '#fff';
-                sortButtons[1].style.background = 'transparent';
-                sortButtons[1].style.color = '#888';
-
-                let movies = store.getAllMovies();
-                movies.sort((a, b) => parseInt((b.Year || b.year) || 0) - parseInt((a.Year || a.year) || 0));
-                this.renderMovies(movies, this.elements.movieResults);
-            };
-            sortButtons[1].onclick = () => {
-                sortButtons[1].style.background = 'rgba(168, 85, 247, 0.2)';
-                sortButtons[1].style.color = '#fff';
-                sortButtons[0].style.background = 'transparent';
-                sortButtons[0].style.color = '#888';
-
-                let movies = store.getAllMovies();
-                movies.reverse();
-                this.renderMovies(movies, this.elements.movieResults);
-            };
-        }
-
         // Scene Tags Events
         if (this.elements.addTagBtn) {
             this.elements.addTagBtn.onclick = () => this.addTagToCurrentMovie();
@@ -1570,7 +1495,6 @@ export const ui = {
 
             card.innerHTML = `
                 ${riskBadge}
-                <div class="neon-pill"><i class="fas fa-star" style="margin-right:4px;"></i>${m.imdbRating && m.imdbRating !== "N/A" ? m.imdbRating : 'New'}</div>
                 <img src="${cover}" class="movie-card-img" alt="${m.Title || m.title}" onerror="this.src='${fallback}'">
                 <div class="movie-card-overlay">
                     <div class="movie-card-info">
