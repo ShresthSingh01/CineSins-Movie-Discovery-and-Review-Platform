@@ -643,7 +643,53 @@ nav a:hover {
   transform: scale(1.1);
 }
 
+/* Neon Grid Pattern */
+.neon-grid {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 10px 0 30px;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
 
+.neon-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.neon-grid .movie-card {
+  flex: 0 0 220px;
+  aspect-ratio: 2/3;
+  border-radius: 16px;
+  position: relative;
+  overflow: visible;
+  /* to allow pill absolute positioning outside inner box if needed */
+}
+
+.neon-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #fff;
+  color: #a855f7;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Landing Layout Constraints */
+@media (max-width: 900px) {
+  .new-layout-container {
+    flex-direction: column;
+  }
+
+  .layout-sidebar {
+    width: 100% !important;
+  }
+}
 
 .card-overlay {
   position: absolute;
