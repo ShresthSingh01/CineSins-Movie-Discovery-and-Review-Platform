@@ -224,18 +224,17 @@ nav a:hover {
 }
 
 /* ==========================================================================
-   CineSins Theatre - Hero discovery Hub
+   CineSins Theatre - Hero discovery Hub (Legacy Rules Retained for reference)
    ========================================================================== */
 
 .hero-section {
   position: relative !important;
-  min-height: 98vh !important;
+  min-height: 85vh !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding-top: 100px !important;
-  background: radial-gradient(circle at center, rgba(255, 0, 0, 0.15) 0%, transparent 80%) !important;
-  padding: 100px 5% 60px !important;
+  padding-top: 120px !important;
+  padding-bottom: 60px !important;
   overflow: hidden;
   z-index: 10;
 }
