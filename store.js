@@ -73,6 +73,66 @@ export const store = {
         return list;
     },
 
+    // --- SinLine Community Social Feed ---
+
+    getSinLinePosts() {
+        return JSON.parse(localStorage.getItem("cinesins_sinline_posts")) || [];
+    },
+
+    addSinLinePost(post) {
+        const posts = this.getSinLinePosts();
+        // Add new post to the top of the feed
+        posts.unshift(post);
+        localStorage.setItem("cinesins_sinline_posts", JSON.stringify(posts));
+        return posts;
+    },
+
+    likeSinLinePost(postId) {
+        const posts = this.getSinLinePosts();
+        const index = posts.findIndex(p => p.id === postId);
+        if (index > -1) {
+            posts[index].likes = (posts[index].likes || 0) + 1;
+            posts[index].likedByUser = true;
+            localStorage.setItem("cinesins_sinline_posts", JSON.stringify(posts));
+            return posts[index];
+        }
+        return null;
+    },
+
+    seedSinLineMockData() {
+        if (!localStorage.getItem("cinesins_sinline_posts")) {
+            const mockPosts = [
+                {
+                    id: "post_1",
+                    author: { name: "CinePhile_99", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=CinePhile_99" },
+                    timestamp: Date.now() - 7200000, // 2 hours ago
+                    content: "Dune 2 is just Spicy Star Wars with better sound design. Fight me.",
+                    likes: 42,
+                    comments: 12
+                },
+                {
+                    id: "post_2",
+                    author: { name: "SarahsWatch", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=SarahsWatch&style=circle" },
+                    timestamp: Date.now() - 259200000, // 3 days ago
+                    type: "poll",
+                    content: "Saltburn: Masterpiece or Mess? 🛁",
+                    movieTag: "Saltburn",
+                    likes: 134,
+                    comments: 56
+                },
+                {
+                    id: "post_3",
+                    author: { name: "FilmBro2001", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=FilmBro&mouth=smile" },
+                    timestamp: Date.now() - 345600000, // 4 days ago
+                    content: "Horror movies in 2024 need to stop relying on jumpscares. Practical effects still holding up 40 years later > CGI.",
+                    likes: 89,
+                    comments: 24
+                }
+            ];
+            localStorage.setItem("cinesins_sinline_posts", JSON.stringify(mockPosts));
+        }
+    },
+
     getAllMovies() {
         const movies = JSON.parse(localStorage.getItem("allMovies")) || [];
         const validMovies = movies.filter(m => m && m.id && m.title);
