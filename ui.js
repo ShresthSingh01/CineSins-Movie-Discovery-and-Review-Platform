@@ -143,7 +143,10 @@ export const ui = {
             dnaCardCloseBtn: document.getElementById("close-export-btn"),
             dnaCardDownloadBtn: document.getElementById("download-card-btn"),
             dnaCardExportTrigger: document.getElementById("export-taste-btn"),
-            dnaRefreshBtn: document.getElementById("refresh-dna-btn")
+            dnaRefreshBtn: document.getElementById("refresh-dna-btn"),
+            sinlineFeedContainer: document.getElementById("sinline-feed-container"),
+            sinlinePostInput: document.getElementById("sinline-post-input"),
+            sinlinePostBtn: document.getElementById("sinline-post-btn")
         };
 
         this.setupNavigation();
@@ -394,6 +397,7 @@ export const ui = {
                 if (section === 'reviews') this.loadUserReviews();
                 if (section === 'watchlist') this.loadWatchlist();
                 if (section === 'cinesins-dna') this.loadCinemaDNA();
+                if (section === 'sinline') this.loadSinLine();
                 if (section === 'regions') this.loadRegions();
                 if (section === 'hidden-gems') this.loadHiddenGems();
 
@@ -439,6 +443,9 @@ export const ui = {
         }
         if (this.elements.watchlistBtn) {
             this.elements.watchlistBtn.onclick = () => this.toggleWatchlist();
+        }
+        if (this.elements.sinlinePostBtn) {
+            this.elements.sinlinePostBtn.onclick = () => this.createSinLinePost();
         }
 
         // Scene Tags Events
@@ -1953,16 +1960,138 @@ export const ui = {
         }
     },
 
+    // --- SinLine Community Social Feed ---
+
+    loadSinLine() {
+        if (!this.elements.sinlineFeedContainer) return;
+
+        // Seed mock data if empty
+        store.seedSinLineMockData();
+        const posts = store.getSinLinePosts();
+
+        this.elements.sinlineFeedContainer.innerHTML = "";
+
+        if (posts.length === 0) {
+            this.elements.sinlineFeedContainer.innerHTML = "<p style='color: #94a3b8; text-align: center; padding: 20px;'>No sins here yet. Be the first to confess!</p>";
+            return;
+        }
+
+        posts.forEach(post => {
+            const isLiked = post.likedByUser;
+            const likeColor = isLiked ? "#ef4444" : "#94a3b8";
+
+            let extraHtml = "";
+            if (post.type === "poll") {
+                extraHtml = `
+               <div style="margin-top: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); padding: 12px;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                   <span style="font-size: 0.9rem; color: white; font-weight: bold;">${post.movieTag || "Movie"}</span>
+                   <span style="font-size: 0.8rem; color: #94a3b8;">4.2k votes • 1h left</span>
+                 </div>
+                 <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                   <div style="width: 75%; height: 100%; background: #eab308;"></div>
+                 </div>
+               </div>`;
+            }
+
+            const div = document.createElement("div");
+            div.className = "bg-[#18181b] border border-white/10 rounded-2xl p-6 hover:border-[#3b82f6]/50 transition-colors shadow-lg sin-post-card";
+            div.style.background = "#18181b";
+            div.style.border = "1px solid rgba(255,255,255,0.1)";
+            div.style.borderRadius = "16px";
+            div.style.padding = "24px";
+            div.style.marginBottom = "20px";
+
+            div.innerHTML = `
+              <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                 <img src="${post.author.avatar}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: #000;">
+                 <div>
+                    <div style="color: white; font-weight: bold; font-size: 0.95rem;">${post.author.name}</div>
+                    <div style="color: #94a3b8; font-size: 0.8rem;">${this.formatTime(post.timestamp)}</div>
+                 </div>
+              </div>
+              <div style="color: rgba(255,255,255,0.9); font-size: 1.05rem; line-height: 1.5;">
+                  ${post.content}
+              </div>
+              ${extraHtml}
+              <div style="display: flex; gap: 24px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                  <button class="like-btn" data-id="${post.id}" style="background: transparent; border: none; color: ${likeColor}; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s;">
+                      <i class="fas fa-heart"></i> <span class="like-count">${post.likes || 0}</span>
+                  </button>
+                  <button style="background: transparent; border: none; color: #94a3b8; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                      <i class="fas fa-comment"></i> <span>${post.comments || 0}</span>
+                  </button>
+                  <button style="background: transparent; border: none; color: #94a3b8; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; margin-left: auto;">
+                      <i class="fas fa-share"></i>
+                  </button>
+              </div>
+            `;
+
+            div.querySelector(".like-btn").onclick = (e) => {
+                const btn = e.currentTarget;
+                if (typeof gsap !== 'undefined') {
+                    gsap.to(btn, { scale: 1.2, duration: 0.1, yoyo: true, repeat: 1 });
+                }
+                const updated = store.likeSinLinePost(post.id);
+                if (updated) {
+                    btn.style.color = "#ef4444";
+                    btn.querySelector(".like-count").textContent = updated.likes;
+                }
+            };
+
+            this.elements.sinlineFeedContainer.appendChild(div);
+        });
+
+        if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
+            const cards = this.elements.sinlineFeedContainer.querySelectorAll('.sin-post-card');
+            gsap.fromTo(cards,
+                { opacity: 0, y: 30 },
+                { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out", clearProps: "transform,opacity" }
+            );
+            ScrollTrigger.refresh();
+        }
+    },
+
+    formatTime(timestamp) {
+        const diff = Date.now() - timestamp;
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return "Just now";
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        return `${Math.floor(hrs / 24)}d ago`;
+    },
+
+    createSinLinePost() {
+        const input = this.elements.sinlinePostInput;
+        if (!input || !input.value.trim()) return;
+
+        const content = input.value.trim();
+        const post = {
+            id: 'post_' + Date.now(),
+            author: { name: "CurrentUser", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=CurrentUser&mouth=smile" },
+            timestamp: Date.now(),
+            content: content,
+            likes: 0,
+            comments: 0
+        };
+
+        store.addSinLinePost(post);
+        input.value = "";
+
+        this.loadSinLine();
+    },
+
     loadUserReviews() {
         if (!this.elements.reviewsList) return;
         const reviews = store.getReviews();
 
         if (!reviews.length) {
             this.elements.reviewsList.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 60px; opacity: 0.5;">
-                    <i class="fas fa-film" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                    <p style="font-size: 1.2rem; font-weight: 500;">No reviews yet.</p>
-                    <p style="color: var(--text-muted);">Start your journey by reviewing a movie!</p>
+                <div style="grid-column: 1/-1; text-align: center; padding: 80px 20px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 20px; background: rgba(0,0,0,0.2);">
+                    <i class="fas fa-film" style="font-size: 3rem; margin-bottom: 20px; color: #8b5cf6; opacity: 0.5;"></i>
+                    <p style="font-size: 1.2rem; font-weight: 500; color: white;">Your scrapbook is empty.</p>
+                    <p style="color: #94a3b8;">Start your journey by reviewing a movie!</p>
                 </div>`;
             return;
         }
@@ -1976,13 +2105,19 @@ export const ui = {
             if (!r || typeof r !== 'object' || !r.id) return;
 
             const div = document.createElement("div");
-            div.className = "review-card premium-card";
+            // Add scrapbook specific tailwind inline-styled classes
+            div.className = "bg-[#18181b] border border-white/10 rounded-2xl p-6 relative group hover:border-[#8b5cf6]/50 transition-colors shadow-lg flex flex-col";
+            div.style.background = "#18181b";
+            div.style.border = "1px solid rgba(255,255,255,0.1)";
+            div.style.borderRadius = "16px";
+            div.style.padding = "24px";
+            div.style.position = "relative";
+            div.style.display = "flex";
+            div.style.flexDirection = "column";
 
             let reviewHtml = "";
-            let expandHtml = "";
 
             const text = r.text || "";
-            // Keep clamping logic simple via CSS, but add "Read More" button if text is long
             const isLong = text.length > 150;
 
             const sentences = text.match(/[^.!?]+[.!?]*\s*/g) || [text];
@@ -1991,67 +2126,63 @@ export const ui = {
 
             if (hasSpoiler) {
                 const splitAt = Math.min(2, Math.max(0, spoilerIndex));
-                const safePart = splitAt > 0 ? sentences.slice(0, splitAt).join("").trim() : "<i style='color:#e74c3c'>[Spoiler Warning]</i>";
+                const safePart = splitAt > 0 ? sentences.slice(0, splitAt).join("").trim() : "<i style='color:#ef4444'>[Spoiler Warning]</i>";
                 const spoilerPart = sentences.slice(splitAt).join("").trim();
 
                 reviewHtml = `
-                <div class="spoiler-container">
-                  <p class="safe-text">${safePart}</p>
+                <div class="spoiler-container" style="font-style: italic; border-left: 2px solid rgba(219, 39, 119, 0.5); padding-left: 12px; margin-bottom: 20px;">
+                  <p class="safe-text" style="color: rgba(255,255,255,0.8); font-size: 0.95rem;">"${safePart}"</p>
                   ${spoilerPart ? `
-                  <div class="spoiler-content collapsed-review">
-                    <p class="review-body">${spoilerPart}</p>
+                  <div class="spoiler-content collapsed-review" style="display: none;">
+                    <p class="review-body" style="color: rgba(255,255,255,0.6); margin-top: 8px;">${spoilerPart}</p>
                   </div>
-                  <button class="spoiler-btn ripple-btn"><i class="fas fa-eye-slash"></i> Reveal Spoiler</button>
+                  <button class="spoiler-btn hover:text-[#db2777] transition-colors" style="margin-top: 10px; font-size: 0.8rem; color: #94a3b8; border: none; background: transparent; cursor: pointer; padding: 0;" onclick="this.previousElementSibling.style.display = this.previousElementSibling.style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.previousElementSibling.style.display === 'none' ? '<i class=\\'fas fa-eye-slash\\'></i> Reveal Spoiler' : '<i class=\\'fas fa-eye\\'></i> Hide Spoiler';"><i class="fas fa-eye-slash"></i> Reveal Spoiler</button>
                   ` : ''}
                 </div>`;
             } else {
                 reviewHtml = `
-                <div class="review-text-container ${isLong ? 'has-overflow' : ''}">
-                    <p class="review-body ${isLong ? 'clamped' : ''}">${text}</p>
-                    ${isLong ? '<button class="read-more-btn">Read More</button>' : ''}
+                <div class="review-text-container" style="font-style: italic; border-left: 2px solid rgba(219, 39, 119, 0.5); padding-left: 12px; margin-bottom: 20px;">
+                    <p class="review-body" style="color: rgba(255,255,255,0.8); font-size: 0.95rem; line-height: 1.6;">"${text}"</p>
                 </div>`;
             }
 
             // Generate animated star string
             const fullStars = "★".repeat(r.rating);
             const emptyStars = "☆".repeat(5 - r.rating);
-            let starsHtml = `<span class="stars-fill">${fullStars}</span><span class="stars-empty">${emptyStars}</span>`;
-
-            // Dynamic Avatar Mapping based on rating
-            let expression = "";
-            if (r.rating >= 4) {
-                // Happy mood
-                expression = "&mouth=smile&eyes=default&eyebrows=raisedExcited";
-            } else if (r.rating >= 2) {
-                // Neutral mood
-                expression = "&mouth=serious&eyes=default&eyebrows=default";
-            } else {
-                // Sad mood
-                expression = "&mouth=sad&eyes=cry&eyebrows=sadConcerned";
-            }
-
-            const avatarUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${r.id}${expression}`;
-
-            const cleanAiMood = (r.aiMood && !r.aiMood.startsWith('[') && !r.aiMood.startsWith('{') && r.aiMood.length < 50) ? r.aiMood : null;
-            const aiMoodHtml = cleanAiMood ? `<span class="ai-tag-inline" title="AI Insight"><i class="fas fa-brain"></i> ${cleanAiMood}</span>` : "";
+            let starsHtml = `<span style="color: #eab308; letter-spacing: 2px;">${fullStars}</span><span style="color: rgba(255,255,255,0.2); letter-spacing: 2px;">${emptyStars}</span>`;
 
             div.innerHTML = `
-            <div class="review-header">
-                <img src="${avatarUrl}" alt="Avatar" class="user-avatar">
-                <div class="user-info">
-                    <h3 style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                        ${r.title}
-                    </h3>
-                    <span class="review-meta">${r.date} • <span class="review-stars">${starsHtml}</span></span>
-                </div>
+            <!-- Star rating top right -->
+            <div style="position: absolute; top: 24px; right: 24px; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; background: rgba(234, 179, 8, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(234, 179, 8, 0.2);">
+                ${starsHtml}
             </div>
-            <div class="review-content">
+            
+            <!-- Title and Meta -->
+            <h3 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 900; color: white; margin: 0 0 4px 0; padding-right: 80px; line-height: 1.1;">${r.title}</h3>
+            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 20px;">
+                ${r.date} • Logged
+            </div>
+            
+            <!-- Notes / Review Text -->
+            <div style="flex-grow: 1;">
                 ${reviewHtml}
             </div>
-            <div class="review-actions">
-                <button class="edit btn-action"><i class="fas fa-edit"></i> Edit</button>
-                <button class="delete btn-action btn-danger"><i class="fas fa-trash"></i> Delete Review</button>
+            
+            <!-- Actions Footer -->
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: auto;">
+                <button class="edit" style="font-size: 0.8rem; color: #94a3b8; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: color 0.2s;"><i class="fas fa-edit"></i> Edit</button>
+                <button class="delete" style="font-size: 0.8rem; color: rgba(239, 68, 68, 0.8); background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: color 0.2s;"><i class="fas fa-trash"></i> Delete</button>
             </div>`;
+
+            // Add slight hover effects via script since inline styles don't support pseudo-classes well
+            const editBtn = div.querySelector(".edit");
+            editBtn.onmouseover = () => editBtn.style.color = "white";
+            editBtn.onmouseout = () => editBtn.style.color = "#94a3b8";
+
+            const deleteBtn = div.querySelector(".delete");
+            deleteBtn.onmouseover = () => deleteBtn.style.color = "#ef4444";
+            deleteBtn.onmouseout = () => deleteBtn.style.color = "rgba(239, 68, 68, 0.8)";
+
             div.querySelector(".edit").onclick = async () => {
                 const movie = await api.fetchMovieById(r.id);
                 if (movie) this.openModal(movie);
@@ -3040,6 +3171,7 @@ export const ui = {
                 const { store } = await import('./store.js');
                 store.saveMoviesBatch(validMovies);
                 this.renderMovies(validMovies, this.elements.movieResults);
+                this.loadHeroTrending(validMovies);
                 this.completeLoader();
             } else {
                 throw new Error("No movies returned from batch fetch.");
@@ -3061,6 +3193,131 @@ export const ui = {
                     </div>`;
             }
         }
+    },
+
+    async loadHeroTrending(movies) {
+        if (!movies || movies.length < 3) return;
+
+        // Find the right column div that holds the trending cards
+        const heroTrendingContainer = document.querySelector('.hero-section .lg\\:w-7\\/12');
+        if (!heroTrendingContainer) return;
+
+        // Take top 3 movies
+        const topMovies = movies.slice(0, 3);
+        const mainMovie = topMovies[0];
+        const mini1 = topMovies[1];
+        const mini2 = topMovies[2];
+
+        // Format genres helper
+        const getGenreHighlight = (genresStr, defaultHighlight) => {
+            if (!genresStr) return defaultHighlight;
+            const fg = genresStr.split(',')[0].trim().toUpperCase();
+            if (fg === "ACTION") return "THRILLS";
+            if (fg === "SCI-FI") return "EPIC";
+            if (fg === "DRAMA") return "INTENSE";
+            if (fg === "COMEDY") return "CAMPY";
+            if (fg === "ROMANCE") return "HEART";
+            return fg.substring(0, 10);
+        };
+
+        const getFallbackPoster = (m) => {
+            const fb = "https://placehold.co/800x1200/111/555?text=No+Poster";
+            return (m.Poster && m.Poster !== "N/A") ? m.Poster : (m.poster && m.poster !== "N/A") ? m.poster : fb;
+        };
+
+        // Reconstruct the HTML
+        heroTrendingContainer.innerHTML = `
+            <!-- Feed Item 1 (Main) -->
+            <div
+              class="group relative rounded-3xl overflow-hidden bg-[#18181b] border border-white/10 hover:border-[#8b5cf6]/50 transition-all duration-500 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] cursor-pointer"
+              onclick="document.querySelector('.movie-card[data-id=\\'${mainMovie.imdbID || mainMovie.id}\\']')?.click()"
+              style="border-radius: 24px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.05); background: #121214; transition: 0.3s;">
+              <div class="aspect-[21/9] w-full relative overflow-hidden" style="min-height: 280px;">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0c]/95 via-[#0a0a0c]/40 to-transparent z-10"
+                  style="position: absolute; inset: 0; background: linear-gradient(to top, #0a0a0c 10%, transparent 60%); z-index: 10;">
+                </div>
+                <div
+                  style="background-image: url('${getFallbackPoster(mainMovie)}'); background-size: cover; background-position: center; position: absolute; inset: 0;"
+                  class="w-full h-full transition-transform duration-700 group-hover:scale-105 opacity-80 backdrop-blur-sm"></div>
+                <div class="absolute top-4 right-4 z-20"
+                  style="position: absolute; top: 15px; right: 15px; z-index: 20;">
+                  <span
+                    class="bg-[#8b5cf6]/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 shadow-lg flex items-center gap-1"
+                    style="background: rgba(139, 92, 246, 0.8); backdrop-filter: blur(10px); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2);">
+                    <i class="fas fa-fire" style="color: #fb923c;"></i> Trending #1
+                  </span>
+                </div>
+              </div>
+              <div class="p-6 relative z-20"
+                style="position: absolute; bottom: 0; left: 0; right: 0; padding: 30px; z-index: 20;">
+                <h3 class="text-3xl font-black text-white mb-2 tracking-tight"
+                  style="font-family: var(--font-heading); font-size: 2.2rem; margin: 0 0 10px 0;">${mainMovie.Title || mainMovie.title}</h3>
+                <div class="flex items-center gap-3 text-sm mb-4"
+                  style="display: flex; gap: 12px; margin-bottom: 20px; color: #888; font-size: 0.85rem; align-items: center;">
+                  <span class="text-[#eab308] font-bold bg-[#eab308]/10 px-2 py-0.5 rounded border border-[#eab308]/20"
+                    style="color: #eab308; background: rgba(234, 179, 8, 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(234, 179, 8, 0.2);">${mainMovie.imdbRating || '8.5'} Rating</span>
+                  <span>${mainMovie.Year || mainMovie.year}</span>
+                  <span>•</span>
+                  <span>${mainMovie.genres?.split(',')[0]}</span>
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed mb-6"
+                  style="color: rgba(255,255,255,0.7); line-height: 1.5; font-size: 0.95rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                  ${mainMovie.Plot || mainMovie.plot}</p>
+              </div>
+            </div>
+
+            <!-- Mini Feed Grid -->
+            <div class="grid grid-cols-2 gap-4"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+              
+              <!-- Mini Item 1 -->
+              <div class="group relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 cursor-pointer"
+                style="min-height: 200px; border-radius: 16px; position: relative; border: 1px solid rgba(255,255,255,0.05); overflow: hidden;"
+                onclick="document.querySelector('.movie-card[data-id=\\'${mini1.imdbID || mini1.id}\\']')?.click()">
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent z-10 pointer-events-none"
+                  style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent 50%); z-index: 10; pointer-events: none;">
+                </div>
+                <div
+                  style="background-image: url('${getFallbackPoster(mini1)}'); background-size: cover; background-position: center; position: absolute; inset: 0;"
+                  class="w-full h-full transition-transform duration-700 group-hover:scale-110"></div>
+                <div class="absolute bottom-4 left-4 z-20 w-full pr-8"
+                  style="position: absolute; bottom: 15px; left: 15px; z-index: 20;">
+                  <span
+                    class="bg-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1 inline-block tracking-wider"
+                    style="background: #ec4899; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; display: inline-block;">
+                    ${getGenreHighlight(mini1.genres, "CAMPY")}
+                  </span>
+                  <h4 class="text-white font-bold text-lg leading-tight"
+                    style="font-family: var(--font-heading); margin: 0; font-size: 1.2rem;">${mini1.Title || mini1.title}</h4>
+                </div>
+              </div>
+
+              <!-- Mini Item 2 -->
+              <div class="group relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 cursor-pointer"
+                style="min-height: 200px; border-radius: 16px; position: relative; border: 1px solid rgba(255,255,255,0.05); overflow: hidden;"
+                onclick="document.querySelector('.movie-card[data-id=\\'${mini2.imdbID || mini2.id}\\']')?.click()">
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent z-10 pointer-events-none"
+                  style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent 50%); z-index: 10; pointer-events: none;">
+                </div>
+                <div
+                  style="background-image: url('${getFallbackPoster(mini2)}'); background-size: cover; background-position: center; position: absolute; inset: 0;"
+                  class="w-full h-full transition-transform duration-700 group-hover:scale-110"></div>
+                <div class="absolute bottom-4 left-4 z-20 w-full pr-8"
+                  style="position: absolute; bottom: 15px; left: 15px; z-index: 20;">
+                  <span
+                    class="bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1 inline-block tracking-wider"
+                    style="background: #3b82f6; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; display: inline-block;">
+                    ${getGenreHighlight(mini2.genres, "MELANCHOLY")}
+                  </span>
+                  <h4 class="text-white font-bold text-lg leading-tight"
+                    style="font-family: var(--font-heading); margin: 0; font-size: 1.2rem;">${mini2.Title || mini2.title}</h4>
+                </div>
+              </div>
+
+            </div>
+        `;
     },
 
     async loadHiddenGems() {
