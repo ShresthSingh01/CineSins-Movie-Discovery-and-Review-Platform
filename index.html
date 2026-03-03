@@ -178,7 +178,7 @@
           <li><a href="#" data-section="home" class="active">Home</a></li>
           <li><a href="#" data-section="hidden-gems">Hidden Gems</a></li>
           <li><a href="#" data-section="cinesins-dna">CineSins DNA</a></li>
-          <li><a href="#" data-section="regions">Regions</a></li>
+          <li><a href="#" data-section="sinline" id="nav-sinline">The Sin-Line</a></li>
           <li><a href="#" data-section="decision-mode" id="nav-decision-mode">Decision Mode</a></li>
           <li><a href="#" data-section="reviews">Reviews</a></li>
           <li><a href="#" data-section="watchlist">Watchlist</a></li>
@@ -198,42 +198,183 @@
 
   <!-- Home Section -->
   <section id="home" class="page-section active">
-    <div class="hero-section" id="hero-area">
-      <div class="hero-gradient-overlay"></div>
-      <div class="hero-content container">
-        <h1 class="hero-title">
-          UNMASK YOUR <br><span>CINEMATIC SINS</span>
-        </h1>
+    <!-- Legacy Search Container Wrapper (Kept in DOM but hidden to ensure UI.js bindings don't crash) -->
+    <div id="hero-area" style="display: none;">
+      <div class="search-container hero-search" role="search" style="display: none;">
+        <!-- ui.js will bind to the elements outside this wrapper now via querySelector -->
+      </div>
+      <button id="zero-scroll-cta" style="display: none;"></button>
+    </div>
 
-        <p class="hero-subtitle">
-          Transcend the algorithm. Discover the masterpieces you were meant to love, hidden beneath the mainstream
-          noise. Your journey starts with a single sin.
-        </p>
+    <!-- Stitch Vibe Check Hero Section -->
+    <section
+      class="hero-section relative isolate pt-14 pb-20 lg:pt-24 lg:pb-32 overflow-hidden bg-[#0a0a0c] min-h-[90vh] flex items-center">
+      <!-- Ambient Glows -->
+      <div
+        class="absolute top-0 right-0 -z-10 w-[600px] h-[600px] bg-[#8b5cf6]/20 rounded-full blur-[120px] opacity-40 translate-x-1/3 -translate-y-1/4">
+      </div>
+      <div
+        class="absolute bottom-0 left-0 -z-10 w-[500px] h-[500px] bg-[#db2777]/20 rounded-full blur-[100px] opacity-30 -translate-x-1/3 translate-y-1/4">
+      </div>
 
-        <div class="search-container hero-search" role="search">
-          <div class="autocomplete-wrapper">
-            <input type="text" id="search-input" placeholder="What is your current cinematic craving?"
-              autocomplete="off">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full" style="max-width: 1400px; padding-top: 80px;">
+        <div class="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start justify-between"
+          style="display: flex; gap: 40px; flex-wrap: wrap;">
+
+          <!-- Left Header & Search -->
+          <div class="flex flex-col gap-6 relative z-10 lg:w-5/12 lg:sticky lg:top-32"
+            style="margin-top: 20px; flex: 1; min-width: 400px;">
+            <div
+              class="inline-flex items-center gap-2 rounded-full border border-[#8b5cf6]/30 bg-[#8b5cf6]/10 px-3 py-1 text-sm text-[#c084fc] backdrop-blur-sm w-fit"
+              style="display: inline-flex; width: fit-content; padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.1); color: #c084fc; font-size: 0.8rem; align-items: center; gap: 8px;">
+              <span class="relative flex h-2 w-2">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#8b5cf6] opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-[#8b5cf6]"></span>
+              </span>
+              AI-Powered Discovery Active
+            </div>
+
+            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[0.9] font-display"
+              style="font-family: var(--font-heading); font-size: clamp(3rem, 6vw, 5.5rem); line-height: 0.95; letter-spacing: -2px; margin: 15px 0;">
+              VIBE <br />
+              <span
+                class="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] via-[#db2777] to-[#8b5cf6] animate-gradient"
+                style="background: linear-gradient(to right, #8b5cf6, #db2777, #8b5cf6); -webkit-background-clip: text; color: transparent; background-size: 200% auto;">CHECK.</span>
+            </h1>
+
+            <p class="text-lg text-slate-400 max-w-lg"
+              style="line-height: 1.6; color: rgba(255, 255, 255, 0.6); max-width: 500px; font-size: 1.1rem; margin-bottom: 20px;">
+              Filter your cinematic feed by mood, aesthetic, or that weird specific feeling you have at 3 AM.
+            </p>
+
+            <!-- Retained Interactive AI Search Bar -->
+            <div class="relative mt-4 group w-full" style="max-width: 550px; position: relative;">
+              <div
+                class="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#8b5cf6] via-[#db2777] to-[#eab308] opacity-50 blur transition duration-500 group-hover:opacity-75"
+                style="position: absolute; inset: -4px; border-radius: 16px; background: linear-gradient(to right, #8b5cf6, #db2777, #eab308); opacity: 0.4; filter: blur(8px); z-index: 0;">
+              </div>
+              <div
+                class="relative flex items-center bg-[#18181b] rounded-xl p-2 shadow-2xl border border-white/10 w-full flex-row"
+                id="hero-search-container"
+                style="position: relative; z-index: 1; background: #121214; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 6px; display: flex; align-items: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+                <div class="pl-3" style="color: #a855f7; padding-left: 15px; font-size: 1.2rem;">
+                  <i class="fas fa-brain"></i>
+                </div>
+                <div class="autocomplete-wrapper" style="flex: 1; min-width: 0;">
+                  <input
+                    class="w-full bg-transparent border-0 focus:ring-0 text-white placeholder:text-slate-500 px-4 py-3 text-base"
+                    placeholder="Describe a mood or dream..." type="text" id="search-input" autocomplete="off"
+                    style="width: 100%; outline: none; background: transparent; border: none; padding: 12px 15px; color: white; font-size: 1rem;" />
+                </div>
+                <button id="ai-toggle-btn"
+                  class="bg-[#18181b] border border-white/20 text-slate-400 rounded-lg p-3 hover:text-[#8b5cf6] transition-colors mx-2"
+                  title="Toggle AI Discovery"
+                  style="background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #888; padding: 12px; margin-right: 8px; cursor: pointer; transition: 0.2s;">
+                  <i class="fas fa-sliders-h"></i>
+                </button>
+                <button id="search-btn"
+                  class="bg-white text-black rounded-lg p-3 font-bold hover:scale-105 transition-transform"
+                  style="background: white; color: black; border: none; border-radius: 8px; padding: 12px 20px; font-weight: bold; cursor: pointer; transition: 0.2s;">
+                  <i class="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
           </div>
-          <button id="ai-toggle-btn" class="search-btn ai-toggle" title="Toggle AI Discovery">
-            <i class="fas fa-brain"></i>
-          </button>
-          <button id="search-btn" class="search-btn">SEARCH</button>
-        </div>
 
-        <div class="premium-cta-group">
-          <button id="zero-scroll-cta" class="premium-btn">
-            <i class="fas fa-magic" style="color: #a855f7;"></i> Find Tonight's Three
-          </button>
-        </div>
+          <!-- Right Vertical Feed (Trending Now) -->
+          <div class="lg:w-7/12 flex flex-col gap-6 relative z-10 w-full" style="flex: 1; min-width: 350px;">
 
-        <div id="ai-search-hint"
-          style="display: none; margin-top: 40px; padding: 20px 35px; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 18px; font-size: 1.05rem; color: #fff; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-          <i class="fas fa-brain" style="color: #a855f7; margin-right: 20px; font-size: 1.4rem;"></i>
-          <strong>Discovery Engine Active</strong> â€” Describe a mood, a deep scene detail, or a dream.
+            <!-- Feed Item 1 (Dune) -->
+            <div
+              class="group relative rounded-3xl overflow-hidden bg-[#18181b] border border-white/10 hover:border-[#8b5cf6]/50 transition-all duration-500 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] cursor-pointer"
+              onclick="document.querySelector('.movie-card[data-id=\'tt15239678\']')?.click() || alert('Movie data loading...')"
+              style="border-radius: 24px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.05); background: #121214; transition: 0.3s;">
+              <div class="aspect-[21/9] w-full relative overflow-hidden" style="min-height: 280px;">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0c]/95 via-[#0a0a0c]/40 to-transparent z-10"
+                  style="position: absolute; inset: 0; background: linear-gradient(to top, #0a0a0c 10%, transparent 60%); z-index: 10;">
+                </div>
+                <!-- Using inline background for the image to prevent broken src loading briefly -->
+                <div
+                  style="background-image: url('https://image.tmdb.org/t/p/original/8b8R8l88ILGWXqHeoNIeO0X1211.jpg'); background-size: cover; background-position: center; position: absolute; inset: 0;"
+                  class="w-full h-full transition-transform duration-700 group-hover:scale-105"></div>
+                <div class="absolute top-4 right-4 z-20"
+                  style="position: absolute; top: 15px; right: 15px; z-index: 20;">
+                  <span
+                    class="bg-[#8b5cf6]/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 shadow-lg flex items-center gap-1"
+                    style="background: rgba(139, 92, 246, 0.8); backdrop-filter: blur(10px); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2);">
+                    <i class="fas fa-fire" style="color: #fb923c;"></i> Trending #1
+                  </span>
+                </div>
+              </div>
+              <div class="p-6 relative z-20"
+                style="position: absolute; bottom: 0; left: 0; right: 0; padding: 30px; z-index: 20;">
+                <h3 class="text-3xl font-black text-white mb-2 tracking-tight"
+                  style="font-family: var(--font-heading); font-size: 2.2rem; margin: 0 0 10px 0;">Dune: Part Two</h3>
+                <div class="flex items-center gap-3 text-sm mb-4"
+                  style="display: flex; gap: 12px; margin-bottom: 20px; color: #888; font-size: 0.85rem; align-items: center;">
+                  <span class="text-[#eab308] font-bold bg-[#eab308]/10 px-2 py-0.5 rounded border border-[#eab308]/20"
+                    style="color: #eab308; background: rgba(234, 179, 8, 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(234, 179, 8, 0.2);">98%
+                    Match</span>
+                  <span>2024</span>
+                  <span>•</span>
+                  <span>Sci-Fi Epic</span>
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed mb-6"
+                  style="color: rgba(255,255,255,0.7); line-height: 1.5; font-size: 0.95rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                  Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators
+                  who destroyed his family.</p>
+              </div>
+            </div>
+
+            <!-- Mini Feed Grid -->
+            <div class="grid grid-cols-2 gap-4"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+              <!-- Mini Item 1 -->
+              <div class="group relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 cursor-pointer"
+                style="min-height: 200px; border-radius: 16px; position: relative; border: 1px solid rgba(255,255,255,0.05); overflow: hidden;"
+                onclick="document.querySelector('.movie-card[data-title=\'Barbie\']')?.click()">
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent z-10 pointer-events-none"
+                  style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent 50%); z-index: 10; pointer-events: none;">
+                </div>
+                <div
+                  style="background-image: url('https://image.tmdb.org/t/p/original/ctMserH8g2SeOAnCw5gFjdQF8mo.jpg'); background-size: cover; background-position: center; position: absolute; inset: 0;"
+                  class="w-full h-full transition-transform duration-700 group-hover:scale-110"></div>
+                <div class="absolute bottom-4 left-4 z-20 w-full pr-8"
+                  style="position: absolute; bottom: 15px; left: 15px; z-index: 20;">
+                  <span
+                    class="bg-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1 inline-block tracking-wider"
+                    style="background: #ec4899; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; display: inline-block;">CAMPY</span>
+                  <h4 class="text-white font-bold text-lg leading-tight"
+                    style="font-family: var(--font-heading); margin: 0; font-size: 1.2rem;">Barbie</h4>
+                </div>
+              </div>
+              <!-- Mini Item 2 -->
+              <div class="group relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 cursor-pointer"
+                style="min-height: 200px; border-radius: 16px; position: relative; border: 1px solid rgba(255,255,255,0.05); overflow: hidden;"
+                onclick="document.querySelector('.movie-card[data-title=\'Aftersun\']')?.click()">
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent z-10 pointer-events-none"
+                  style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent 50%); z-index: 10; pointer-events: none;">
+                </div>
+                <div
+                  style="background-image: url('https://image.tmdb.org/t/p/original/nDLylQOoIazGyYuWhk21Yww5fcb.jpg'); background-size: cover; background-position: center; position: absolute; inset: 0;"
+                  class="w-full h-full transition-transform duration-700 group-hover:scale-110"></div>
+                <div class="absolute bottom-4 left-4 z-20 w-full pr-8"
+                  style="position: absolute; bottom: 15px; left: 15px; z-index: 20;">
+                  <span
+                    class="bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1 inline-block tracking-wider"
+                    style="background: #3b82f6; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; display: inline-block;">MELANCHOLY</span>
+                  <h4 class="text-white font-bold text-lg leading-tight"
+                    style="font-family: var(--font-heading); margin: 0; font-size: 1.2rem;">Aftersun</h4>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
     <div class="container" style="padding-bottom: 100px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px;">
@@ -277,13 +418,42 @@
     </div>
   </section>
 
-  <!-- Reviews Section -->
-  <section id="reviews" class="page-section">
-    <div class="container">
-      <h2 class="section-title">My Reviews</h2>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 48px;">Your personal journey through
-        cinema.</p>
-      <div id="reviews-list" class="movie-grid" aria-live="polite"></div>
+  <!-- Reviews Section (Scrapbook Design) -->
+  <section id="reviews" class="page-section bg-[#0a0a0c] py-20 relative overflow-hidden">
+    <!-- Ambient Blur Background -->
+    <div
+      class="absolute top-1/4 left-0 w-[400px] h-[400px] bg-[#eab308]/10 rounded-full blur-[100px] pointer-events-none -translate-x-1/2">
+    </div>
+    <div
+      class="absolute bottom-0 right-0 w-[600px] h-[500px] bg-[#8b5cf6]/10 rounded-full blur-[120px] pointer-events-none translate-x-1/3">
+    </div>
+
+    <div class="container relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-white/10 pb-6 relative">
+        <div class="absolute -top-6 -left-6 text-[#eab308]/20 text-8xl font-serif pointer-events-none">"</div>
+        <div class="relative z-10">
+          <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight"
+            style="font-family: var(--font-heading); margin: 0;">
+            My <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#eab308] to-[#db2777]"
+              style="background: linear-gradient(to right, #eab308, #db2777); -webkit-background-clip: text; color: transparent;">Scrapbook</span>
+          </h2>
+          <p class="text-slate-400 mt-2 text-lg text-[#94a3b8]">Collecting cinematic sins & wins since 2023 🎬✨</p>
+        </div>
+        <div class="mt-6 md:mt-0 flex gap-4">
+          <button
+            class="bg-[#18181b] hover:bg-[#27272a] text-white border border-white/20 rounded-lg px-6 py-3 font-semibold transition-colors flex items-center gap-2"
+            style="background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; color: white; padding: 10px 20px;">
+            <i class="fas fa-filter text-[#eab308]" style="color: #eab308;"></i> Filter Sins
+          </button>
+        </div>
+      </div>
+
+      <!-- The dynamic list container -->
+      <!-- Added scrapbook-grid classes alongside the required movie-grid class if needed for fallback styling -->
+      <div id="reviews-list" class="movie-grid scrapbook-mode" aria-live="polite"
+        style="position: relative; z-index: 10;"></div>
+
     </div>
   </section>
 
@@ -297,119 +467,301 @@
     </div>
   </section>
 
-  <!-- CineSins DNA Section (Bento Grid) -->
-  <section id="cinesins-dna" class="page-section">
-    <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px;">
+  <!-- CineSins DNA Section -->
+  <section id="cinesins-dna" class="page-section bg-[#0a0a0c] py-20 relative overflow-hidden">
+    <!-- Ambient Blur Background -->
+    <div
+      class="absolute top-0 right-0 w-[500px] h-[500px] bg-[#8b5cf6]/10 rounded-full blur-[100px] pointer-events-none">
+    </div>
+    <div
+      class="absolute bottom-[-100px] left-[-100px] w-[600px] h-[600px] bg-[#db2777]/10 rounded-full blur-[120px] pointer-events-none">
+    </div>
+
+    <div class="container relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-white/10 pb-6">
         <div>
-          <h2 class="section-title" style="text-align: left; margin: 0;">CineSins DNA Dashboard</h2>
-          <p style="color: var(--text-muted); margin-top: 8px;">Visualizing your cinematic fingerprints.</p>
+          <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight"
+            style="font-family: var(--font-heading); margin: 0;">
+            My <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] to-[#db2777]"
+              style="background: linear-gradient(to right, #8b5cf6, #db2777); -webkit-background-clip: text; color: transparent;">DNA</span>
+          </h2>
+          <p class="text-slate-400 mt-2 text-lg text-[#94a3b8]">Analyze your cinematic psyche.</p>
         </div>
-        <button id="refresh-dna-btn" class="dna-btn secondary" style="padding: 10px 20px; font-size: 0.8rem;">
-          <i class="fas fa-sync-alt"></i> Refresh DNA
+        <div class="mt-6 md:mt-0 flex gap-4">
+          <button id="refresh-dna-btn"
+            class="bg-[#18181b] hover:bg-[#27272a] text-white border border-white/20 rounded-lg px-6 py-3 font-semibold transition-colors flex items-center gap-2"
+            style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; color: white; padding: 10px 20px;">
+            <i class="fas fa-sync-alt text-[#8b5cf6]" style="color: #8b5cf6;"></i> Recalibrate DNA
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px;">
+
+        <!-- Left Column: Persona & Core Stats -->
+        <div class="lg:col-span-1 flex flex-col gap-6" style="display: flex; flex-direction: column; gap: 24px;">
+
+          <!-- Your Persona Card -->
+          <div
+            class="bg-gradient-to-br from-[#18181b] to-[#0a0a0c] border border-white/10 rounded-3xl p-8 relative overflow-hidden group shadow-[0_0_40px_rgba(139,92,246,0.1)]"
+            id="archetype-container"
+            style="background: linear-gradient(135deg, #18181b, #0a0a0c); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 30px; position: relative; box-shadow: 0 0 30px rgba(139,92,246,0.1);">
+            <div class="absolute inset-0 bg-gradient-to-br from-[#8b5cf6]/5 to-transparent pointer-events-none"></div>
+
+            <div class="flex justify-between items-start mb-6"
+              style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+              <span class="text-xs font-bold uppercase tracking-widest text-[#94a3b8]"
+                style="font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8;">Your
+                Persona</span>
+              <div id="archetype-icon-wrapper"
+                class="w-10 h-10 rounded-full bg-[#8b5cf6]/20 flex items-center justify-center text-[#c084fc] border border-[#8b5cf6]/30"
+                style="width: 40px; height: 40px; border-radius: 50%; background: rgba(139,92,246,0.1); color: #c084fc; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(139,92,246,0.3);">
+                <i class="fas fa-crown"></i>
+              </div>
+            </div>
+
+            <h3 id="archetype-label" class="text-3xl font-black text-white leading-tight mb-3"
+              style="font-family: var(--font-heading); font-size: 2rem; margin-bottom: 12px; font-weight: 900; line-height: 1.1;">
+              Discovering...</h3>
+            <p id="archetype-description" class="text-sm text-[#94a3b8] leading-relaxed mb-6"
+              style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6; margin-bottom: 24px;">Analyzing your cinematic
+              soul to uncover your unique profile.</p>
+
+            <div id="archetype-traits" class="flex flex-wrap gap-2" style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <!-- JS fills this -->
+            </div>
+          </div>
+
+          <!-- Quick Stats Grid -->
+          <div class="grid grid-cols-2 gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="bg-[#18181b] border border-white/10 rounded-2xl p-5"
+              style="background: #18181b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px;">
+              <p class="text-xs text-[#94a3b8] uppercase tracking-wider font-semibold mb-2"
+                style="font-size: 0.75rem; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 15px;">
+                Avg Score</p>
+              <div class="flex items-end gap-2 text-white" style="display: flex; align-items: flex-end; gap: 8px;">
+                <span id="dna-avg-rating" class="text-2xl font-black"
+                  style="font-size: 1.8rem; font-weight: 900; line-height: 1;">-</span>
+                <i class="fas fa-star text-[#eab308] text-sm" style="color: #eab308; margin-bottom: 4px;"></i>
+              </div>
+            </div>
+            <div class="bg-[#18181b] border border-white/10 rounded-2xl p-5"
+              style="background: #18181b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px;">
+              <p class="text-xs text-[#94a3b8] uppercase tracking-wider font-semibold mb-2"
+                style="font-size: 0.75rem; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 15px;">
+                Movies Logged</p>
+              <div class="flex items-end gap-2 text-white" style="display: flex; align-items: flex-end; gap: 8px;">
+                <span id="dna-logged" class="text-2xl font-black"
+                  style="font-size: 1.8rem; font-weight: 900; line-height: 1;">-</span>
+                <span class="text-sm text-[#94a3b8]"
+                  style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 2px;">films</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Middle Column: Visualizations & Genres -->
+        <div class="lg:col-span-1 flex flex-col gap-6" style="display: flex; flex-direction: column; gap: 24px;">
+
+          <!-- Genre Constellation -->
+          <div class="bg-[#18181b] border border-white/10 rounded-3xl p-6 h-full flex flex-col relative overflow-hidden"
+            style="background: #18181b; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 24px; position: relative; display: flex; flex-direction: column; min-height: 350px;">
+            <div
+              class="absolute top-0 right-0 w-[200px] h-[200px] bg-[#3b82f6]/10 rounded-full blur-[60px] pointer-events-none -translate-y-1/2 translate-x-1/2">
+            </div>
+
+            <div class="mb-4" style="margin-bottom: 20px;">
+              <span class="text-xs font-bold uppercase tracking-widest text-[#94a3b8]"
+                style="font-size: 0.75rem; letter-spacing: 2px; color: #94a3b8;">Genre Constellation</span>
+            </div>
+            <div>
+              <p class="text-sm text-[#94a3b8]" style="margin-bottom: 5px;">Dominant Vibes:</p>
+              <h4 id="dna-genre" class="text-xl font-bold text-white mb-6"
+                style="font-size: 1.4rem; color: white; font-weight: bold; margin-bottom: 20px;">-</h4>
+            </div>
+
+            <!-- Spectrum Chart Canvas Area -->
+            <div
+              class="flex-grow flex items-center justify-center min-h-[180px] w-full mt-auto relative z-10 bg-white/5 rounded-xl border border-white/5 p-4"
+              style="flex: 1; min-height: 200px; display: flex; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 15px;">
+              <canvas id="dna-chart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Directors & Recent Logs -->
+        <div class="lg:col-span-1 flex flex-col gap-6" style="display: flex; flex-direction: column; gap: 24px;">
+
+          <!-- Your Gods (Directors) -->
+          <div class="bg-[#18181b] border border-white/10 rounded-3xl p-6"
+            style="background: #18181b; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 24px;">
+            <div class="flex items-center gap-3 mb-5"
+              style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+              <i class="fas fa-bullhorn text-[#db2777]" style="color: #db2777;"></i>
+              <span class="text-sm font-bold uppercase tracking-widest text-white"
+                style="font-size: 0.8rem; font-weight: bold; letter-spacing: 2px;">Your Gods (Directors)</span>
+            </div>
+            <ul id="dna-directors" class="flex flex-wrap gap-2"
+              style="display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0;">
+              <!-- Populated by JS -->
+            </ul>
+
+            <!-- Behavior Hub embedded in here to save space -->
+            <div id="trends-container" class="mt-8 pt-6 border-t border-white/10"
+              style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+              <p id="trends-insight" class="text-xs text-[#94a3b8] mb-3 italic"
+                style="font-size: 0.75rem; color: #94a3b8; font-style: italic; margin-bottom: 12px;">Analyzing viewing
+                patterns...</p>
+              <div
+                class="h-[60px] w-full bg-white/5 rounded-lg border border-white/5 flex items-center justify-center p-2"
+                style="height: 80px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); padding: 10px;">
+                <canvas id="trends-canvas" style="width: 100%; height: 100%;"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Action Footer -->
+      <div class="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-center items-center gap-4"
+        style="margin-top: 50px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+        <button id="compare-taste-btn"
+          class="w-full sm:w-auto bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-[0_10px_30px_rgba(139,92,246,0.3)] flex items-center justify-center gap-2"
+          style="background: #8b5cf6; color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(139,92,246,0.3);">
+          <i class="fas fa-handshake"></i> Compare DNA
+        </button>
+        <button id="export-taste-btn"
+          class="w-full sm:w-auto bg-[#18181b] hover:bg-white/10 border border-white/20 text-white px-8 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+          style="background: #18181b; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 15px 30px; border-radius: 12px; font-weight: bold; cursor: pointer;">
+          <i class="fas fa-share-nodes"></i> Export DNA
+        </button>
+        <button id="generate-share-btn"
+          class="w-full sm:w-auto bg-[#db2777] hover:bg-[#be185d] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-[0_10px_30px_rgba(219,39,119,0.3)] flex items-center justify-center gap-2"
+          style="background: #db2777; color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(219,39,119,0.3);">
+          <i class="fas fa-images"></i> Generate Card
         </button>
       </div>
 
-      <!-- Redesigned Bento Grid -->
-      <div class="dna-bento-grid">
+      <!-- Hidden canvas for sharing generation -->
+      <canvas id="dna-share-canvas" width="800" height="1200" style="display:none;"></canvas>
 
-        <!-- Primary Archetype (The Hero Piece) -->
-        <div class="dna-tile dna-hero" id="archetype-container">
-          <div class="dna-hero-inner">
-            <div id="archetype-icon-wrapper" class="dna-icon-box">
-              <i class="fas fa-crown"></i>
-            </div>
-            <div class="dna-hero-content">
-              <div class="dna-badge-row">
-                <span class="dna-badge dna-badge-glow">Primary Archetype</span>
+    </div>
+  </section>
+
+  <!-- SinLine Community Feed Section -->
+  <section id="sinline" class="page-section bg-[#0a0a0c] py-20 relative overflow-hidden">
+    <!-- Ambient Blur Background -->
+    <div
+      class="absolute top-0 right-0 w-[500px] h-[500px] bg-[#3b82f6]/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2">
+    </div>
+    <div
+      class="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-[#db2777]/10 rounded-full blur-[120px] pointer-events-none">
+    </div>
+
+    <div class="container relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <!-- Header -->
+      <div class="mb-10 border-b border-white/10 pb-6">
+        <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight"
+          style="font-family: var(--font-heading); margin: 0;">
+          THE <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6]"
+            style="background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; color: transparent;">SIN-LINE</span>
+        </h2>
+        <p class="text-[#94a3b8] mt-2 text-lg">Where cinephiles confess their hottest takes.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8"
+        style="display: grid; gap: 32px; grid-template-columns: repeat(12, minmax(0, 1fr));">
+
+        <!-- Main Feed (Left 2/3) -->
+        <div class="lg:col-span-2 flex flex-col gap-6"
+          style="grid-column: span 8 / span 8; display: flex; flex-direction: column; gap: 24px;">
+
+          <!-- Create Post Box -->
+          <div class="bg-[#18181b] border border-white/10 rounded-2xl p-6 relative">
+            <div class="flex gap-4" style="display: flex; gap: 16px;">
+              <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=CurrentUser&mouth=smile" alt="Avatar"
+                class="w-12 h-12 rounded-full border border-white/20 bg-black/50"
+                style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);">
+              <div class="flex-grow" style="flex-grow: 1;">
+                <textarea id="sinline-post-input" placeholder="Drop a cinematic sin..."
+                  class="w-full bg-transparent border-none text-white text-lg resize-none focus:outline-none mb-3"
+                  rows="2"
+                  style="background: transparent; border: none; color: white; width: 100%; resize: none; outline: none; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; padding-bottom: 8px;"></textarea>
+
+                <div class="flex justify-between items-center"
+                  style="display: flex; justify-content: space-between; align-items: center;">
+                  <!-- Mock Tag Selector -->
+                  <div class="flex items-center gap-2 text-[#94a3b8]"
+                    style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 0.9rem;">
+                    <i class="fas fa-tag hover:text-white cursor-pointer transition-colors"></i>
+                    <i class="fas fa-poll-h hover:text-white cursor-pointer transition-colors"></i>
+                    <span id="sinline-selected-tag"
+                      class="bg-[#3b82f6]/20 text-[#3b82f6] px-3 py-1 rounded-full text-xs font-bold hidden"
+                      style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;"></span>
+                  </div>
+
+                  <button id="sinline-post-btn"
+                    class="bg-[#3b82f6] hover:bg-[#2563eb] text-white px-6 py-2 rounded-xl font-bold transition-all shadow-[0_5px_15px_rgba(59,130,246,0.3)]"
+                    style="background: #3b82f6; color: white; border: none; padding: 8px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(59,130,246,0.3);">
+                    Post
+                  </button>
+                </div>
               </div>
-              <h3 id="archetype-label" class="dna-title-xl">Discovering...</h3>
-              <p id="archetype-description" class="dna-desc">Analyzing your cinematic soul to uncover your unique
-                profile.</p>
-              <div id="archetype-traits" class="dna-traits-row"></div>
             </div>
           </div>
-        </div>
 
-        <!-- Quick Stats: Favorite Genre -->
-        <div class="dna-tile dna-stat">
-          <div class="dna-stat-label">Main Genre</div>
-          <div id="dna-genre" class="dna-stat-value">-</div>
-          <div class="dna-stat-icon"><i class="fas fa-masks-theater"></i></div>
-        </div>
-
-        <!-- Quick Stats: Avg Rating -->
-        <div class="dna-tile dna-stat">
-          <div class="dna-stat-label">Avg Rating</div>
-          <div id="dna-avg-rating" class="dna-stat-value">-</div>
-          <div class="dna-stat-icon"><i class="fas fa-star"></i></div>
-        </div>
-
-        <!-- Quick Stats: Movies Logged -->
-        <div class="dna-tile dna-stat">
-          <div class="dna-stat-label">Movies Logged</div>
-          <div id="dna-logged" class="dna-stat-value">-</div>
-          <div class="dna-stat-icon"><i class="fas fa-film"></i></div>
-        </div>
-
-        <!-- Intelligent Insights: Behavior Hub -->
-        <div class="dna-tile dna-insights" id="trends-container">
-          <div class="dna-tile-header">
-            <span class="dna-tile-tag">Intelligent Insights</span>
-            <h4 class="dna-tile-title">Behavior Hub</h4>
+          <!-- Feed Container -->
+          <div id="sinline-feed-container" class="flex flex-col gap-5"
+            style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Dynamic Posts will be injected here by ui.js -->
           </div>
-          <div class="dna-insight-content">
-            <p id="trends-insight" class="dna-insight-text">Analyzing your viewing patterns...</p>
-            <div class="dna-sparkline">
-              <canvas id="trends-canvas"></canvas>
+
+        </div>
+
+        <!-- Sidebar (Right 1/3) -->
+        <div class="lg:col-span-1 flex flex-col gap-6"
+          style="grid-column: span 4 / span 4; display: flex; flex-direction: column; gap: 24px;">
+
+          <!-- Trending Panel -->
+          <div class="bg-[#18181b] border border-white/10 rounded-2xl p-6"
+            style="background: #18181b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px;">
+            <div class="flex items-center gap-3 mb-5"
+              style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+              <i class="fas fa-fire text-[#ef4444]" style="color: #ef4444;"></i>
+              <span class="text-sm font-bold uppercase tracking-widest text-white"
+                style="font-size: 0.8rem; font-weight: bold; letter-spacing: 2px;">Trending Sins</span>
             </div>
-          </div>
-        </div>
 
-        <!-- Top Directors -->
-        <div class="dna-tile dna-list-tile">
-          <div class="dna-tile-header">
-            <h4 class="dna-tile-title">Master Directors</h4>
+            <ul class="flex flex-col gap-4"
+              style="display: flex; flex-direction: column; gap: 16px; list-style: none; padding: 0;">
+              <li class="border-b border-white/5 pb-3">
+                <p class="text-xs text-[#94a3b8] mb-1">1 • Movies • Trending</p>
+                <p class="text-white font-semibold">Dune: Part Two</p>
+                <p class="text-xs text-[#94a3b8]">14.5k posts</p>
+              </li>
+              <li class="border-b border-white/5 pb-3">
+                <p class="text-xs text-[#94a3b8] mb-1">2 • Directors • Trending</p>
+                <p class="text-white font-semibold">Christopher Nolan</p>
+                <p class="text-xs text-[#94a3b8]">8.2k posts</p>
+              </li>
+              <li>
+                <p class="text-xs text-[#94a3b8] mb-1">3 • Discourse • Trending</p>
+                <p class="text-white font-semibold">"Overrated"</p>
+                <p class="text-xs text-[#94a3b8]">5.1k posts</p>
+              </li>
+            </ul>
           </div>
-          <ul id="dna-directors" class="dna-pill-list"></ul>
-        </div>
 
-        <!-- Emotional Distribution -->
-        <div class="dna-tile dna-chart-tile">
-          <div class="dna-tile-header">
-            <h4 class="dna-tile-title">Emotional Spectrum</h4>
-          </div>
-          <div class="dna-chart-container">
-            <canvas id="dna-chart"></canvas>
-          </div>
-        </div>
-
-        <!-- Comparison / Sharing Block -->
-        <div class="dna-tile dna-cta-tile">
-          <div class="dna-cta-content">
-            <div class="dna-cta-text">
-              <h3><i class="fas fa-fingerprint"></i> Taste DNA Sharing</h3>
-              <p>Sync your cinematic fingerprints with friends to find perfect co-viewing matches.</p>
-            </div>
-            <div class="dna-cta-actions">
-              <button id="export-taste-btn" class="dna-btn secondary"><i class="fas fa-share-nodes"></i> Export
-                DNA</button>
-              <button id="compare-taste-btn" class="dna-btn primary"><i class="fas fa-handshake"></i> Compare
-                DNA</button>
-            </div>
-          </div>
         </div>
 
       </div>
-    </div>
-
-    <div style="text-align: center; margin-top: 64px;">
-      <button id="generate-share-btn" class="save-btn btn-primary" style="padding: 16px 40px;">
-        <i class="fas fa-share-alt"></i> Generate DNA Share Card
-      </button>
-    </div>
-
-    <canvas id="dna-share-canvas" width="800" height="1200" style="display:none;"></canvas>
     </div>
   </section>
 
