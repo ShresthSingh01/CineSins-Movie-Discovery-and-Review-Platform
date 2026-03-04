@@ -10,7 +10,8 @@ export const ui = {
         selectedRating: 0,
         renderedMoviesMaps: {}, // Using plural maps for all sections
         renderedGemsMap: {},
-        renderedWatchlistMap: {}
+        renderedWatchlistMap: {},
+        trendingMovies: []
     },
 
     getRegRiskBadgeHTML(movie) {
@@ -428,6 +429,37 @@ export const ui = {
                 }
             });
         }
+
+        // Trending Filters
+        const typeFilterEl = document.getElementById('filter-type');
+        const genreFilterEl = document.getElementById('filter-genre');
+        if (typeFilterEl && genreFilterEl) {
+            const applyTrendingFilters = () => {
+                const typeFilter = typeFilterEl.value;
+                const genreFilter = genreFilterEl.value.toLowerCase();
+
+                let filtered = this.state.trendingMovies || [];
+
+                if (typeFilter !== 'all') {
+                    filtered = filtered.filter(m => {
+                        const mType = (m.type || m.Type || 'movie').toLowerCase();
+                        return mType === typeFilter;
+                    });
+                }
+
+                if (genreFilter !== 'all') {
+                    filtered = filtered.filter(m => {
+                        const mGenres = (m.genres || m.Genre || "").toLowerCase();
+                        return mGenres.includes(genreFilter);
+                    });
+                }
+
+                this.renderMovies(filtered, this.elements.movieResults);
+            };
+
+            typeFilterEl.addEventListener('change', applyTrendingFilters);
+            genreFilterEl.addEventListener('change', applyTrendingFilters);
+        }
         if (this.elements.reviewText) {
             this.elements.reviewText.oninput = () => {
                 if (this.elements.charCount) {
@@ -686,9 +718,13 @@ export const ui = {
         if (this.elements.decisionBtn) {
             this.elements.decisionBtn.addEventListener('click', (e) => {
                 if (e) e.preventDefault();
-                this.elements.decisionModal.style.display = "flex";
-                setTimeout(() => this.elements.decisionModal.classList.add("active"), 10);
-                this.elements.decisionResults.innerHTML = "";
+                try {
+                    this.elements.decisionModal.style.display = "flex";
+                    setTimeout(() => this.elements.decisionModal.classList.add("active"), 10);
+                    this.elements.decisionResults.innerHTML = "";
+                } catch (err) {
+                    console.error("Error opening modal:", err);
+                }
             });
         }
         if (this.elements.closeDecisionModal) {
@@ -1520,30 +1556,33 @@ export const ui = {
             card.dataset.id = m.imdbID || m.id;
             this.state.renderedMoviesMaps[containerId][m.imdbID || m.id] = m;
 
-            target.appendChild(card);
-            cards.push(card);
-        });
-
-        // Event Delegation Pattern
-        target.onclick = (e) => {
-            const btn = e.target.closest('.review-btn');
-            const card = e.target.closest('.movie-card');
-
-            if (btn && btn.dataset.action === "open-modal") {
-                const movieId = btn.dataset.id;
-                const movie = this.state.renderedMoviesMaps[containerId][movieId];
-                const posterImg = btn.closest('.movie-card').querySelector('img');
-                if (movie) this.openModal(movie, posterImg);
-                return;
-            }
-
-            if (card) {
+            // Direct click event binding for reliability
+            card.onclick = (e) => {
+                if (e.target.closest('.review-btn')) {
+                    // Button click handled below
+                    return;
+                }
                 const movieId = card.dataset.id;
                 const movie = this.state.renderedMoviesMaps[containerId][movieId];
                 const posterImg = card.querySelector('img');
                 if (movie) this.openModal(movie, posterImg);
+            };
+
+            // Also bind the button specifically
+            const reviewBtn = card.querySelector('.review-btn');
+            if (reviewBtn) {
+                reviewBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const movieId = card.dataset.id;
+                    const movie = this.state.renderedMoviesMaps[containerId][movieId];
+                    const posterImg = card.querySelector('img');
+                    if (movie) this.openModal(movie, posterImg);
+                };
             }
-        };
+
+            target.appendChild(card);
+            cards.push(card);
+        });
 
         // GSAP ScrollTrigger Batch Animation
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && cards.length > 0) {
@@ -1571,124 +1610,126 @@ export const ui = {
     },
 
     async openModal(movie, sourceImgElement = null) {
-        // Hydrate movie data if it's missing details (like actors or watch providers)
-        // because initial batch load is now basic for speed.
-        let detailedMovie = movie;
-        if (!movie.actors || movie.actors === "N/A" || !movie.scenes || movie.scenes.length <= 1) {
-            try {
-                const refreshed = await api.fetchMovieById(movie.imdbID || movie.id);
-                if (refreshed) detailedMovie = refreshed;
-            } catch (e) {
-                console.warn("Could not hydrate movie details, showing basic info:", e);
+        try {
+            console.log("Opening modal for:", movie.Title || movie.title);
+            // Hydrate movie data if it's missing details (like actors or watch providers)
+            // because initial batch load is now basic for speed.
+            let detailedMovie = movie;
+            if (!movie.actors || movie.actors === "N/A" || !movie.scenes || movie.scenes.length <= 1) {
+                try {
+                    const refreshed = await api.fetchMovieById(movie.imdbID || movie.id);
+                    if (refreshed) detailedMovie = refreshed;
+                } catch (e) {
+                    console.warn("Could not hydrate movie details, showing basic info:", e);
+                }
             }
-        }
 
-        this.state.currentMovie = detailedMovie;
-        this.elements.modalTitle.textContent = detailedMovie.Title || detailedMovie.title;
-        const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
-        const rawPoster = (detailedMovie.Poster && detailedMovie.Poster !== "N/A") ? detailedMovie.Poster : (detailedMovie.poster && detailedMovie.poster !== "N/A") ? detailedMovie.poster : fallback;
-        const posterUrl = this.getHighResPoster(rawPoster);
-        this.elements.modalPoster.src = posterUrl;
-        this.elements.modalPoster.onerror = function () { this.src = fallback; };
+            this.state.currentMovie = detailedMovie;
+            this.elements.modalTitle.textContent = detailedMovie.Title || detailedMovie.title;
+            const fallback = "https://placehold.co/300x450/111/555?text=No+Poster";
+            const rawPoster = (detailedMovie.Poster && detailedMovie.Poster !== "N/A") ? detailedMovie.Poster : (detailedMovie.poster && detailedMovie.poster !== "N/A") ? detailedMovie.poster : fallback;
+            const posterUrl = this.getHighResPoster(rawPoster);
+            this.elements.modalPoster.src = posterUrl;
+            this.elements.modalPoster.onerror = function () { this.src = fallback; };
 
-        this.elements.modalPlot.textContent = movie.plot || movie.Plot || "No plot summary available.";
+            this.elements.modalPlot.textContent = movie.plot || movie.Plot || "No plot summary available.";
 
-        // Populate Cinemaholic specific details
-        const modalYear = document.getElementById("modal-year");
-        const modalRuntime = document.getElementById("modal-runtime");
-        const modalRating = document.getElementById("modal-rating");
-        const metricEmotional = document.getElementById("metric-emotional");
-        const metricCognitive = document.getElementById("metric-cognitive");
-        const metricComfort = document.getElementById("metric-comfort");
+            // Populate Cinemaholic specific details
+            const modalYear = document.getElementById("modal-year");
+            const modalRuntime = document.getElementById("modal-runtime");
+            const modalRating = document.getElementById("modal-rating");
+            const metricEmotional = document.getElementById("metric-emotional");
+            const metricCognitive = document.getElementById("metric-cognitive");
+            const metricComfort = document.getElementById("metric-comfort");
 
-        if (modalYear) modalYear.textContent = detailedMovie.Year || detailedMovie.year || "";
-        if (modalRuntime) modalRuntime.textContent = detailedMovie.Runtime || detailedMovie.runtime || "";
-        if (modalRating) modalRating.textContent = `★ ${detailedMovie.imdbRating || "N/A"}`;
+            if (modalYear) modalYear.textContent = detailedMovie.Year || detailedMovie.year || "";
+            if (modalRuntime) modalRuntime.textContent = detailedMovie.Runtime || detailedMovie.runtime || "";
+            if (modalRating) modalRating.textContent = `★ ${detailedMovie.imdbRating || "N/A"}`;
 
-        // Calculate metrics based on genre if not present
-        const metrics = detailedMovie.metrics || { emotionalIntensity: 50, cognitiveLoad: 50, comfortScore: 50 };
-        if (!detailedMovie.metrics && detailedMovie.Genre) {
-            // Simple heuristic for demo if metrics missing
-            if (detailedMovie.Genre.includes("Drama")) metrics.emotionalIntensity = 80;
-            if (detailedMovie.Genre.includes("Sci-Fi")) metrics.cognitiveLoad = 90;
-            if (detailedMovie.Genre.includes("Comedy")) metrics.comfortScore = 85;
-        }
-
-        if (metricEmotional) metricEmotional.style.width = `${metrics.emotionalIntensity}%`;
-        if (metricCognitive) metricCognitive.style.width = `${metrics.cognitiveLoad}%`;
-        if (metricComfort) metricComfort.style.width = `${metrics.comfortScore}%`;
-
-        this.setupCarousel(movie);
-
-        const { store } = await import('./store.js');
-        const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
-        this.state.selectedRating = saved ? saved.rating : 0;
-        this.elements.reviewText.value = saved ? saved.text : "";
-        if (this.elements.charCount && this.elements.reviewText) {
-            this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
-        }
-
-        // Update Watch Now link safely
-        if (this.elements.watchNowBtn) {
-            if (movie.watchLink) {
-                this.elements.watchNowBtn.href = movie.watchLink;
-            } else {
-                const movieTitle = movie.Title || movie.title;
-                this.elements.watchNowBtn.href = `https://www.google.com/search?q=where+to+watch+${encodeURIComponent(movieTitle)}+movie+online`;
+            // Calculate metrics based on genre if not present
+            const metrics = detailedMovie.metrics || { emotionalIntensity: 50, cognitiveLoad: 50, comfortScore: 50 };
+            if (!detailedMovie.metrics && detailedMovie.Genre) {
+                // Simple heuristic for demo if metrics missing
+                if (detailedMovie.Genre.includes("Drama")) metrics.emotionalIntensity = 80;
+                if (detailedMovie.Genre.includes("Sci-Fi")) metrics.cognitiveLoad = 90;
+                if (detailedMovie.Genre.includes("Comedy")) metrics.comfortScore = 85;
             }
-        }
 
-        // Watchlist state
-        const wl = store.getWatchlist().find(m => m.id === (movie.imdbID || movie.id));
-        if (this.elements.watchlistBtn) {
-            if (wl) {
-                this.elements.watchlistBtn.innerHTML = '<i class="fas fa-check"></i> In Watchlist';
-                this.elements.watchlistBtn.style.background = '#27ae60';
-            } else {
-                this.elements.watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i> Watchlist';
-                this.elements.watchlistBtn.style.background = '#34495e';
+            if (metricEmotional) metricEmotional.style.width = `${metrics.emotionalIntensity}%`;
+            if (metricCognitive) metricCognitive.style.width = `${metrics.cognitiveLoad}%`;
+            if (metricComfort) metricComfort.style.width = `${metrics.comfortScore}%`;
+
+            this.setupCarousel(movie);
+
+            const { store } = await import('./store.js');
+            const saved = store.getReviews().find(r => r.id === (movie.imdbID || movie.id));
+            this.state.selectedRating = saved ? saved.rating : 0;
+            this.elements.reviewText.value = saved ? saved.text : "";
+            if (this.elements.charCount && this.elements.reviewText) {
+                this.elements.charCount.textContent = this.elements.reviewText.value.length + "/300";
             }
-        }
 
-        if (this.elements.newTagInput) this.elements.newTagInput.value = "";
-        this.renderTags();
-        this.renderStars();
+            // Update Watch Now link safely
+            if (this.elements.watchNowBtn) {
+                if (movie.watchLink) {
+                    this.elements.watchNowBtn.href = movie.watchLink;
+                } else {
+                    const movieTitle = movie.Title || movie.title;
+                    this.elements.watchNowBtn.href = `https://www.google.com/search?q=where+to+watch+${encodeURIComponent(movieTitle)}+movie+online`;
+                }
+            }
 
-        // Render Anonymous Community Reviews
-        const { auth } = await import('./src/auth.js');
-        const commToggleBtn = document.getElementById('toggle-community-panel-btn');
-        const commList = document.getElementById('community-reviews-list');
-        const commToggleCount = document.getElementById('community-reviews-toggle-count');
-        const commSidePanel = document.getElementById('community-side-panel');
-        const reviewModalContent = document.getElementById('review-modal-content');
-        const closeCommPanelBtn = document.getElementById('close-community-panel-btn');
+            // Watchlist state
+            const wl = store.getWatchlist().find(m => m.id === (movie.imdbID || movie.id));
+            if (this.elements.watchlistBtn) {
+                if (wl) {
+                    this.elements.watchlistBtn.innerHTML = '<i class="fas fa-check"></i> In Watchlist';
+                    this.elements.watchlistBtn.style.background = '#27ae60';
+                } else {
+                    this.elements.watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i> Watchlist';
+                    this.elements.watchlistBtn.style.background = '#34495e';
+                }
+            }
 
-        // Reset panel state on load
-        if (commSidePanel && reviewModalContent) {
-            commSidePanel.style.width = '0px';
-            commSidePanel.style.minWidth = '0px';
-            commSidePanel.style.opacity = '0';
-            reviewModalContent.style.maxWidth = '1100px';
-        }
+            if (this.elements.newTagInput) this.elements.newTagInput.value = "";
+            this.renderTags();
+            this.renderStars();
 
-        if (commToggleBtn && commList && commToggleCount) {
-            const globalReviews = auth.getGlobalReviews(movie.imdbID || movie.id);
-            if (globalReviews && globalReviews.length > 0) {
-                commToggleCount.textContent = globalReviews.length;
-                commToggleBtn.style.display = 'flex';
+            // Render Anonymous Community Reviews
+            const { auth } = await import('./src/auth.js');
+            const commToggleBtn = document.getElementById('toggle-community-panel-btn');
+            const commList = document.getElementById('community-reviews-list');
+            const commToggleCount = document.getElementById('community-reviews-toggle-count');
+            const commSidePanel = document.getElementById('community-side-panel');
+            const reviewModalContent = document.getElementById('review-modal-content');
+            const closeCommPanelBtn = document.getElementById('close-community-panel-btn');
 
-                // Clear the list first
-                commList.innerHTML = '';
+            // Reset panel state on load
+            if (commSidePanel && reviewModalContent) {
+                commSidePanel.style.width = '0px';
+                commSidePanel.style.minWidth = '0px';
+                commSidePanel.style.opacity = '0';
+                reviewModalContent.style.maxWidth = '1100px';
+            }
 
-                // Load TTS service asynchronously
-                import('./src/tts_service.js').then(({ ttsService }) => {
-                    globalReviews.forEach(r => {
-                        const div = document.createElement('div');
-                        div.style.cssText = "background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; display: flex; gap: 12px; transition: background 0.2s; cursor: crosshair;";
+            if (commToggleBtn && commList && commToggleCount) {
+                const globalReviews = auth.getGlobalReviews(movie.imdbID || movie.id);
+                if (globalReviews && globalReviews.length > 0) {
+                    commToggleCount.textContent = globalReviews.length;
+                    commToggleBtn.style.display = 'flex';
 
-                        const stars = Array(Math.max(1, Math.min(5, r.rating || 0))).fill('<i class="fas fa-star"></i>').join('');
+                    // Clear the list first
+                    commList.innerHTML = '';
 
-                        div.innerHTML = `
+                    // Load TTS service asynchronously
+                    import('./src/tts_service.js').then(({ ttsService }) => {
+                        globalReviews.forEach(r => {
+                            const div = document.createElement('div');
+                            div.style.cssText = "background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; display: flex; gap: 12px; transition: background 0.2s; cursor: crosshair;";
+
+                            const stars = Array(Math.max(1, Math.min(5, r.rating || 0))).fill('<i class="fas fa-star"></i>').join('');
+
+                            div.innerHTML = `
                             <div class="echo-icon-wrapper" style="width: 32px; height: 32px; border-radius: 50%; background: ${r.profileColor || '#8b5cf6'}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
                                 <i class="fas fa-mask" style="color: rgba(255,255,255,0.8); font-size: 0.8rem; transition: all 0.2s;"></i>
                             </div>
@@ -1701,77 +1742,81 @@ export const ui = {
                             </div>
                         `;
 
-                        // Hover styling & TTS Binding
-                        const iconEl = div.querySelector('.fa-mask');
+                            // Hover styling & TTS Binding
+                            const iconEl = div.querySelector('.fa-mask');
 
-                        div.addEventListener('mouseenter', () => {
-                            div.style.background = "rgba(255,255,255,0.06)";
-                            ttsService.playReview(r.text, r.rating, iconEl);
+                            div.addEventListener('mouseenter', () => {
+                                div.style.background = "rgba(255,255,255,0.06)";
+                                ttsService.playReview(r.text, r.rating, iconEl);
+                            });
+
+                            div.addEventListener('mouseleave', () => {
+                                div.style.background = "rgba(255,255,255,0.03)";
+                                ttsService.stopSpeaking();
+                            });
+
+                            // Stop TTS if user clicks toggle to close panel manually
+                            const closeBtn = document.getElementById('close-community-panel-btn');
+                            if (closeBtn) {
+                                closeBtn.addEventListener('click', () => ttsService.stopSpeaking(), { once: true });
+                            }
+
+                            commList.appendChild(div);
                         });
-
-                        div.addEventListener('mouseleave', () => {
-                            div.style.background = "rgba(255,255,255,0.03)";
-                            ttsService.stopSpeaking();
-                        });
-
-                        // Stop TTS if user clicks toggle to close panel manually
-                        const closeBtn = document.getElementById('close-community-panel-btn');
-                        if (closeBtn) {
-                            closeBtn.addEventListener('click', () => ttsService.stopSpeaking(), { once: true });
-                        }
-
-                        commList.appendChild(div);
                     });
-                });
-            } else {
-                commToggleCount.textContent = '0';
-                commToggleBtn.style.display = 'flex'; // Always show to make feature discoverable
-                commList.innerHTML = `
+                } else {
+                    commToggleCount.textContent = '0';
+                    commToggleBtn.style.display = 'flex'; // Always show to make feature discoverable
+                    commList.innerHTML = `
                     <div style="text-align: center; padding: 20px; color: var(--cin-muted); font-style: italic; font-size: 0.85rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center;">
                          <i class="fas fa-ghost" style="font-size: 2rem; display: block; margin-bottom: 12px; color: rgba(255,255,255,0.1);"></i>
                          <span>No community echoes found in the abyss.</span><br><span style="margin-top: 8px; display: block; color: var(--cin-muted);">Be the first to leave an anonymous review!</span>
                     </div>
                 `;
-            }
-
-            // Bind toggle logic cleanly using onclick to avoid duplicates
-            commToggleBtn.onclick = () => {
-                if (commSidePanel.style.width === '0px' || !commSidePanel.style.width) {
-                    reviewModalContent.style.maxWidth = '1450px';
-                    commSidePanel.style.width = '350px';
-                    commSidePanel.style.minWidth = '350px';
-                    // Delay opacity slightly for a smoother slide-then-fade-in effect
-                    setTimeout(() => commSidePanel.style.opacity = '1', 150);
-                } else {
-                    commSidePanel.style.opacity = '0';
-                    setTimeout(() => {
-                        reviewModalContent.style.maxWidth = '1100px';
-                        commSidePanel.style.width = '0px';
-                        commSidePanel.style.minWidth = '0px';
-                    }, 150);
                 }
-            };
 
-            if (closeCommPanelBtn) {
-                closeCommPanelBtn.onclick = () => {
-                    commSidePanel.style.opacity = '0';
-                    setTimeout(() => {
-                        reviewModalContent.style.maxWidth = '1100px';
-                        commSidePanel.style.width = '0px';
-                        commSidePanel.style.minWidth = '0px';
-                    }, 150);
+                // Bind toggle logic cleanly using onclick to avoid duplicates
+                commToggleBtn.onclick = () => {
+                    if (commSidePanel.style.width === '0px' || !commSidePanel.style.width) {
+                        reviewModalContent.style.maxWidth = '1450px';
+                        commSidePanel.style.width = '350px';
+                        commSidePanel.style.minWidth = '350px';
+                        // Delay opacity slightly for a smoother slide-then-fade-in effect
+                        setTimeout(() => commSidePanel.style.opacity = '1', 150);
+                    } else {
+                        commSidePanel.style.opacity = '0';
+                        setTimeout(() => {
+                            reviewModalContent.style.maxWidth = '1100px';
+                            commSidePanel.style.width = '0px';
+                            commSidePanel.style.minWidth = '0px';
+                        }, 150);
+                    }
                 };
+
+                if (closeCommPanelBtn) {
+                    closeCommPanelBtn.onclick = () => {
+                        commSidePanel.style.opacity = '0';
+                        setTimeout(() => {
+                            reviewModalContent.style.maxWidth = '1100px';
+                            commSidePanel.style.width = '0px';
+                            commSidePanel.style.minWidth = '0px';
+                        }, 150);
+                    };
+                }
             }
+
+            // Log the view event for Trends
+            store.logMovieView(detailedMovie);
+
+            this.elements.modal.style.display = "flex";
+            setTimeout(() => {
+                this.elements.modal.classList.add("active");
+                this.trapFocus(this.elements.modal);
+            }, 10);
+        } catch (e) {
+            console.error("Error in openModal:", e);
+            alert("Sorry, an error occurred while opening the movie details.");
         }
-
-        // Log the view event for Trends
-        store.logMovieView(detailedMovie);
-
-        this.elements.modal.style.display = "flex";
-        setTimeout(() => {
-            this.elements.modal.classList.add("active");
-            animations.trapFocus(this.elements.modal);
-        }, 10);
     },
 
     setupCarousel(movie) {
@@ -3168,9 +3213,19 @@ export const ui = {
             const validMovies = await api.fetchPopularMoviesBatch();
 
             if (validMovies && validMovies.length > 0) {
+                this.state.trendingMovies = validMovies;
                 const { store } = await import('./store.js');
                 store.saveMoviesBatch(validMovies);
                 this.renderMovies(validMovies, this.elements.movieResults);
+
+                // Re-apply filters right after loading to respect any default HTML state
+                const typeEl = document.getElementById('filter-type');
+                const genreEl = document.getElementById('filter-genre');
+                if (typeEl && genreEl) {
+                    // Dispatch change event to trigger the existing filter logic
+                    typeEl.dispatchEvent(new Event('change'));
+                }
+
                 this.loadHeroTrending(validMovies);
                 this.completeLoader();
             } else {
@@ -3181,7 +3236,18 @@ export const ui = {
             const { store } = await import('./store.js');
             const localMovies = store.getAllMovies();
             if (localMovies && localMovies.length > 0) {
-                this.renderMovies(localMovies.slice(-10).reverse(), this.elements.movieResults);
+                const fallbackList = localMovies.slice(-30).reverse();
+                this.state.trendingMovies = fallbackList;
+                this.renderMovies(fallbackList, this.elements.movieResults);
+
+                // Re-apply filters right after loading to respect any default HTML state
+                const typeEl = document.getElementById('filter-type');
+                const genreEl = document.getElementById('filter-genre');
+                if (typeEl && genreEl) {
+                    // Dispatch change event to trigger the existing filter logic
+                    typeEl.dispatchEvent(new Event('change'));
+                }
+
                 this.completeLoader();
             } else {
                 this.completeLoader();

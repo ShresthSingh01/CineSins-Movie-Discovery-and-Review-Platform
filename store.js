@@ -15,6 +15,19 @@ export const store = {
         }
         localStorage.setItem("reviews", JSON.stringify(reviews));
 
+        // Sync with Backend
+        try {
+            const token = localStorage.getItem('cinesins_token');
+            const profile = localStorage.getItem('cinesins_active_profile');
+            if (token && profile) {
+                await fetch(`http://localhost:5000/api/actions/${profile}/reviews`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ movieId: review.id, rating: review.rating, reviewText: review.text })
+                });
+            }
+        } catch (err) { console.error("Failed to sync review to backend", err); }
+
         // Emit Event
         try {
             const { eventStore } = await import('./src/eventStore.js');
@@ -36,22 +49,38 @@ export const store = {
     async toggleWatchlist(movie) {
         let wl = this.getWatchlist();
         const index = wl.findIndex(m => m.id === movie.id);
+        let added = false;
+
         if (index > -1) {
             wl.splice(index, 1);
             localStorage.setItem("watchlist", JSON.stringify(wl));
-            return false; // Removed
+            added = false;
         } else {
             wl.unshift(movie);
             localStorage.setItem("watchlist", JSON.stringify(wl));
+            added = true;
+        }
 
-            // Emit Event
+        // Sync with Backend
+        try {
+            const token = localStorage.getItem('cinesins_token');
+            const profile = localStorage.getItem('cinesins_active_profile');
+            if (token && profile) {
+                await fetch(`http://localhost:5000/api/actions/${profile}/watchlist`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ movieId: movie.id || movie._id || movie.imdbID })
+                });
+            }
+        } catch (err) { console.error("Failed to sync watchlist to backend", err); }
+
+        if (added) {
             try {
                 const { eventStore } = await import('./src/eventStore.js');
                 eventStore.logEvent('watchlist-add', movie.id, movie.metrics);
             } catch (e) { }
-
-            return true; // Added
         }
+        return added;
     },
 
     async logMovieView(movie) {

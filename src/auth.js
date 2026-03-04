@@ -1,245 +1,194 @@
+import { api } from '../api.js';
+
+const BASE_URL = 'http://localhost:5000/api';
 const originalGetItem = Storage.prototype.getItem;
 const originalSetItem = Storage.prototype.setItem;
 const originalRemoveItem = Storage.prototype.removeItem;
-const originalClear = Storage.prototype.clear;
 
-const PREFIX_EXCEPTIONS = ['cinesins_profiles', 'cinesins_active_profile'];
+const PREFIX_EXCEPTIONS = ['cinesins_profiles', 'cinesins_active_profile', 'cinesins_token'];
 
 function getActiveProfile() {
     return originalGetItem.call(window.localStorage, 'cinesins_active_profile') || null;
 }
 
-// Override Storage methods
 Storage.prototype.getItem = function (key) {
-    if (PREFIX_EXCEPTIONS.includes(key)) {
-        return originalGetItem.call(this, key);
-    }
+    if (PREFIX_EXCEPTIONS.includes(key)) return originalGetItem.call(this, key);
     const prefix = getActiveProfile();
-    if (prefix) {
-        return originalGetItem.call(this, `${prefix}_${key}`);
-    }
-    return originalGetItem.call(this, key);
+    return prefix ? originalGetItem.call(this, `${prefix}_${key}`) : originalGetItem.call(this, key);
 };
 
 Storage.prototype.setItem = function (key, value) {
-    if (PREFIX_EXCEPTIONS.includes(key)) {
-        return originalSetItem.call(this, key, value);
-    }
+    if (PREFIX_EXCEPTIONS.includes(key)) return originalSetItem.call(this, key, value);
     const prefix = getActiveProfile();
-    if (prefix) {
-        return originalSetItem.call(this, `${prefix}_${key}`, value);
-    }
-    return originalSetItem.call(this, key, value);
+    return prefix ? originalSetItem.call(this, `${prefix}_${key}`, value) : originalSetItem.call(this, key, value);
 };
 
 Storage.prototype.removeItem = function (key) {
-    if (PREFIX_EXCEPTIONS.includes(key)) {
-        return originalRemoveItem.call(this, key);
-    }
+    if (PREFIX_EXCEPTIONS.includes(key)) return originalRemoveItem.call(this, key);
     const prefix = getActiveProfile();
-    if (prefix) {
-        return originalRemoveItem.call(this, `${prefix}_${key}`);
-    }
-    return originalRemoveItem.call(this, key);
+    return prefix ? originalRemoveItem.call(this, `${prefix}_${key}`) : originalRemoveItem.call(this, key);
 };
 
 export const auth = {
+    async login(email, password) {
+        const res = await fetch(`${BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) throw new Error("Login failed");
+        const data = await res.json();
+        originalSetItem.call(window.localStorage, 'cinesins_token', data.token);
+        await this.syncProfilesFromBackend();
+        return true;
+    },
+
+    async register(email, password) {
+        const res = await fetch(`${BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) throw new Error("Registration failed");
+        return this.login(email, password);
+    },
+
+    async syncProfilesFromBackend() {
+        const token = originalGetItem.call(window.localStorage, 'cinesins_token');
+        if (!token) return;
+        const res = await fetch(`${BASE_URL}/profiles`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+            const profiles = await res.json();
+            // Transform _id to strings for local usage
+            const mapped = profiles.map(p => ({ ...p, id: p._id }));
+            originalSetItem.call(window.localStorage, 'cinesins_profiles', JSON.stringify(mapped));
+        }
+    },
+
+    async createProfile(name) {
+        const token = originalGetItem.call(window.localStorage, 'cinesins_token');
+        if (!token) return null;
+
+        const res = await fetch(`${BASE_URL}/profiles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ name })
+        });
+        if (res.ok) {
+            await this.syncProfilesFromBackend();
+            const profiles = this.getProfiles();
+            return profiles[profiles.length - 1]; // return newest
+        }
+        return null;
+    },
+
     getProfiles() {
         return JSON.parse(originalGetItem.call(window.localStorage, 'cinesins_profiles')) || [];
     },
 
-    saveProfiles(profiles) {
-        originalSetItem.call(window.localStorage, 'cinesins_profiles', JSON.stringify(profiles));
-    },
-
-    createProfile(name) {
-        const profiles = this.getProfiles();
-        const id = 'prof_' + Date.now() + Math.floor(Math.random() * 1000);
-
-        // Pick a random avatar color/emoji
-        const emojis = ['🎭', '🎬', '🍿', '🎟️', '👽', '🧛'];
-        const colors = ['#8b5cf6', '#db2777', '#10b981', '#f59e0b', '#3b82f6', '#ef4444'];
-
-        const profile = {
-            id,
-            name,
-            emoji: emojis[Math.floor(Math.random() * emojis.length)],
-            color: colors[Math.floor(Math.random() * colors.length)]
-        };
-
-        profiles.push(profile);
-        this.saveProfiles(profiles);
-        return profile;
-    },
-
-    removeProfile(id) {
-        // Remove from profile list
-        const profiles = this.getProfiles().filter(p => p.id !== id);
-        this.saveProfiles(profiles);
-
-        // Cleanup all localStorage keys that belong to this profile
-        const keysToRemove = [];
-        for (let i = 0; i < window.localStorage.length; i++) {
-            const key = window.localStorage.key(i);
-            if (key && key.startsWith(`${id}_`)) {
-                keysToRemove.push(key);
-            }
-        }
-        keysToRemove.forEach(k => {
-            originalRemoveItem.call(window.localStorage, k);
-        });
-    },
-
-    switchProfile(id) {
+    async switchProfile(id) {
         originalSetItem.call(window.localStorage, 'cinesins_active_profile', id);
-        // Reload page to re-initialize store and UI with new prefixed keys
+
+        // Sync reviews and watchlist down from server to local storage for synchronous UI access
+        const token = originalGetItem.call(window.localStorage, 'cinesins_token');
+        if (token && id) {
+            try {
+                // Fetch Watchlist
+                const wlRes = await fetch(`${BASE_URL}/actions/${id}/watchlist`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (wlRes.ok) {
+                    const wlData = await wlRes.json();
+                    const formattedWl = wlData.map(d => ({ ...d.movieId, id: d.movieId._id })); // Map populated backend docs
+                    originalSetItem.call(window.localStorage, `${id}_watchlist`, JSON.stringify(formattedWl));
+                }
+
+                // Fetch Reviews
+                const revRes = await fetch(`${BASE_URL}/actions/${id}/reviews`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (revRes.ok) {
+                    const revData = await revRes.json();
+                    const formattedRev = revData.map(d => ({
+                        id: d.movieId._id || d.movieId,
+                        rating: d.rating,
+                        text: d.reviewText,
+                        title: d.movieId.title,
+                        poster: d.movieId.poster,
+                        date: d.createdAt
+                    }));
+                    originalSetItem.call(window.localStorage, `${id}_reviews`, JSON.stringify(formattedRev));
+                }
+            } catch (e) { console.error("Sync failed", e) }
+        }
+
         window.location.reload();
     },
 
     logout() {
         originalRemoveItem.call(window.localStorage, 'cinesins_active_profile');
+        originalRemoveItem.call(window.localStorage, 'cinesins_token');
         window.location.reload();
     },
 
-    getGlobalReviews(movieId) {
-        // Collect reviews from all profiles for a given movie
-        const globalReviews = [];
-        const profiles = this.getProfiles();
-        const activeProfileId = getActiveProfile();
-
-        profiles.forEach(p => {
-            // Skip the current active user so they don't see their own review as anonymous
-            if (p.id === activeProfileId) return;
-
-            const rawReviews = originalGetItem.call(window.localStorage, `${p.id}_reviews`);
-            if (rawReviews) {
-                try {
-                    const parsed = JSON.parse(rawReviews);
-                    // Find if this profile reviewed this specific movie
-                    const movieReview = parsed.find(r => String(r.id) === String(movieId));
-                    if (movieReview && movieReview.text) {
-                        // Push an anonymous version of the review
-                        globalReviews.push({
-                            text: movieReview.text,
-                            rating: movieReview.rating,
-                            date: movieReview.date || Date.now(),
-                            profileColor: p.color // keep the color to distinguish users visually, but anonymize name
-                        });
-                    }
-                } catch (e) { }
-            }
-        });
-
-        // Return sorted by newest
-        return globalReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-    },
-
-    init() {
+    // Simplified auth gate initialization for demo
+    async init() {
         return new Promise((resolve) => {
+            const token = originalGetItem.call(window.localStorage, 'cinesins_token');
             const active = getActiveProfile();
             const gate = document.getElementById('auth-gate');
 
-            if (active) {
-                // If logged in, hide the gate and allow app to load
+            if (token && active) {
                 if (gate) gate.style.display = 'none';
-
-                // Add logout button to header dynamically
+                // Add logout button
                 const nav = document.getElementById('main-nav');
                 if (nav) {
                     const ul = nav.querySelector('ul');
-                    if (ul) {
+                    if (ul && !document.getElementById('nav-logout')) {
                         const li = document.createElement('li');
-                        li.innerHTML = `<a href="#" id="nav-logout" style="color: #db2777;"><i class="fas fa-sign-out-alt"></i> Switch Profile</a>`;
+                        li.innerHTML = `<a href="#" id="nav-logout" style="color: #db2777;"><i class="fas fa-sign-out-alt"></i> Logout</a>`;
                         ul.appendChild(li);
-
                         document.getElementById('nav-logout').addEventListener('click', (e) => {
                             e.preventDefault();
                             this.logout();
                         });
                     }
                 }
-
                 resolve(true);
             } else {
-                // Not logged in: Show auth gate
                 if (gate) {
                     gate.style.display = 'flex';
-                    this.renderProfiles();
+                    // We render a quick generic login/register prompt into the gate instead of the old profile switcher
+                    gate.innerHTML = `
+                        <div class="auth-container" style="background: rgba(0,0,0,0.8); padding: 30px; border-radius: 12px; border: 1px solid #333; width: 300px; text-align: center; margin: auto;">
+                            <h2>Login or Register</h2>
+                            <input type="email" id="auth-email" placeholder="Email" style="width: 100%; padding: 10px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #444;" />
+                            <input type="password" id="auth-pass" placeholder="Password" style="width: 100%; padding: 10px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #444;" />
+                            <button id="auth-login-btn" style="width: 100%; padding: 10px; background: #db2777; color: white; border: none; cursor: pointer; margin-top: 10px;">Login / Register</button>
+                        </div>
+                    `;
 
-                    const createBtn = document.getElementById('create-profile-btn');
-                    const input = document.getElementById('new-profile-name');
-
-                    if (createBtn && input) {
-                        createBtn.onclick = () => {
-                            const name = input.value.trim();
-                            if (name) {
-                                const newProf = this.createProfile(name);
-                                this.switchProfile(newProf.id);
+                    document.getElementById('auth-login-btn').onclick = async () => {
+                        const em = document.getElementById('auth-email').value;
+                        const pw = document.getElementById('auth-pass').value;
+                        if (!em || !pw) return alert("Email and password required");
+                        try {
+                            try {
+                                await this.login(em, pw);
+                            } catch (e) { // If login fails, try register
+                                await this.register(em, pw);
                             }
-                        };
-                        input.onkeypress = (e) => {
-                            if (e.key === 'Enter') createBtn.click();
-                        };
-                    }
-                } else {
-                    console.error("Auth Gate UI not found in DOM");
-                    resolve(true); // Fallback so app doesn't freeze
+                            // Quick create profile if 0 profiles
+                            const profs = this.getProfiles();
+                            if (profs.length === 0) {
+                                const newP = await this.createProfile(em.split('@')[0]);
+                                await this.switchProfile(newP.id);
+                            } else {
+                                await this.switchProfile(profs[0].id);
+                            }
+                        } catch (err) {
+                            alert("Auth Failed: " + err.message);
+                        }
+                    };
                 }
+                resolve(true);
             }
-        });
-    },
-
-    renderProfiles() {
-        const container = document.getElementById('profiles-list');
-        if (!container) return;
-
-        const profiles = this.getProfiles();
-        container.innerHTML = '';
-
-        if (profiles.length === 0) {
-            container.innerHTML = `<p style="grid-column: 1/-1; color: var(--cin-muted); font-size: 0.9rem;">No profiles yet. Create one to begin.</p>`;
-            return;
-        }
-
-        profiles.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'profile-card';
-            div.style.cssText = `position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: transform 0.2s ease;`;
-            div.innerHTML = `
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: ${p.color}; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1);">
-                    ${p.emoji}
-                </div>
-                <span style="color: #fff; font-weight: 600; font-family: 'Inter', sans-serif;">${p.name}</span>
-                <button class="delete-profile-btn" style="position: absolute; top: -5px; right: 0px; width: 24px; height: 24px; border-radius: 50%; background: rgba(239, 68, 68, 0.9); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s ease; z-index: 10;">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-
-            const delBtn = div.querySelector('.delete-profile-btn');
-
-            div.onmouseover = () => {
-                div.style.transform = 'scale(1.1)';
-                delBtn.style.opacity = '1';
-            };
-            div.onmouseout = () => {
-                div.style.transform = 'scale(1)';
-                delBtn.style.opacity = '0';
-            };
-
-            div.onclick = (e) => {
-                const btn = e.target.closest('.delete-profile-btn');
-                if (btn) {
-                    // Stop event bubbling so switchProfile isn't invoked
-                    e.stopPropagation();
-                    if (confirm(`Are you sure you want to delete profile "${p.name}"? All data for this profile will be lost.`)) {
-                        this.removeProfile(p.id);
-                        this.renderProfiles();
-                    }
-                } else {
-                    this.switchProfile(p.id);
-                }
-            };
-            container.appendChild(div);
         });
     }
 };

@@ -377,13 +377,34 @@
     </section>
 
     <div class="container" style="padding-bottom: 100px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 50px; flex-wrap: wrap; gap: 20px;">
         <div>
           <h2 class="section-title" style="text-align: left; margin: 0; font-size: 2rem;">Trending <span
               style="color: #a855f7;">Sins</span></h2>
           <p style="color: #666; margin-top: 5px;">The most searched masterpieces in the last 24 hours.</p>
         </div>
-
+        <div id="landing-filters" style="display: flex; gap: 15px; flex-wrap: wrap; z-index: 20; position: relative;">
+          <select id="filter-type"
+            style="background: rgba(24,24,27,0.8); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(168, 85, 247, 0.5); border-radius: 12px; padding: 12px 20px; outline: none; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 20px rgba(168, 85, 247, 0.15); transition: all 0.3s ease;">
+            <option value="all">All Types</option>
+            <option value="movie">Movies</option>
+            <option value="series">TV Shows</option>
+          </select>
+          <select id="filter-genre"
+            style="background: rgba(24,24,27,0.8); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(168, 85, 247, 0.5); border-radius: 12px; padding: 12px 20px; outline: none; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 20px rgba(168, 85, 247, 0.15); transition: all 0.3s ease;">
+            <option value="all">All Genres</option>
+            <option value="Action">Action</option>
+            <option value="Comedy">Comedy</option>
+            <option value="Drama">Drama</option>
+            <option value="Horror">Horror</option>
+            <option value="Sci-Fi">Sci-Fi</option>
+            <option value="Romance">Romance</option>
+            <option value="Thriller">Thriller</option>
+            <option value="Animation">Animation</option>
+            <option value="Documentary">Documentary</option>
+          </select>
+        </div>
       </div>
 
       <div id="movie-results" class="movie-grid" aria-live="polite"></div>
