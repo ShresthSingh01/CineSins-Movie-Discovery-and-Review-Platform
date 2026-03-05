@@ -86,6 +86,16 @@ export const auth = {
         return JSON.parse(originalGetItem.call(window.localStorage, 'cinesins_profiles')) || [];
     },
 
+    getGlobalReviews(movieId) {
+        // Shared anonymous reviews for demo purposes
+        // In a real app, this would fetch from a global database endpoint
+        return [
+            { text: "Absolutely stunning visuals! A must watch.", rating: 5, profileColor: "#8b5cf6" },
+            { text: "A bit slow in the middle, but the ending makes up for it.", rating: 4, profileColor: "#db2777" },
+            { text: "Overrated. The book was much better.", rating: 2, profileColor: "#eab308" }
+        ];
+    },
+
     async switchProfile(id) {
         originalSetItem.call(window.localStorage, 'cinesins_active_profile', id);
 
