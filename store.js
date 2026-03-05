@@ -364,9 +364,7 @@ export const store = {
                 // Ensure metrics exist even for legacy data
                 if (!m.metrics) {
                     try {
-                        const { computeMetrics, normalizeMovieData } = this;
-                        // Use normalizeMovieData logic inline or directly since it's on the same object
-                        const normalizedManually = this.normalizeMovieData ? this.normalizeMovieData(m) : m;
+                        const normalizedManually = normalizeMovieData(m);
                         m.metrics = normalizedManually.metrics;
                     } catch (e) {
                         console.warn("Could not normalize movie for analytics:", m.title);
@@ -522,6 +520,11 @@ export function computeMetrics(movie) {
 // Add a normalization helper for metrics persistence
 export function normalizeMovieData(movie) {
     if (!movie) return movie;
+
+    // Ensure id exists (Backend uses _id, frontend uses id/imdbID)
+    if (!movie.id && movie._id) movie.id = String(movie._id);
+    if (!movie.imdbID && movie._id) movie.imdbID = String(movie._id);
+    if (!movie.id && movie.imdbID) movie.id = String(movie.imdbID);
 
     // Create new normalized properties
     movie.normalizedGenres = (movie.genres || movie.Genre || "").split(',').map(g => g.trim()).filter(Boolean);
