@@ -62,7 +62,7 @@ router.get('/search', async (req, res) => {
         const basicResults = response.data.Search.slice(0, 10);
 
         const detailedResults = await Promise.all(basicResults.map(async (m) => {
-            const detailRes = await axios.get(`${OMDB_BASE_URL}?apikey=${OMDB_API_KEY}&i=${m.imdbID}`);
+            const detailRes = await axios.get(`${OMDB_BASE_URL}?apikey=${OMDB_API_KEY}&i=${m.imdbID}&plot=full`);
             return normalizeOMDBMovie(detailRes.data);
         }));
 
@@ -116,22 +116,36 @@ router.get('/trending/week', async (req, res) => {
             trendingTitles = fallbacks.sort(() => 0.5 - Math.random()).slice(0, 30);
         }
 
-        // Step 2: Fetch details for these titles from OMDB
-        const detailedResults = [];
-        for (const title of trendingTitles) {
-            const url = `${OMDB_BASE_URL}?apikey=${OMDB_API_KEY}&t=${encodeURIComponent(title)}`;
-            const response = await axios.get(url);
+        // Step 2: Fetch details for these titles (Check local DB first to save API credits)
+        const detailedResults = await Promise.all(trendingTitles.map(async (title) => {
+            try {
+                // Check local DB/Cache specifically for this title first
+                let cachedMovie = await Movie.findOne({ title: new RegExp(`^${title}$`, 'i') });
 
-            if (response.data.Response !== "False") {
-                const normalized = normalizeOMDBMovie(response.data);
-                detailedResults.push(normalized);
+                if (cachedMovie && (Date.now() - cachedMovie.lastFetched.getTime() < 24 * 60 * 60 * 1000)) {
+                    return cachedMovie;
+                }
 
-                // Cache asynchronously
-                Movie.findByIdAndUpdate(normalized._id, normalized, { upsert: true }).catch(err => console.error(err));
+                // If not in cache or stale, hit OMDB
+                const url = `${OMDB_BASE_URL}?apikey=${OMDB_API_KEY}&t=${encodeURIComponent(title)}&plot=full`;
+                const response = await axios.get(url);
+
+                if (response.data.Response !== "False") {
+                    const normalized = normalizeOMDBMovie(response.data);
+                    normalized.lastFetched = Date.now();
+                    // Update cache
+                    return await Movie.findByIdAndUpdate(normalized._id, normalized, { upsert: true, new: true });
+                }
+
+                // Final fallback: if OMDB fails but we have stale cache, use it
+                return cachedMovie || null;
+            } catch (err) {
+                console.error(`Error processing ${title}:`, err.message);
+                return null;
             }
-        }
+        }));
 
-        res.json(detailedResults);
+        res.json(detailedResults.filter(Boolean));
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Error fetching real-time trending', error: err.message });
