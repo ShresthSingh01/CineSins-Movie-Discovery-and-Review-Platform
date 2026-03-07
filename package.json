@@ -1,12 +1,29 @@
 {
-    "name": "cinemadna",
-    "version": "1.0.0",
-    "description": "CinemaDNA — A privacy-first, offline-first movie analytics & personality product",
-    "type": "module",
-    "scripts": {
-        "start": "npx serve ."
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC"
+  "name": "next-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "next dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@types/gsap": "^1.20.2",
+    "gsap": "^3.14.2",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "typescript": "^5"
+  }
 }
