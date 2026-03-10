@@ -1,0 +1,177 @@
+"use server";
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const USER_OMDB_KEY = process.env.NEXT_PUBLIC_OMDB_API_KEY;
+const FALLBACK_OMDB_KEY = "thewdb";
+
+// Use user key if provided and not known to be invalid/empty, else use fallback
+const OMDB_API_KEY = (USER_OMDB_KEY && USER_OMDB_KEY !== "400f1b83") ? USER_OMDB_KEY : FALLBACK_OMDB_KEY;
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+
+export interface Movie {
+    id: string; // IMDb ID
+    title: string;
+    year: string;
+    poster: string;
+    type?: string;
+    rating?: string;
+    sinScore?: number;
+    sinSentence?: string;
+    plot?: string;
+    Runtime?: string;
+    Genre?: string;
+    Director?: string;
+    Actors?: string;
+    imdbRating?: string;
+    Metascore?: string;
+    logicGaps?: string[];
+}
+
+export async function calculateSinScore(imdbRating: string, metascore: string, aiConfidence: number = 0): Promise<number> {
+    const imdb = parseFloat(imdbRating) || 5.0;
+    const meta = parseInt(metascore) || 50;
+
+    // Base score from IMDb (0-10 scale flipped and boosted to 430 max)
+    const imdbPenalty = Math.max(0, (10 - imdb) * 43);
+
+    // Metacritic modifier (0-100 scale flipped and boosted to 150 max)
+    const metaPenalty = Math.max(0, (100 - meta) * 1.5);
+
+    // AI Sin Multiplier (Random base for trending, will be precise in Audit)
+    const aiModifier = aiConfidence > 0 ? aiConfidence : (Math.random() * 50);
+
+    return Math.floor(imdbPenalty + metaPenalty + aiModifier + 12);
+}
+
+export async function getTrendingMovies(): Promise<Movie[]> {
+    try {
+        if (!genAI) {
+            return await searchMovies("Inception");
+        }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `Return a JSON array of 12 famous or currently popular movie titles that would be interesting to analyze for cinematic "sins". ONLY the JSON array of strings. No markdown formatting.`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const titles = JSON.parse(text.replace(/```json|```/g, "").trim());
+
+        const movies = await Promise.all(
+            titles.map(async (title: string) => {
+                const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`);
+                const data = await res.json();
+                if (data.Response === "True") {
+                    const sinScore = await calculateSinScore(data.imdbRating, data.Metascore);
+                    return {
+                        id: data.imdbID,
+                        title: data.Title,
+                        year: data.Year,
+                        poster: data.Poster !== "N/A" ? data.Poster : "/placeholder-movie.png",
+                        type: data.Type,
+                        rating: data.imdbRating,
+                        Genre: data.Genre,
+                        Director: data.Director,
+                        plot: data.Plot,
+                        Metascore: data.Metascore,
+                        sinScore
+                    };
+                }
+                return null;
+            })
+        );
+
+        return movies.filter((m): m is Movie => m !== null);
+    } catch (error) {
+        return await searchMovies("Batman");
+    }
+}
+
+export async function searchMovies(query: string): Promise<Movie[]> {
+    try {
+        const res = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(query)}&apikey=${OMDB_API_KEY}`);
+        const data = await res.json();
+        if (data.Response === "True") {
+            const movies = await Promise.all(
+                data.Search.slice(0, 8).map(async (m: any) => {
+                    const detailRes = await fetch(`https://www.omdbapi.com/?i=${m.imdbID}&apikey=${OMDB_API_KEY}`);
+                    const detailData = await detailRes.json();
+                    const sinScore = await calculateSinScore(detailData.imdbRating, detailData.Metascore);
+                    return {
+                        id: m.imdbID,
+                        title: m.Title,
+                        year: m.Year,
+                        poster: m.Poster !== "N/A" ? m.Poster : "/placeholder-movie.png",
+                        type: m.Type,
+                        rating: detailData.imdbRating || 'N/A',
+                        Genre: detailData.Genre,
+                        Director: detailData.Director,
+                        Metascore: detailData.Metascore,
+                        sinScore
+                    };
+                })
+            );
+            return movies;
+        }
+        return [];
+    } catch (error) {
+        return [];
+    }
+}
+
+export async function getMovieDetails(id: string) {
+    try {
+        const res = await fetch(`https://www.omdbapi.com/?i=${id}&plot=full&apikey=${OMDB_API_KEY}`);
+        const data = await res.json();
+        return data.Response === "True" ? data : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+export async function getForensicAnalysis(title: string, year: string, plot: string) {
+    if (!genAI) return { sinScore: 0, sinSentence: "Forensic brain offline.", breakdown: {} };
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `Analyze the movie "${title}" released in ${year}. Plot: ${plot}.
+      Acting as the CineSins Forensic AI, provide:
+      1. A "Sin Score" between 0 and 999.
+      2. A single, witty, cynical "Sin Sentence" summarizing its biggest crime.
+      3. A JSON breakdown of flaws (0-100) for: Plot, Acting, Logic, Tone, Technical.
+      Return ONLY valid JSON.`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        return JSON.parse(text.replace(/```json|```/g, "").trim());
+    } catch (error) {
+        return { sinScore: 404, sinSentence: "Evidence lost in the void.", breakdown: {} };
+    }
+}
+
+export async function getOracleRecommendation(moodAnswers: string[]) {
+    // Fallback cinematic artifacts if AI is offline
+    const fallbacks = [
+        { title: "Blade Runner 2049" },
+        { title: "The Lighthouse" },
+        { title: "Seven" },
+        { title: "Mad Max: Fury Road" },
+        { title: "Fight Club" }
+    ];
+
+    if (!genAI) return fallbacks;
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `Based on these session answers: [${moodAnswers.join(", ")}], recommend 3 movies. Return JSON array of objects with {title}.`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        return JSON.parse(text.replace(/```json|```/g, "").trim());
+    } catch (error) {
+        return fallbacks;
+    }
+}

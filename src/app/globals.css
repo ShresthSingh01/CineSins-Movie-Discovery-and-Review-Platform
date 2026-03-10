@@ -1,1 +1,99 @@
-/* globals.css cleared to avoid conflicts with vanilla design system */
+@import "tailwindcss";
+
+@theme {
+  /* Use system fonts as fallback if variables fail to load in Turbopack build */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", serif;
+
+  --color-background: #0D0D0D;
+  --color-foreground: #FFFFFF;
+
+  --color-primary: #C0392B;
+  --color-primary-light: #E74C3C;
+  --color-primary-dark: #8E1C12;
+
+  --color-secondary: #1A1A2E;
+  --color-accent: #F39C12;
+  --color-gold: #D4AF37;
+
+  --color-void: #050505;
+
+  --shadow-premium: 0 0 50px rgba(192, 57, 43, 0.2);
+  --shadow-gold: 0 0 30px rgba(212, 175, 55, 0.1);
+
+  /* Define animation in theme so it's recognized as a utility */
+  --animate-shimmer: shimmer 3s linear infinite;
+  --animate-slow-zoom: slow-zoom 20s ease-in-out infinite;
+
+  @keyframes shimmer {
+    to {
+      background-position: 200% center;
+    }
+  }
+
+  @keyframes slow-zoom {
+
+    0%,
+    100% {
+      transform: scale(1.05);
+    }
+
+    50% {
+      transform: scale(1.1);
+    }
+  }
+}
+
+@layer base {
+  :root {
+    --background: #0D0D0D;
+    --foreground: #FFFFFF;
+  }
+
+  /* Direct font mapping to Next.js variables */
+  body {
+    font-family: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+    @apply bg-black text-white antialiased selection:bg-primary selection:text-white;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-playfair), "Playfair Display", serif;
+  }
+
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-dark {
+    @apply bg-black/60 backdrop-blur-2xl border border-primary/20;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(192, 57, 43, 0.5);
+  }
+
+  .shimmer-text {
+    /* Use the utility directly here if we want, but @apply works if defined in @theme */
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-primary to-white bg-[length:200%_auto] animate-shimmer;
+  }
+
+  .noise-bg {
+    background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+    @apply opacity-20;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-black;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full hover:bg-primary-light transition-colors;
+}

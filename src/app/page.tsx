@@ -1,100 +1,143 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Header } from '@/components/Header';
-import { Hero } from '@/components/Hero';
-import { AuthGate } from '@/components/AuthGate';
-import { MovieGrid } from '@/components/MovieGrid';
-import { MovieModal } from '@/components/MovieModal';
-import { DecisionModal } from '@/components/DecisionModal';
-import { useMovies } from '@/context/MovieContext';
-import { useAuth } from '@/context/AuthContext';
-import { Movie } from '@/lib/types';
-import { api } from '@/lib/api';
-import { normalizeMovieData } from '@/lib/movieUtils';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { Navbar } from '@/components/layout/Navbar';
+import { Hero } from '@/components/sections/Hero';
+import { MovieCard } from '@/components/ui/MovieCard';
+import { getTrendingMovies, Movie } from '@/services/movieService';
+import { motion } from 'framer-motion';
+import { Gavel, AlertTriangle, ShieldCheck, TrendingUp, Microscope } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function Home() {
-  const { activeProfile } = useAuth();
   const [trending, setTrending] = useState<Movie[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [isDecisionOpen, setIsDecisionOpen] = useState(false);
-  const [isLoadingTrending, setIsLoadingTrending] = useState(true);
-  const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (activeProfile) {
-      router.push('/dashboard');
-    }
-  }, [activeProfile, router]);
-
-  const [hasMounted, setHasMounted] = useState(false);
-  const trendingLoaded = useRef(false);
-
-  useEffect(() => {
-    setHasMounted(true);
+    const fetchMovies = async () => {
+      const data = await getTrendingMovies();
+      setTrending(data);
+      setLoading(false);
+    };
+    fetchMovies();
   }, []);
 
-  useEffect(() => {
-    const loadTrending = async () => {
-      if (trendingLoaded.current) return;
-      try {
-        console.log("🔥 Loading landing trending movies...");
-        const results = await api.fetchPopularMoviesBatch();
-        const normalized = results.map((m: any) => normalizeMovieData(m)).filter((m: any): m is Movie => m !== null);
-
-        if (normalized.length > 0) {
-          setTrending(normalized);
-          trendingLoaded.current = true;
-          console.log(`🔥 Landing trending loaded: ${normalized.length} items`);
-        }
-      } catch (e) {
-        console.error("Failed to load trending", e);
-      } finally {
-        setIsLoadingTrending(false);
-      }
-    };
-    if (hasMounted && !trendingLoaded.current) loadTrending();
-  }, [hasMounted]);
-
   return (
-    <main className="min-h-screen">
-      <AuthGate />
-      <Header onOpenDecision={() => setIsDecisionOpen(true)} />
-      <Hero />
+    <div className="flex flex-col w-full min-h-screen bg-black">
+      <Navbar />
+      <main className="flex-1">
+        <Hero />
 
-      <section id="trending" className="container py-20">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '50px', flexWrap: 'wrap', gap: '20px' }}>
-          <div>
-            <h2 className="section-title" style={{ textAlign: 'left', margin: 0, fontSize: '2rem' }}>
-              Trending <span style={{ color: '#a855f7' }}>Sins</span>
+        {/* Forensic Feed Heading */}
+        <section className="pt-32 pb-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 text-primary font-black tracking-widest text-[10px] uppercase mb-4">
+              <Microscope className="w-4 h-4" /> THE FORENSIC FEED
+            </div>
+            <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.85] font-display uppercase italic">
+              WATCHING <span className="shimmer-text">NOW.</span>
             </h2>
-            <p style={{ color: '#666', marginTop: '5px' }}>The most searched masterpieces in the last 24 hours.</p>
+          </div>
+          <div className="flex flex-col items-end text-right">
+            <div className="text-2xl font-black italic tracking-tighter text-white">Consensus Pending</div>
+            <div className="text-[10px] text-white/30 font-black uppercase tracking-[0.3em] mt-1">Live Evidence Streams</div>
+          </div>
+        </section>
+
+        {/* Trending Grid */}
+        <section className="py-20 px-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-20">
+            {loading ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="aspect-[2/3] w-full bg-white/5 rounded-[32px] animate-pulse" />
+              ))
+            ) : (
+              trending.map((movie, index) => (
+                <MovieCard key={movie.id} movie={movie} index={index} />
+              ))
+            )}
+          </div>
+
+          <div className="mt-20 text-center">
+            <button className="glass px-12 py-5 rounded-2xl text-[10px] font-black tracking-[0.4em] uppercase hover:bg-white hover:text-black transition-all border border-white/10 group">
+              Expand Database <TrendingUp className="inline-block ml-3 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        </section>
+
+        {/* Forensic Philosophy Section */}
+        <section className="py-40 px-6 max-w-7xl mx-auto bg-transparent relative overflow-hidden">
+          {/* Decorative Background Text */}
+          <div className="absolute top-1/2 left-0 -translate-y-1/2 text-[15rem] font-black text-white/[0.02] pointer-events-none select-none italic font-display -z-10 tracking-tighter">
+            CINESINS.
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-24 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-6xl md:text-8xl font-black tracking-tighter mb-10 leading-[0.9] font-display">
+                RATINGS ARE <br /><span className="text-primary italic">EXTINCT.</span>
+              </h2>
+              <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-12 uppercase tracking-tight">
+                Stop boiling down cinematic masterpieces into meaningless stars. Score movies based on their forensic failures: plot-holes, logical lapses, and technical sins.
+              </p>
+
+              <div className="grid grid-cols-3 gap-8">
+                <PhilosophyItem score="0-20" label="SINLESS" desc="Cinema Elite" color="text-primary" />
+                <PhilosophyItem score="21-50" label="OFFENDER" desc="Minor Lapses" color="text-white/60" />
+                <PhilosophyItem score="51+" label="CRIMINAL" desc="Void Bait" color="text-white/20" />
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              <div className="glass-dark aspect-square rounded-[64px] border border-primary/20 flex flex-col items-center justify-center p-12 text-center relative overflow-hidden group shadow-premium">
+                <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/20 transition-all duration-700" />
+                <div className="relative z-10">
+                  <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-8 border border-primary/40 group-hover:scale-110 transition-transform shadow-premium">
+                    <Gavel className="w-12 h-12 text-primary" />
+                  </div>
+                  <h3 className="text-4xl font-black mb-4 italic tracking-tighter">THE SIN ENGINE</h3>
+                  <p className="text-white/40 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto">Submit your first forensic note to begin.</p>
+                </div>
+                {/* Glowing Accent */}
+                <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[100px] group-hover:bg-primary/40 transition-all" />
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="py-20 text-center border-t border-white/5 bg-void/50">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col items-center gap-10">
+          <div className="text-3xl font-black tracking-[0.5em] text-white/20 uppercase font-display italic">CINESINS.</div>
+          <nav className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 text-[10px] font-black tracking-widest uppercase text-white/40">
+            <Link href="/about" className="hover:text-primary transition-colors">Forensic Standards</Link>
+            <Link href="/oracle" className="hover:text-primary transition-colors">The Oracle</Link>
+            <Link href="/void" className="hover:text-primary transition-colors">The Void</Link>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Archival Privacy</Link>
+          </nav>
+          <div className="text-[10px] font-black text-white/10 uppercase tracking-[0.2em]">
+            &copy; 2026 CineSins Forensic Lab. All rights to criticism reserved.
           </div>
         </div>
-
-        {isLoadingTrending ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}><div className="loader"></div></div>
-        ) : (
-          <MovieGrid
-            movies={trending.slice(0, 10)}
-            onMovieClick={(m: any) => setSelectedMovie(m)}
-          />
-        )}
-      </section>
-
-      <MovieModal
-        movie={selectedMovie}
-        onClose={() => setSelectedMovie(null)}
-      />
-
-      <DecisionModal
-        isOpen={isDecisionOpen}
-        onClose={() => setIsDecisionOpen(false)}
-      />
-
-      {/* Ambient Glow Cursor */}
-      <div className="cursor-glow" id="cursor-glow"></div>
-    </main>
+      </footer>
+    </div>
   );
 }
+
+const PhilosophyItem = ({ score, label, desc, color }: { score: string, label: string, desc: string, color: string }) => (
+  <div className="flex flex-col group transition-transform hover:translate-y-[-5px]">
+    <span className={cn("text-4xl font-black tracking-tighter leading-none mb-2", color)}>{score}</span>
+    <span className="text-[10px] uppercase font-black text-white tracking-[0.2em]">{label}</span>
+    <span className="text-[8px] uppercase font-bold text-white/20 tracking-[0.1em] mt-1">{desc}</span>
+  </div>
+);
