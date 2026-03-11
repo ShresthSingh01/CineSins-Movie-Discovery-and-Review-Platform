@@ -132,6 +132,76 @@ export async function getMovieDetails(id: string) {
     }
 }
 
+export async function getDetentionBlock(): Promise<Movie[]> {
+    try {
+        if (!genAI) {
+            return await searchMovies("Cats");
+        }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `Return a JSON array of 8 famously bad or low-rated movie titles (cinematic disasters). ONLY the JSON array of strings. No markdown formatting.`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const titles = JSON.parse(text.replace(/```json|```/g, "").trim());
+
+        const movies = await Promise.all(
+            titles.map(async (title: string) => {
+                const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`);
+                const data = await res.json();
+                if (data.Response === "True") {
+                    const sinScore = await calculateSinScore(data.imdbRating, data.Metascore);
+                    return {
+                        id: data.imdbID,
+                        title: data.Title,
+                        year: data.Year,
+                        poster: data.Poster !== "N/A" ? data.Poster : "/placeholder-movie.png",
+                        type: data.Type,
+                        rating: data.imdbRating,
+                        Genre: data.Genre,
+                        Director: data.Director,
+                        plot: data.Plot,
+                        Metascore: data.Metascore,
+                        sinScore
+                    };
+                }
+                return null;
+            })
+        );
+
+        return movies.filter((m): m is Movie => m !== null);
+    } catch (error) {
+        console.error("Detention Block Error:", error);
+        // Robust fallback with diverse famously bad films
+        const disasters = ["The Room", "Cats", "Birdemic: Shock and Terror", "Batman & Robin", "The Emoji Movie", "Battlefield Earth", "Plan 9 from Outer Space", "Superbabies: Baby Geniuses 2"];
+        const fallbackMovies = await Promise.all(
+            disasters.map(async (title) => {
+                const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`);
+                const data = await res.json();
+                if (data.Response === "True") {
+                    const sinScore = await calculateSinScore(data.imdbRating, data.Metascore);
+                    const movie: Movie = {
+                        id: data.imdbID,
+                        title: data.Title,
+                        year: data.Year,
+                        poster: data.Poster !== "N/A" ? data.Poster : "/placeholder-movie.png",
+                        type: data.Type,
+                        rating: data.imdbRating,
+                        Genre: data.Genre,
+                        Director: data.Director,
+                        plot: data.Plot,
+                        Metascore: data.Metascore,
+                        sinScore
+                    };
+                    return movie;
+                }
+                return null;
+            })
+        );
+        return (fallbackMovies.filter((m) => m !== null) as Movie[]);
+    }
+}
+
 export async function getForensicAnalysis(title: string, year: string, plot: string) {
     if (!genAI) return { sinScore: 0, sinSentence: "Forensic brain offline.", breakdown: {} };
 
@@ -139,16 +209,37 @@ export async function getForensicAnalysis(title: string, year: string, plot: str
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const prompt = `Analyze the movie "${title}" released in ${year}. Plot: ${plot}.
       Acting as the CineSins Forensic AI, provide:
-      1. A "Sin Score" between 0 and 999.
-      2. A single, witty, cynical "Sin Sentence" summarizing its biggest crime.
-      3. A JSON breakdown of flaws (0-100) for: Plot, Acting, Logic, Tone, Technical.
+      1. A "sinScore" between 0 and 999.
+      2. A single, witty, cynical "sinSentence" summarizing its biggest crime.
+      3. A JSON "breakdown" of flaws (0-100) for: Plot, Acting, Logic, Tone, Technical.
+      4. A JSON array "crimes" containing 3 specific, witty "charges" (plot holes or failures) as objects with {id, description, severity}.
       Return ONLY valid JSON.`;
 
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        return JSON.parse(text.replace(/```json|```/g, "").trim());
+        const data = JSON.parse(text.replace(/```json|```/g, "").trim());
+
+        // Ensure crimes exist even if AI fails to format properly
+        if (!data.crimes) {
+            data.crimes = [
+                { id: 1, description: "Generic cinematic deviation detected.", severity: "Moderate" },
+                { id: 2, description: "Logical inconsistencies in character motivation.", severity: "High" },
+                { id: 3, description: "Unnecessary narrative padding identified.", severity: "Low" }
+            ];
+        }
+        return data;
     } catch (error) {
-        return { sinScore: 404, sinSentence: "Evidence lost in the void.", breakdown: {} };
+        console.error("Forensic Analysis Error:", error);
+        return {
+            sinScore: 404,
+            sinSentence: "Evidence lost in the void. Tactical fallback engaged.",
+            breakdown: { Plot: 50, Acting: 50, Tone: 50, Logic: 50, Technical: 50 },
+            crimes: [
+                { id: 1, description: "Corrupted forensic data prevents specific indictment.", severity: "Critical" },
+                { id: 2, description: "Generic cinematic deviation detected by oversight.", severity: "Moderate" },
+                { id: 3, description: "Subject remains uncalibrated due to data void.", severity: "Low" }
+            ]
+        };
     }
 }
 

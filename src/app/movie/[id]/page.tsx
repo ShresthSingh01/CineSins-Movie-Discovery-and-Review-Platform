@@ -29,6 +29,7 @@ export default function MovieDetail() {
     const [loading, setLoading] = useState(true);
     const [analyzing, setAnalyzing] = useState(false);
     const [forensics, setForensics] = useState<any>(null);
+    const [verdicts, setVerdicts] = useState<Record<number, boolean>>({});
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -44,9 +45,14 @@ export default function MovieDetail() {
     const runForensics = async () => {
         if (!movie) return;
         setAnalyzing(true);
+        setVerdicts({});
         const report = await getForensicAnalysis(movie.Title, movie.Year, movie.Plot);
         setForensics(report);
         setAnalyzing(false);
+    };
+
+    const handleVerdict = (id: number, agreed: boolean) => {
+        setVerdicts(prev => ({ ...prev, [id]: agreed }));
     };
 
     if (loading) return (
@@ -206,6 +212,100 @@ export default function MovieDetail() {
                                     </div>
                                 </div>
                             </section>
+
+                            {/* Evidence Locker: Interactive Crimes */}
+                            <section className="space-y-12">
+                                <div className="flex items-center gap-4 px-4 border-l-4 border-accent">
+                                    <div>
+                                        <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2">Exhibit A, B, C</div>
+                                        <h2 className="text-5xl font-black italic tracking-tighter uppercase font-display">THE EVIDENCE LOCKER.</h2>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {forensics.crimes?.map((crime: any) => (
+                                        <motion.div
+                                            key={crime.id}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            className="glass-dark p-10 rounded-[40px] border border-white/5 flex flex-col md:flex-row items-center gap-8 group hover:border-primary/30 transition-all"
+                                        >
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <span className={cn(
+                                                        "text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest",
+                                                        crime.severity === 'High' ? "bg-primary text-white" : "bg-white/10 text-white/60"
+                                                    )}>
+                                                        {crime.severity} SEVERITY
+                                                    </span>
+                                                    <span className="text-[10px] font-black text-primary uppercase italic tracking-widest">Charge #{crime.id}</span>
+                                                </div>
+                                                <p className="text-2xl font-black italic tracking-tighter text-white/90 uppercase font-display leading-tight">
+                                                    {crime.description}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex gap-4">
+                                                <button
+                                                    onClick={() => handleVerdict(crime.id, true)}
+                                                    className={cn(
+                                                        "px-8 py-4 rounded-3xl font-black tracking-widest text-[10px] uppercase transition-all flex items-center gap-2",
+                                                        verdicts[crime.id] === true
+                                                            ? "bg-primary text-white scale-105 shadow-premium"
+                                                            : "bg-white/5 text-white/40 hover:bg-white/10"
+                                                    )}
+                                                >
+                                                    <Gavel size={14} /> INDICT
+                                                </button>
+                                                <button
+                                                    onClick={() => handleVerdict(crime.id, false)}
+                                                    className={cn(
+                                                        "px-8 py-4 rounded-3xl font-black tracking-widest text-[10px] uppercase transition-all flex items-center gap-2",
+                                                        verdicts[crime.id] === false
+                                                            ? "bg-green-500 text-white scale-105 shadow-premium"
+                                                            : "bg-white/5 text-white/40 hover:bg-white/10"
+                                                    )}
+                                                >
+                                                    <ShieldAlert size={14} /> ACQUIT
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+
+                                {Object.keys(verdicts).length === forensics.crimes?.length && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="bg-primary/10 border border-primary/30 p-12 rounded-[56px] text-center"
+                                    >
+                                        <div className="text-primary font-black text-2xl mb-2 tracking-[0.2em] uppercase italic">Final Verdict Recorded</div>
+                                        <p className="text-white/60 text-sm font-bold uppercase tracking-widest">
+                                            Your evidence has been uploaded to the Forensic Deep-Chain.
+                                        </p>
+                                    </motion.div>
+                                )}
+                            </section>
+
+                            {/* Save to History Effect */}
+                            {(() => {
+                                if (Object.keys(verdicts).length === (forensics.crimes?.length || 0) && Object.values(verdicts).some(v => v === true)) {
+                                    if (typeof window !== 'undefined') {
+                                        const deported = JSON.parse(localStorage.getItem('cinesins_deported') || '[]');
+                                        if (!deported.find((m: any) => m.id === movie.imdbID)) {
+                                            const entry = {
+                                                id: movie.imdbID,
+                                                title: movie.Title,
+                                                year: movie.Year,
+                                                poster: movie.Poster,
+                                                sinScore: forensics.sinScore
+                                            };
+                                            localStorage.setItem('cinesins_deported', JSON.stringify([entry, ...deported].slice(0, 8)));
+                                        }
+                                    }
+                                }
+                                return null;
+                            })()}
                         </div>
 
                         {/* Sidebar Intel */}

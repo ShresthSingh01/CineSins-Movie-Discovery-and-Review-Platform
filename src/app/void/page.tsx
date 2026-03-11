@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { MovieCard } from '@/components/ui/MovieCard';
-import { searchMovies, Movie } from '@/services/movieService';
+import { getDetentionBlock, Movie } from '@/services/movieService';
 import { motion } from 'framer-motion';
 import { Ghost, ShieldAlert, AlertTriangle, Skull, History, TrendingDown, Microscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import NextImage from 'next/image';
 
 export default function TheVoid() {
     const [highSinMovies, setHighSinMovies] = useState<Movie[]>([]);
@@ -14,11 +15,8 @@ export default function TheVoid() {
 
     useEffect(() => {
         const fetchVoid = async () => {
-            // Fetch famously sinful/low-rated artifacts
-            const badMovies = await searchMovies("The Room");
-            const disasters = await searchMovies("Cats");
-            const combined = [...badMovies.slice(0, 4), ...disasters.slice(0, 4)];
-            setHighSinMovies(combined);
+            const movies = await getDetentionBlock();
+            setHighSinMovies(movies);
             setLoading(false);
         };
         fetchVoid();
@@ -79,6 +77,48 @@ export default function TheVoid() {
                         ))
                     )}
                 </div>
+
+                {/* Recently Deported Section */}
+                {(() => {
+                    if (typeof window !== 'undefined') {
+                        const deported = JSON.parse(localStorage.getItem('cinesins_deported') || '[]');
+                        if (deported.length > 0) {
+                            return (
+                                <section className="mt-40">
+                                    <div className="flex items-center gap-4 mb-20 px-4 border-l-4 border-accent">
+                                        <div>
+                                            <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2">Your Indictment History</div>
+                                            <h2 className="text-5xl font-black italic tracking-tighter uppercase font-display">RECENTLY DEPORTED.</h2>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
+                                        {deported.map((m: any, i: number) => (
+                                            <motion.div
+                                                key={m.id}
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className="relative aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 group"
+                                            >
+                                                <NextImage
+                                                    src={m.poster}
+                                                    alt={m.title}
+                                                    fill
+                                                    className="object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                                                    unoptimized={true}
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                                                <div className="absolute bottom-3 left-3 right-3 text-[8px] font-black text-white/40 uppercase truncate">
+                                                    #{m.id}
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </section>
+                            );
+                        }
+                    }
+                    return null;
+                })()}
 
                 {/* Anti-Recommendation Warning */}
                 <section className="mt-40 glass-dark p-20 rounded-[64px] border border-primary/20 flex flex-col md:flex-row items-center gap-20 shadow-premium relative overflow-hidden">
