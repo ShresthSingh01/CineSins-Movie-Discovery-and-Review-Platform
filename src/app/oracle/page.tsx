@@ -79,8 +79,15 @@ export default function Oracle() {
         setStep(step + 1);
 
         try {
-            // Get AI-curated recommendations based on mood
-            const recs = await getOracleRecommendation(finalAnswers);
+            // Get history from localStorage
+            let history: string[] = [];
+            if (typeof window !== 'undefined') {
+                const deported = JSON.parse(localStorage.getItem('cinesins_deported') || '[]');
+                history = deported.map((m: any) => m.title);
+            }
+
+            // Get AI-curated recommendations based on mood and forensic history
+            const recs = await getOracleRecommendation(finalAnswers, history);
 
             const movieResults = await Promise.all(
                 recs.map(async (r: any) => {

@@ -243,7 +243,7 @@ export async function getForensicAnalysis(title: string, year: string, plot: str
     }
 }
 
-export async function getOracleRecommendation(moodAnswers: string[]) {
+export async function getOracleRecommendation(moodAnswers: string[], history: string[] = []) {
     // Fallback cinematic artifacts if AI is offline
     const fallbacks = [
         { title: "Blade Runner 2049" },
@@ -257,7 +257,11 @@ export async function getOracleRecommendation(moodAnswers: string[]) {
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const prompt = `Based on these session answers: [${moodAnswers.join(", ")}], recommend 3 movies. Return JSON array of objects with {title}.`;
+        const historyContext = history.length > 0
+            ? `\nAGENT HISTORY: The user has recently indicted/deported these movies for cinematic sins: [${history.join(", ")}]. Avoid these specific titles and consider their genres as potential 'low-interest' zones unless the current session strongly indicates otherwise.`
+            : "";
+
+        const prompt = `You are the CineSins Oracle. ${historyContext}\nBased on these session answers: [${moodAnswers.join(", ")}], recommend 3 movies. Return JSON array of objects with {title}.`;
 
         const result = await model.generateContent(prompt);
         const text = result.response.text();
