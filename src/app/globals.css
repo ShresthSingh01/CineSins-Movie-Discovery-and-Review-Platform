@@ -8,9 +8,9 @@
   --color-background: #0D0D0D;
   --color-foreground: #FFFFFF;
 
-  --color-primary: #C0392B;
-  --color-primary-light: #E74C3C;
-  --color-primary-dark: #8E1C12;
+  --color-primary: #7000FF;
+  --color-primary-light: #9D50FF;
+  --color-primary-dark: #4B00B4;
 
   --color-secondary: #1A1A2E;
   --color-accent: #F39C12;
@@ -18,7 +18,7 @@
 
   --color-void: #050505;
 
-  --shadow-premium: 0 0 50px rgba(192, 57, 43, 0.2);
+  --shadow-premium: 0 0 50px rgba(112, 0, 255, 0.2);
   --shadow-gold: 0 0 30px rgba(212, 175, 55, 0.1);
 
   /* Define animation in theme so it's recognized as a utility */
@@ -71,7 +71,7 @@
   }
 
   .text-glow {
-    text-shadow: 0 0 20px rgba(192, 57, 43, 0.5);
+    text-shadow: 0 0 20px rgba(112, 0, 255, 0.5);
   }
 
   .shimmer-text {

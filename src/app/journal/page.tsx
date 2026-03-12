@@ -142,7 +142,7 @@ export default function Journal() {
                             {/* Actions Footer */}
                             <div className="bg-white/[0.02] px-8 py-4 flex items-center justify-between border-t border-white/5">
                                 <div className="flex gap-6">
-                                    <button className="flex items-center gap-2 text-xs font-bold text-white/60 hover:text-red-500 transition-colors">
+                                    <button className="flex items-center gap-2 text-xs font-bold text-white/60 hover:text-primary transition-colors">
                                         <Heart size={16} /> {entry.likes}
                                     </button>
                                     <button className="flex items-center gap-2 text-xs font-bold text-white/60 hover:text-primary transition-colors">
@@ -159,7 +159,7 @@ export default function Journal() {
 
                 {/* Sidebar Stats / CTA */}
                 <div className="space-y-12">
-                    <button className="w-full bg-primary hover:bg-primary-dark text-white p-8 rounded-[32px] font-black text-xl italic tracking-tighter transition-all shadow-[0_20px_40px_rgba(192,57,43,0.3)] flex items-center justify-center gap-4 group">
+                    <button className="w-full bg-primary hover:bg-primary-dark text-white p-8 rounded-[32px] font-black text-xl italic tracking-tighter transition-all shadow-[0_20px_40px_rgba(112,0,255,0.3)] flex items-center justify-center gap-4 group">
                         <Plus className="group-hover:rotate-180 transition-transform duration-500" /> NEW ENTRY
                     </button>
 
