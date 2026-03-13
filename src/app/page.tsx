@@ -6,19 +6,28 @@ import { Hero } from '@/components/sections/Hero';
 import { MovieCard } from '@/components/ui/MovieCard';
 import { getTrendingMovies, Movie } from '@/services/movieService';
 import { motion } from 'framer-motion';
-import { Gavel, AlertTriangle, ShieldCheck, TrendingUp, Microscope } from 'lucide-react';
+import { Gavel, AlertTriangle, ShieldCheck, TrendingUp, Microscope, Sparkles, Book, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { syncService } from '@/services/syncService';
+import { VerdictTicker } from '@/components/ui/VerdictTicker';
+import { injectDemoData } from '@/lib/injectDemoData';
 
 export default function Home() {
   const [trending, setTrending] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Start with demo state if in development
+    injectDemoData();
+    
     const fetchMovies = async () => {
       const data = await getTrendingMovies();
       setTrending(data);
       setLoading(false);
+      
+      // Trigger background sync of local findings to the global DB
+      syncService.syncLocalVerdicts();
     };
     fetchMovies();
   }, []);
@@ -28,6 +37,9 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         <Hero />
+        
+        {/* Real-Time Community Ticker */}
+        <VerdictTicker />
 
         {/* Forensic Feed Heading */}
         <section className="pt-32 pb-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5">
@@ -63,6 +75,49 @@ export default function Home() {
             <button className="glass px-12 py-5 rounded-2xl text-[10px] font-black tracking-[0.4em] uppercase hover:bg-white hover:text-black transition-all border border-white/10 group">
               Expand Database <TrendingUp className="inline-block ml-3 group-hover:translate-x-1 transition-transform" />
             </button>
+          </div>
+        </section>
+
+        {/* Forensic Lab Tools Section */}
+        <section className="py-32 px-6 max-w-7xl mx-auto border-t border-white/5">
+          <div className="flex flex-col mb-20">
+            <div className="flex items-center gap-2 text-primary font-black tracking-widest text-[10px] uppercase mb-4">
+              <Sparkles className="w-4 h-4" /> THE FORENSIC ECOSYSTEM
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
+              EQUIPPING THE <span className="shimmer-text">INVESTIGATOR.</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <FeatureCard 
+              href="/oracle"
+              icon={<Sparkles className="w-8 h-8" />}
+              title="AI MOVIE FINDER"
+              desc="Personalized movie matches based on your unique taste."
+              tag="AI Finder"
+            />
+            <FeatureCard 
+              href="/void"
+              icon={<Search className="w-8 h-8" />}
+              title="HALL OF SHAME"
+              desc="The collective archive of movies that failed the audit."
+              tag="Bad Movies"
+            />
+            <FeatureCard 
+              href="/journal"
+              icon={<Book className="w-8 h-8" />}
+              title="MY MOVIE LOG"
+              desc="Your history of reviews, reactions, and cinematic audits."
+              tag="Personal"
+            />
+            <FeatureCard 
+              href="/debates"
+              icon={<Gavel className="w-8 h-8" />}
+              title="COMMUNITY POLLS"
+              desc="Vote on controversial movie sins with other users."
+              tag="Social"
+            />
           </div>
         </section>
 
@@ -120,10 +175,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center gap-10">
           <div className="text-3xl font-black tracking-[0.5em] text-white/20 uppercase font-display italic">CINESINS.</div>
           <nav className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 text-[10px] font-black tracking-widest uppercase text-white/40">
-            <Link href="/about" className="hover:text-primary transition-colors">Forensic Standards</Link>
-            <Link href="/oracle" className="hover:text-primary transition-colors">The Oracle</Link>
-            <Link href="/void" className="hover:text-primary transition-colors">The Void</Link>
-            <Link href="/privacy" className="hover:text-primary transition-colors">Archival Privacy</Link>
+            <Link href="/about" className="hover:text-primary transition-colors">Audit Standards</Link>
+            <Link href="/oracle" className="hover:text-primary transition-colors">AI Finder</Link>
+            <Link href="/void" className="hover:text-primary transition-colors">Hall of Shame</Link>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Data Privacy</Link>
           </nav>
           <div className="text-[10px] font-black text-white/10 uppercase tracking-[0.2em]">
             &copy; 2026 CineSins Forensic Lab. All rights to criticism reserved.
@@ -133,6 +188,26 @@ export default function Home() {
     </div>
   );
 }
+
+const FeatureCard = ({ href, icon, title, desc, tag }: { href: string, icon: React.ReactNode, title: string, desc: string, tag: string }) => (
+  <Link href={href}>
+    <div className="glass-dark p-10 rounded-[40px] border border-white/5 hover:border-primary/50 transition-all duration-500 group relative overflow-hidden h-full flex flex-col">
+      <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="px-3 py-1 bg-primary text-[8px] font-black uppercase tracking-widest rounded-full">{tag}</div>
+      </div>
+      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-8 border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-premium">
+        {icon}
+      </div>
+      <h3 className="text-2xl font-black tracking-tighter mb-4 italic group-hover:text-primary transition-colors">{title}</h3>
+      <p className="text-sm text-white/40 font-bold leading-relaxed uppercase tracking-tighter mb-8 flex-1">{desc}</p>
+      <div className="flex items-center gap-2 text-primary font-black text-[10px] tracking-[0.3em] uppercase opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">
+        Access Module <TrendingUp className="w-3 h-3" />
+      </div>
+      {/* Background Glow */}
+      <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/5 rounded-full blur-[40px] group-hover:bg-primary/20 transition-all" />
+    </div>
+  </Link>
+);
 
 const PhilosophyItem = ({ score, label, desc, color }: { score: string, label: string, desc: string, color: string }) => (
   <div className="flex flex-col group transition-transform hover:translate-y-[-5px]">

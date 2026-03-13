@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Film, Search, Bell, User, Menu, X, Gavel, History, Sparkles } from 'lucide-react';
+import { Film, Search, Bell, User, Menu, X, Gavel, History, Sparkles, Book } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SearchOverlay } from '@/components/ui/SearchOverlay';
 
@@ -49,9 +49,10 @@ export const Navbar = () => {
 
                     {/* Center Nav - Desktop */}
                     <div className="hidden lg:flex items-center gap-10">
-                        <NavLink href="/oracle" icon={<Sparkles size={14} />}>Oracle</NavLink>
-                        <NavLink href="/void" icon={<Search size={14} />}>The Void</NavLink>
-                        <NavLink href="/debates" icon={<Gavel size={14} />}>Debates</NavLink>
+                        <NavLink href="/oracle" icon={<Sparkles size={14} />}>AI Finder</NavLink>
+                        <NavLink href="/void" icon={<Search size={14} />}>Hall of Shame</NavLink>
+                        <NavLink href="/journal" icon={<Book size={14} />}>My Log</NavLink>
+                        <NavLink href="/debates" icon={<Gavel size={14} />}>Polls</NavLink>
                         <NavLink href="/time-machine" icon={<History size={14} />}>Timeline</NavLink>
                     </div>
 
@@ -88,10 +89,10 @@ export const Navbar = () => {
                             className="fixed inset-0 z-[-1] bg-black/90 pt-32 px-10 flex flex-col gap-8 md:hidden lg:hidden"
                         >
                             <MobileNavLink href="/" text="Home" />
-                            <MobileNavLink href="/oracle" text="The Oracle" />
-                            <MobileNavLink href="/void" text="The Void" />
-                            <MobileNavLink href="/journal" text="Journal" />
-                            <MobileNavLink href="/debates" text="Debates" />
+                            <MobileNavLink href="/oracle" text="AI Movie Finder" />
+                            <MobileNavLink href="/void" text="Hall of Shame" />
+                            <MobileNavLink href="/journal" text="My Movie Log" />
+                            <MobileNavLink href="/debates" text="Community Polls" />
                             <MobileNavLink href="/time-machine" text="Timeline" />
                             <div className="h-[1px] w-full bg-white/10 my-4" />
                             <button className="flex items-center gap-4 text-2xl font-black italic tracking-tighter text-primary">

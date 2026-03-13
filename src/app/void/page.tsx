@@ -37,7 +37,7 @@ export default function TheVoid() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="flex items-center justify-center gap-3 text-primary font-black tracking-[0.5em] text-[10px] uppercase mb-8"
                     >
-                        <Ghost className="w-5 h-5 animate-bounce" /> ACCESSING THE DETENTION BLOCK
+                        <Ghost className="w-5 h-5 animate-bounce" /> ACCESSING THE HALL OF SHAME
                     </motion.div>
 
                     <h1 className="text-7xl md:text-[12rem] font-black tracking-tighter leading-[0.8] font-display uppercase italic mb-10 shimmer-text">
@@ -53,16 +53,16 @@ export default function TheVoid() {
             <main className="max-w-7xl mx-auto px-6 w-full mt-32">
                 {/* Hall of Shame Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-32">
-                    <VoidMetric icon={<ShieldAlert className="text-primary" />} value="8,402" label="DEPORTED ARTIFACTS" />
-                    <VoidMetric icon={<Skull className="text-white/40" />} value="124K" label="CAREER CRIMINALS" />
-                    <VoidMetric icon={<History className="text-accent" />} value="98%" label="PUBLIC DISREGARD" />
+                    <VoidMetric icon={<ShieldAlert className="text-primary" />} value="8,402" label="BAD MOVIES LOGGED" />
+                    <VoidMetric icon={<Skull className="text-white/40" />} value="124K" label="LOGIC CRIMES" />
+                    <VoidMetric icon={<History className="text-accent" />} value="98%" label="SKEPTICISM RATE" />
                 </div>
 
                 <div className="flex items-center justify-between mb-20">
-                    <h2 className="text-4xl font-black italic tracking-tighter uppercase font-display">THE HALL OF SHAME.</h2>
+                    <h2 className="text-4xl font-black italic tracking-tighter uppercase font-display">THE REJECTS.</h2>
                     <div className="flex items-center gap-4 bg-primary/5 px-6 py-3 rounded-2xl border border-primary/20">
                         <TrendingDown className="text-primary" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Sorting by Sin Intensity</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Highest Sin Count</span>
                     </div>
                 </div>
 
@@ -87,8 +87,8 @@ export default function TheVoid() {
                                 <section className="mt-40">
                                     <div className="flex items-center gap-4 mb-20 px-4 border-l-4 border-accent">
                                         <div>
-                                            <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2">Your Indictment History</div>
-                                            <h2 className="text-5xl font-black italic tracking-tighter uppercase font-display">RECENTLY DEPORTED.</h2>
+                                            <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2">Your Personal Hall</div>
+                                            <h2 className="text-5xl font-black italic tracking-tighter uppercase font-display">MY BLACKLIST.</h2>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
@@ -129,9 +129,9 @@ export default function TheVoid() {
                         <Microscope className="w-20 h-20 text-primary animate-pulse" />
                     </div>
                     <div className="flex-1 text-center md:text-left">
-                        <h3 className="text-4xl md:text-6xl font-black tracking-tighter italic uppercase font-display mb-6 leading-none">FORENSIC WARNING.</h3>
+                        <h3 className="text-4xl md:text-6xl font-black tracking-tighter italic uppercase font-display mb-6 leading-none">VIEWER BEWARE.</h3>
                         <p className="text-xl text-white/60 uppercase font-medium tracking-tight mb-8">
-                            The films listed in The Void are known to cause structural logic failure in viewers. If you decide to proceed, do so in a controlled environment.
+                            The films listed here are known for major plot holes and logic failures. Watch at your own risk.
                         </p>
                         <button className="bg-primary text-white px-10 py-5 rounded-2xl font-black italic tracking-tighter uppercase text-lg shadow-premium hover:bg-primary-dark transition-all">
                             REPORT A NEW SIN

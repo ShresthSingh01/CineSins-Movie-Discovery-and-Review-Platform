@@ -169,8 +169,8 @@ export default function Oracle() {
                                 <div className="absolute inset-0 border-t-2 border-primary rounded-full animate-spin" />
                                 <Sparkles className="absolute inset-0 m-auto text-primary animate-pulse" size={64} />
                             </div>
-                            <h2 className="text-3xl font-black tracking-[0.4em] uppercase italic text-white/40">Calibrating Frequency...</h2>
-                            <p className="mt-4 text-[10px] font-black tracking-[0.6em] text-primary/40 uppercase">Extracting AI forensic recommendations</p>
+                            <h2 className="text-3xl font-black tracking-[0.4em] uppercase italic text-white/40">Finding Your Matches...</h2>
+                            <p className="mt-4 text-[10px] font-black tracking-[0.6em] text-primary/40 uppercase">Analyzing your cinematic frequency</p>
                         </motion.div>
                     ) : (
                         <motion.div
@@ -184,8 +184,8 @@ export default function Oracle() {
                                     <Zap size={12} className="text-primary" />
                                     <span className="text-[10px] font-black tracking-[0.3em] text-white uppercase italic">Calibration Successful</span>
                                 </div>
-                                <h2 className="text-6xl md:text-9xl font-black tracking-tighter italic uppercase font-display leading-none mb-4">THE <span className="shimmer-text">PROJECTION.</span></h2>
-                                <p className="text-white/40 font-bold uppercase tracking-widest text-sm italic">Artifacts aligned with your forensic session.</p>
+                                <h2 className="text-6xl md:text-9xl font-black tracking-tighter italic uppercase font-display leading-none mb-4">YOUR <span className="shimmer-text">MATCHES.</span></h2>
+                                <p className="text-white/40 font-bold uppercase tracking-widest text-sm italic">Movies aligned with your specific profile.</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
@@ -211,7 +211,7 @@ export default function Oracle() {
                                     }}
                                     className="text-xs font-black tracking-[0.5em] text-white/40 border-b border-primary/40 pb-2 hover:text-primary transition-colors uppercase italic"
                                 >
-                                    Reset Oracle Sequence
+                                    Restart AI Finder
                                 </button>
                             </div>
                         </motion.div>

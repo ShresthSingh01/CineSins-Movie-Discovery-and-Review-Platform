@@ -7,6 +7,7 @@ import { Star, AlertTriangle, ShieldCheck, Eye } from 'lucide-react';
 import { Movie } from '@/services/movieService';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { syncService } from '@/services/syncService';
 
 interface MovieCardProps {
     movie: Movie;
@@ -14,8 +15,17 @@ interface MovieCardProps {
 }
 
 export const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
+    const [consensus, setConsensus] = React.useState<{ agree: number, total: number, percentage?: number } | null>(null);
     const sinScore = movie.sinScore || 0;
     const isHighSin = sinScore > 300;
+
+    React.useEffect(() => {
+        const fetchConsensus = async () => {
+            const data = await syncService.getCommunityConsensus(movie.id);
+            setConsensus(data);
+        };
+        fetchConsensus();
+    }, [movie.id]);
 
     return (
         <motion.div
@@ -95,7 +105,11 @@ export const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
             <div className="mt-6 flex items-center justify-between px-2">
                 <div className="flex flex-col">
                     <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] leading-none">Status</span>
-                    <span className="text-xs font-black italic tracking-tighter text-white/60">Verified Evidence</span>
+                    <span className="text-xs font-black italic tracking-tighter text-white/60">
+                        {consensus && consensus.total > 0 
+                            ? `${consensus.percentage}% COMMUNITY AGREE` 
+                            : 'Authenticating Evidence'}
+                    </span>
                 </div>
                 <div className="flex gap-1">
                     {Array.from({ length: 5 }).map((_, i) => (
