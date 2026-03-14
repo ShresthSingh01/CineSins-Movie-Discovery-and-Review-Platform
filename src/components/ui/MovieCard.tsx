@@ -81,8 +81,8 @@ export const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
                                 </div>
                             </div>
 
-                            <p className="text-sm font-medium text-white/70 line-clamp-3 leading-relaxed italic border-l-2 border-primary/30 pl-4 py-1">
-                                {movie.plot || movie.sinSentence || `Subject identified in the ${movie.year} cycle. High probability of cinematic deviation detected.`}
+                            <p className="text-sm font-medium text-white/70 line-clamp-4 leading-relaxed italic border-l-2 border-primary/30 pl-4 py-1">
+                                {movie.oracleReason || movie.sinSentence || movie.plot || `Subject identified in the ${movie.year} cycle. High probability of cinematic deviation detected.`}
                             </p>
 
                             <div className="flex items-center justify-between pt-4 border-t border-white/10">

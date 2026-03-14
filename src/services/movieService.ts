@@ -29,6 +29,7 @@ export interface Movie {
     imdbRating?: string;
     Metascore?: string;
     logicGaps?: string[];
+    oracleReason?: string;
 }
 
 export async function calculateSinScore(imdbRating: string, metascore: string, aiConfidence: number = 0): Promise<number> {
@@ -244,13 +245,12 @@ export async function getForensicAnalysis(title: string, year: string, plot: str
 }
 
 export async function getOracleRecommendation(moodAnswers: string[], history: string[] = []) {
-    // Fallback cinematic artifacts if AI is offline
     const fallbacks = [
-        { title: "Blade Runner 2049" },
-        { title: "The Lighthouse" },
-        { title: "Seven" },
-        { title: "Mad Max: Fury Road" },
-        { title: "Fight Club" }
+        { title: "Blade Runner 2049", oracleReason: "Visual saturation matches your high-contrast era preference." },
+        { title: "The Lighthouse", oracleReason: "Matched your melancholy frequency with vintage grain aesthetics." },
+        { title: "Seven", oracleReason: "Your darkness tolerance matches this pitch-black diagnostic." },
+        { title: "Mad Max: Fury Road", oracleReason: "Chaotic frequency identified. High-octane narrative gravity detected." },
+        { title: "Fight Club", oracleReason: "Moral compass alignment: Total Corruption. Perfect match." }
     ];
 
     if (!genAI) return fallbacks;
@@ -258,15 +258,39 @@ export async function getOracleRecommendation(moodAnswers: string[], history: st
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const historyContext = history.length > 0
-            ? `\nAGENT HISTORY: The user has recently indicted/deported these movies for cinematic sins: [${history.join(", ")}]. Avoid these specific titles and consider their genres as potential 'low-interest' zones unless the current session strongly indicates otherwise.`
+            ? `\nAGENT HISTORY: The user has recently indicted/deported these movies: [${history.join(", ")}]. AVOID these titles. Do NOT recommend them.`
             : "";
 
-        const prompt = `You are the CineSins Oracle. ${historyContext}\nBased on these session answers: [${moodAnswers.join(", ")}], recommend 3 movies. Return JSON array of objects with {title}.`;
+        const prompt = `
+            You are the CINESINS ORACLE. You analyze human cinematic frequencies with cynical precision.
+
+            FORENSIC CALIBRATION DATA:
+            ${moodAnswers.map((a, i) => `Sequence ${i + 1}: ${a}`).join('\n')}
+
+            ${historyContext}
+
+            INTERPRETATION PARAMETERS:
+            - Chaotic: High-energy, non-linear, unpredictable.
+            - Melancholy: Atmospheric, slow-paced, emotional weight.
+            - Pitch Black: Extreme nihilism, horror, or dark thrillers.
+            - Neon Noir: Stylized, high-contrast, cyberpunk or crime.
+            - Modern Forensic: Recent cinema, crisp digital aesthetics.
+            - Vintage Grain: 70s/80s gritty texture.
+            - Singularity: Reality-bending, philosophical, high narrative gravity.
+            - Silent Void: Meditative, minimal dialogue, visual storytelling.
+
+            TASK:
+            Recommend 4 movies that perfectly align with this calibration profile. Provide a witty, cynical, CineSins-style "oracleReason" for each (max 15 words) that explains why it matches their data.
+
+            Return ONLY a JSON array of objects: [{"title": "...", "oracleReason": "..."}]
+        `;
 
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        return JSON.parse(text.replace(/```json|```/g, "").trim());
+        const data = JSON.parse(text.replace(/```json|```/g, "").trim());
+        return data;
     } catch (error) {
+        console.error("Oracle AI Error:", error);
         return fallbacks;
     }
 }

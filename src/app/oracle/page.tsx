@@ -59,9 +59,21 @@ export default function Oracle() {
     const [recommendations, setRecommendations] = useState<Movie[]>([]);
 
     useEffect(() => {
-        // Select 4 random questions from the pool
-        const shuffled = [...QUESTION_POOL].sort(() => 0.5 - Math.random());
-        setActiveQuestions(shuffled.slice(0, 4));
+        // Group questions by category and pick one from each
+        const categories = {
+            vibe: ['freq', 'dark'],
+            visual: ['era', 'aesthetic'],
+            narrative: ['narrative', 'logic'],
+            context: ['social', 'moral']
+        };
+
+        const selected: any[] = [];
+        Object.values(categories).forEach(ids => {
+            const pool = QUESTION_POOL.filter(q => ids.includes(q.id));
+            selected.push(pool[Math.floor(Math.random() * pool.length)]);
+        });
+
+        setActiveQuestions(selected.sort(() => 0.5 - Math.random()));
     }, []);
 
     const handleAnswer = (answer: string) => {
@@ -100,7 +112,11 @@ export default function Oracle() {
                             year: details.Year,
                             poster: details.Poster !== "N/A" ? details.Poster : "/placeholder-movie.png",
                             type: details.Type,
-                            rating: details.imdbRating
+                            rating: details.imdbRating,
+                            oracleReason: r.oracleReason, // AI's forensic justification
+                            Genre: details.Genre,
+                            Director: details.Director,
+                            plot: details.Plot
                         };
                     }
                     return null;
@@ -206,8 +222,18 @@ export default function Oracle() {
                                         setStep(0);
                                         setAnswers([]);
                                         setRecommendations([]);
-                                        const shuffled = [...QUESTION_POOL].sort(() => 0.5 - Math.random());
-                                        setActiveQuestions(shuffled.slice(0, 4));
+                                        const categories = {
+                                            vibe: ['freq', 'dark'],
+                                            visual: ['era', 'aesthetic'],
+                                            narrative: ['narrative', 'logic'],
+                                            context: ['social', 'moral']
+                                        };
+                                        const selected: any[] = [];
+                                        Object.values(categories).forEach(ids => {
+                                            const pool = QUESTION_POOL.filter(q => ids.includes(q.id));
+                                            selected.push(pool[Math.floor(Math.random() * pool.length)]);
+                                        });
+                                        setActiveQuestions(selected.sort(() => 0.5 - Math.random()));
                                     }}
                                     className="text-xs font-black tracking-[0.5em] text-white/40 border-b border-primary/40 pb-2 hover:text-primary transition-colors uppercase italic"
                                 >
