@@ -141,11 +141,6 @@ export default function Home() {
                 Stop boiling down cinematic masterpieces into meaningless stars. Score movies based on their forensic failures: plot-holes, logical lapses, and technical sins.
               </p>
 
-              <div className="grid grid-cols-3 gap-8">
-                <PhilosophyItem score="0-20" label="SINLESS" desc="Cinema Elite" color="text-primary" />
-                <PhilosophyItem score="21-50" label="OFFENDER" desc="Minor Lapses" color="text-white/60" />
-                <PhilosophyItem score="51+" label="CRIMINAL" desc="Void Bait" color="text-white/20" />
-              </div>
             </motion.div>
 
             <motion.div
@@ -161,7 +156,6 @@ export default function Home() {
                     <Gavel className="w-12 h-12 text-primary" />
                   </div>
                   <h3 className="text-4xl font-black mb-4 italic tracking-tighter">THE SIN ENGINE</h3>
-                  <p className="text-white/40 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto">Submit your first forensic note to begin.</p>
                 </div>
                 {/* Glowing Accent */}
                 <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-[100px] group-hover:bg-primary/40 transition-all" />
@@ -192,27 +186,15 @@ export default function Home() {
 const FeatureCard = ({ href, icon, title, desc, tag }: { href: string, icon: React.ReactNode, title: string, desc: string, tag: string }) => (
   <Link href={href}>
     <div className="glass-dark p-10 rounded-[40px] border border-white/5 hover:border-primary/50 transition-all duration-500 group relative overflow-hidden h-full flex flex-col">
-      <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="px-3 py-1 bg-primary text-[8px] font-black uppercase tracking-widest rounded-full">{tag}</div>
-      </div>
       <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-8 border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-premium">
         {icon}
       </div>
       <h3 className="text-2xl font-black tracking-tighter mb-4 italic group-hover:text-primary transition-colors">{title}</h3>
       <p className="text-sm text-white/40 font-bold leading-relaxed uppercase tracking-tighter mb-8 flex-1">{desc}</p>
-      <div className="flex items-center gap-2 text-primary font-black text-[10px] tracking-[0.3em] uppercase opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">
-        Access Module <TrendingUp className="w-3 h-3" />
-      </div>
       {/* Background Glow */}
       <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/5 rounded-full blur-[40px] group-hover:bg-primary/20 transition-all" />
     </div>
   </Link>
 );
 
-const PhilosophyItem = ({ score, label, desc, color }: { score: string, label: string, desc: string, color: string }) => (
-  <div className="flex flex-col group transition-transform hover:translate-y-[-5px]">
-    <span className={cn("text-4xl font-black tracking-tighter leading-none mb-2", color)}>{score}</span>
-    <span className="text-[10px] uppercase font-black text-white tracking-[0.2em]">{label}</span>
-    <span className="text-[8px] uppercase font-bold text-white/20 tracking-[0.1em] mt-1">{desc}</span>
-  </div>
-);
+
